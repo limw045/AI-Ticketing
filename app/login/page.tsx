@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { KeyRound, Mail, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
+import { KeyRound, Mail, AlertCircle, ArrowRight, Sparkles, Cpu } from "lucide-react";
+import { DotGridBg } from "@/components/react-bits/DotGridBg";
+import { BlurText } from "@/components/react-bits/BlurText";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,22 +33,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50/70 via-slate-50 to-indigo-50/50 text-slate-800 p-4 relative overflow-hidden">
-      <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-slate-200/80 space-y-6 relative z-10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50/80 via-slate-50 to-indigo-50/60 text-slate-800 p-4 relative overflow-hidden">
+      <DotGridBg />
+
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-slate-200/90 space-y-6 relative z-10">
         <div className="flex justify-between items-center border-b border-slate-100 pb-4">
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-rose-400" />
             <div className="w-3 h-3 rounded-full bg-amber-400" />
             <div className="w-3 h-3 rounded-full bg-emerald-400" />
           </div>
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> GTMSW Support
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/60">
+            <Cpu className="w-3.5 h-3.5 text-blue-600 animate-pulse" /> GTMSW AI DEPARTMENT
           </span>
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome Back</h1>
-          <p className="text-sm text-slate-500 mt-1">Sign in with your GTMSW staff or Intern account</p>
+          <BlurText text="Welcome to AI Desk" className="text-2xl font-extrabold tracking-tight text-slate-900" />
+          <p className="text-sm text-slate-500 mt-1">Sign in with your GTMSW Staff or Intern account to contact the AI Department</p>
         </div>
 
         {error && (
@@ -92,7 +96,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
           >
-            {loading ? "Signing in..." : "Sign In to Portal"}
+            {loading ? "Signing in..." : "Sign In to AI Portal"}
             {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>

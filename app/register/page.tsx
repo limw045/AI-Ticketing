@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { User, Mail, KeyRound, Building2, UserCheck, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
+import { User, Mail, KeyRound, Building2, UserCheck, AlertCircle, CheckCircle2, Cpu } from "lucide-react";
+import { DotGridBg } from "@/components/react-bits/DotGridBg";
+import { BlurText } from "@/components/react-bits/BlurText";
 
 export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
@@ -72,22 +74,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50/70 via-slate-50 to-indigo-50/50 text-slate-800 p-4 relative overflow-hidden">
-      <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-slate-200/80 space-y-6 relative z-10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50/80 via-slate-50 to-indigo-50/60 text-slate-800 p-4 relative overflow-hidden">
+      <DotGridBg />
+
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-slate-200/90 space-y-6 relative z-10">
         <div className="flex justify-between items-center border-b border-slate-100 pb-4">
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-rose-400" />
             <div className="w-3 h-3 rounded-full bg-amber-400" />
             <div className="w-3 h-3 rounded-full bg-emerald-400" />
           </div>
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> Join Portal
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/60">
+            <Cpu className="w-3.5 h-3.5 text-blue-600 animate-pulse" /> GTMSW AI DEPARTMENT
           </span>
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create Account</h1>
-          <p className="text-sm text-slate-500 mt-1">Full-time Staff and Intern registration</p>
+          <BlurText text="AI Portal Registration" className="text-2xl font-extrabold tracking-tight text-slate-900" />
+          <p className="text-sm text-slate-500 mt-1">Full-time Staff and Intern registration for AI Department support</p>
         </div>
 
         {error && (
@@ -175,6 +179,7 @@ export default function RegisterPage() {
                 onChange={(e) => setDepartment(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition text-slate-800 font-medium"
               >
+                <option value="AI Department">AI Department User</option>
                 <option value="IT">IT Support & System</option>
                 <option value="HR">Human Resources</option>
                 <option value="Marketing">Marketing</option>
