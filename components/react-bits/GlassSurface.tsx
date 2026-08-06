@@ -17,18 +17,18 @@ export function GlassSurface({
   return (
     <div
       className={clsx(
-        "glass-panel rounded-3xl shadow-xl relative overflow-hidden transition-all duration-300 bg-white/90 border border-slate-200/80",
+        "porcelain-card rounded-2xl relative overflow-hidden bg-white border border-black/5 shadow-[0_2px_10px_rgba(0,0,0,0.03)]",
         className
       )}
     >
       {showWindowDots && (
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200/80 bg-slate-100/50">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-black/5 bg-zinc-50/50">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-rose-400" />
-            <div className="w-3 h-3 rounded-full bg-amber-400" />
-            <div className="w-3 h-3 rounded-full bg-emerald-400" />
+            <div className="w-3 h-3 rounded-full bg-zinc-300" />
+            <div className="w-3 h-3 rounded-full bg-zinc-300" />
+            <div className="w-3 h-3 rounded-full bg-zinc-300" />
           </div>
-          {title && <span className="text-xs font-semibold text-slate-500 tracking-wide">{title}</span>}
+          {title && <span className="text-xs font-mono font-medium text-zinc-400">{title}</span>}
           <div className="w-12" />
         </div>
       )}

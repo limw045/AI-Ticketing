@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Internal Staff Support Portal",
-  description: "Bright & friendly internal ticketing platform",
+  title: "GTMSW AI Department Support",
+  description: "Porcelain Clean Light Apple/Stripe-level UI",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="light">
-      <body className="bg-slate-50 text-slate-900 antialiased selection:bg-blue-500 selection:text-white">
+      <body className="bg-[#fcfcfc] text-zinc-950 antialiased selection:bg-blue-600 selection:text-white">
         {children}
       </body>
     </html>

@@ -1,41 +1,42 @@
 import Link from "next/link";
-import { Cpu, Sparkles } from "lucide-react";
+import { Cpu, ArrowRight } from "lucide-react";
 import { DotGridBg } from "@/components/react-bits/DotGridBg";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-blue-50/70 via-slate-50 to-indigo-50/50 relative overflow-hidden">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-[#fcfcfc] relative overflow-hidden">
       <DotGridBg />
 
-      <div className="bg-white/95 backdrop-blur-xl p-10 rounded-3xl max-w-xl w-full space-y-6 shadow-2xl border border-slate-200/90 relative z-10">
-        <div className="flex justify-center gap-2 mb-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-rose-400" />
-          <div className="w-3.5 h-3.5 rounded-full bg-amber-400" />
-          <div className="w-3.5 h-3.5 rounded-full bg-emerald-400" />
-        </div>
-        
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-extrabold uppercase tracking-wider">
-          <Cpu className="w-4 h-4 text-blue-600 animate-pulse" /> GTMSW AI Department Desk
+      <div className="bg-white p-10 rounded-2xl max-w-md w-full space-y-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-black/5 relative z-10 text-left">
+        <div className="flex items-center justify-between">
+          <div className="w-9 h-9 rounded-xl bg-zinc-900 flex items-center justify-center text-white shadow-sm">
+            <Cpu className="w-5 h-5" />
+          </div>
+          <span className="text-[11px] font-mono font-medium text-zinc-400 border border-black/5 px-2 py-0.5 rounded bg-zinc-50">
+            v1.0 • AI Support
+          </span>
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-          AI Department Support
-        </h1>
-        
-        <p className="text-slate-600 text-sm leading-relaxed font-medium">
-          Integrated communication and ticketing platform for other departments to submit AI model support, GPU cluster access, data pipeline requests, and AI system bugs.
-        </p>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
+            GTMSW AI Dept Support
+          </h1>
+          <p className="text-zinc-500 text-xs leading-relaxed mt-1">
+            Official internal portal for submitting AI model support, GPU cluster access, data pipeline requests, and AI system tickets.
+          </p>
+        </div>
 
-        <div className="flex justify-center gap-4 pt-4">
+        <div className="space-y-2 pt-2">
           <Link
             href="/login"
-            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 font-bold transition text-white shadow-lg shadow-blue-500/25 text-sm"
+            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 font-semibold transition text-white shadow-sm text-xs flex items-center justify-center gap-2"
           >
-            Sign In to AI Desk
+            <span>Sign In to AI Portal</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
           <Link
             href="/register"
-            className="px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 font-bold transition text-slate-700 border border-slate-200 text-sm"
+            className="w-full py-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 font-semibold transition text-zinc-700 border border-black/5 text-xs flex items-center justify-center"
           >
             Create Account
           </Link>
