@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { clsx } from "clsx";
 
 interface SpotlightCardProps {
@@ -14,38 +14,16 @@ export function SpotlightCard({
   children,
   className = "",
   onClick,
-  spotlightColor = "rgba(59, 130, 246, 0.08)",
 }: SpotlightCardProps) {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setPosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
-
   return (
     <div
       onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setOpacity(1)}
-      onMouseLeave={() => setOpacity(0)}
       className={clsx(
-        "relative overflow-hidden rounded-2xl bg-white border border-slate-200/90 p-5 transition-all duration-300 hover:border-blue-300 hover:shadow-lg shadow-sm shadow-slate-200/50 text-slate-800",
+        "porcelain-card rounded-2xl bg-white border border-black/5 p-5 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-black/10 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-all duration-200 text-zinc-900",
         className
       )}
     >
-      <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300"
-        style={{
-          opacity,
-          background: `radial-gradient(500px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
-        }}
-      />
-      <div className="relative z-10">{children}</div>
+      {children}
     </div>
   );
 }
