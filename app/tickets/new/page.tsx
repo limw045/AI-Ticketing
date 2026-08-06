@@ -6,11 +6,10 @@ import { Navbar } from "@/components/Navbar";
 import { IncidentBanner } from "@/components/IncidentBanner";
 import { scanSensitiveData } from "@/lib/security-scanner";
 import { compressAndUploadImage } from "@/lib/image-upload";
-import { ShinyText } from "@/components/react-bits/ShinyText";
-import { DotGridBg } from "@/components/react-bits/DotGridBg";
+import { EditorialGrid } from "@/components/EditorialGrid";
 import {
   AlertOctagon, Image as ImageIcon, Send, Sparkles, Monitor, ShieldCheck, Check,
-  Cpu, Flame, Layers, Wand2, Trash2, FileText, ArrowRight, CornerDownLeft
+  Flame, Layers, Trash2, ArrowRight
 } from "lucide-react";
 
 const CATEGORY_TEMPLATES: Record<string, string> = {
@@ -163,28 +162,28 @@ export default function NewTicketPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-zinc-950 pb-32 relative">
-      <DotGridBg />
+    <div className="editorial-shell pb-32 relative">
+      <EditorialGrid />
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-6 pt-10 relative z-10 space-y-8">
+      <main className="editorial-content max-w-5xl mx-auto px-6 pt-10 relative z-10 space-y-8">
         <IncidentBanner />
 
         {savedDraftAlert && (
-          <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center justify-between animate-fade-in shadow-xs">
+          <div className="p-3 rounded-2xl bg-[#141416] border border-[#6a9bcc]/30 text-[#d7e6f3] text-xs font-semibold flex items-center justify-between animate-fade-in shadow-xl">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-blue-600" />
+              <Check className="w-4 h-4 text-[#8db3d6]" />
               <span>Restored auto-saved draft from your previous session.</span>
             </div>
-            <button onClick={handleClearDraft} className="text-zinc-500 hover:text-red-600 underline text-[11px]">
+            <button onClick={handleClearDraft} className="text-zinc-500 hover:text-rose-300 underline text-[11px]">
               Clear Draft
             </button>
           </div>
         )}
 
         {securityWarning && (
-          <div className="p-4.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-sm flex items-start gap-3 shadow-md">
-            <AlertOctagon className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
+          <div className="p-4 rounded-2xl bg-rose-400/10 border border-rose-400/30 text-rose-100 text-sm flex items-start gap-3 shadow-xl">
+            <AlertOctagon className="w-5 h-5 shrink-0 text-rose-300 mt-0.5" />
             <div>
               <span className="font-bold block">Sensitive Data Pre-Submit Guard Alert</span>
               <span className="text-xs opacity-90">{securityWarning}</span>
@@ -196,25 +195,26 @@ export default function NewTicketPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Borderless Title Input */}
           <div className="space-y-2">
+            <div className="editorial-mono mb-3 text-[10px] uppercase tracking-[0.25em] text-zinc-600">STEP 02 / PRESCRIBE A REQUEST</div>
             <input
               type="text"
               placeholder="Title of AI request or bug..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full text-3xl md:text-4xl font-extrabold tracking-tight bg-transparent border-none outline-none focus:outline-none placeholder:text-zinc-300 text-zinc-950 leading-tight"
+              className="w-full bg-transparent text-4xl font-light leading-tight tracking-[-0.06em] text-white outline-none placeholder:text-zinc-700 focus:outline-none md:text-6xl"
             />
           </div>
 
           {/* Interactive Property Pills Bar */}
-          <div className="flex flex-wrap items-center gap-2.5 pt-2 pb-4 border-b border-black/5 text-xs">
+          <div className="flex flex-wrap items-center gap-2.5 border-b border-white/10 pb-4 pt-2 text-xs">
             {/* Category Selector Pill */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/10 shadow-xs hover:border-black/20 transition">
-              <Layers className="w-3.5 h-3.5 text-blue-600" />
+            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-[#141416] px-3 py-1.5 shadow-xs transition hover:border-white/25">
+              <Layers className="w-3.5 h-3.5 text-[#8db3d6]" />
               <select
                 value={category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="bg-transparent font-semibold text-zinc-800 outline-none cursor-pointer"
+                className="bg-transparent font-semibold text-zinc-200 outline-none cursor-pointer"
               >
                 <option value="System Bug">⚡ System Bug</option>
                 <option value="Hardware">🖥️ Hardware & GPU</option>
@@ -226,10 +226,10 @@ export default function NewTicketPage() {
             {/* Priority Selector Pill */}
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-xs transition ${
               priority === "urgent"
-                ? "bg-rose-50 border-rose-200 text-rose-700 font-bold"
-                : "bg-white border-black/10 text-zinc-700 font-medium"
+                ? "bg-rose-400/10 border-rose-400/30 text-rose-200 font-bold"
+                : "bg-[#141416] border-white/10 text-zinc-300 font-medium"
             }`}>
-              <Flame className={`w-3.5 h-3.5 ${priority === "urgent" ? "text-rose-600 animate-pulse" : "text-amber-500"}`} />
+              <Flame className={`w-3.5 h-3.5 ${priority === "urgent" ? "text-rose-300 animate-pulse" : "text-[#e0a58b]"}`} />
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
@@ -243,34 +243,34 @@ export default function NewTicketPage() {
             </div>
 
             {/* Auto Device Environment Badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100/70 border border-black/5 text-zinc-500 font-medium text-[11px]">
-              <Monitor className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="editorial-mono flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-[10px] font-medium text-zinc-500">
+              <Monitor className="w-3.5 h-3.5 text-zinc-600" />
               <span>Auto-Context Attached</span>
             </div>
 
             {/* Guard Badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-[11px] ml-auto">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="editorial-mono ml-auto flex items-center gap-1.5 rounded-full border border-[#788c5d]/30 bg-[#788c5d]/10 px-3 py-1.5 text-[10px] font-bold text-[#a4b889]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#a4b889]" />
               <span>Data Guard Active</span>
             </div>
           </div>
 
           {/* Integrated Content Canvas with Floating Toolbar */}
-          <div className="bg-white rounded-2xl border border-black/5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="editorial-bubble overflow-hidden rounded-2xl">
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-black/5 bg-zinc-50/50 text-xs text-zinc-500">
+            <div className="flex items-center justify-between border-b border-white/10 bg-black/30 px-4 py-2.5 text-xs text-zinc-500">
               <div className="flex items-center gap-3 font-medium">
                 <button
                   type="button"
                   onClick={() => setPreviewTab("edit")}
-                  className={`px-2.5 py-1 rounded-md transition ${previewTab === "edit" ? "bg-white text-zinc-950 font-bold shadow-xs" : "hover:text-zinc-900"}`}
+                  className={`rounded-md px-2.5 py-1 transition ${previewTab === "edit" ? "bg-zinc-800 font-bold text-white" : "hover:text-white"}`}
                 >
                   Write Markdown
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTab("preview")}
-                  className={`px-2.5 py-1 rounded-md transition ${previewTab === "preview" ? "bg-white text-zinc-950 font-bold shadow-xs" : "hover:text-zinc-900"}`}
+                  className={`rounded-md px-2.5 py-1 transition ${previewTab === "preview" ? "bg-zinc-800 font-bold text-white" : "hover:text-white"}`}
                 >
                   Live Preview
                 </button>
@@ -278,7 +278,7 @@ export default function NewTicketPage() {
 
               <div className="flex items-center gap-3 text-[11px] text-zinc-400 font-mono">
                 <span className="flex items-center gap-1">
-                  <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> Press Ctrl + V to paste screenshot
+                  <ImageIcon className="w-3.5 h-3.5 text-[#8db3d6]" /> Press Ctrl + V to paste screenshot
                 </span>
               </div>
             </div>
@@ -292,29 +292,29 @@ export default function NewTicketPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 placeholder="Describe your issue or request in Markdown format..."
-                className="w-full p-5 text-sm font-mono focus:outline-none bg-transparent text-zinc-900 leading-relaxed placeholder:text-zinc-300"
+                className="w-full bg-transparent p-5 text-sm leading-relaxed text-zinc-200 outline-none placeholder:text-zinc-700 focus:outline-none"
               />
             ) : (
-              <div className="p-6 min-h-[320px] font-mono text-sm leading-relaxed whitespace-pre-wrap text-zinc-800 bg-zinc-50/30">
+              <div className="min-h-[320px] bg-black/20 p-6 font-mono text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
                 {description}
               </div>
             )}
 
             {uploadingImage && (
-              <div className="px-5 py-3 border-t border-black/5 bg-blue-50/50 text-xs text-blue-700 font-semibold flex items-center gap-2">
-                <Sparkles className="w-4 h-4 animate-spin text-blue-600" />
+              <div className="flex items-center gap-2 border-t border-white/10 bg-[#6a9bcc]/10 px-5 py-3 text-xs font-semibold text-[#b9d2e8]">
+                <Sparkles className="w-4 h-4 animate-spin text-[#8db3d6]" />
                 <span>Compressing & Uploading Screenshot... {uploadProgress}%</span>
               </div>
             )}
           </div>
 
           {/* Floating Action Dock */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xl border border-black/10 shadow-2xl rounded-full px-6 py-3 flex items-center gap-6 max-w-xl w-full justify-between">
-            <div className="flex items-center gap-3 text-xs text-zinc-500 font-medium">
+          <div className="fixed bottom-8 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 items-center justify-between gap-6 rounded-full border border-white/15 bg-[#141416]/95 px-6 py-3 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3 text-xs font-medium text-zinc-500">
               <button
                 type="button"
                 onClick={handleClearDraft}
-                className="hover:text-red-600 transition flex items-center gap-1 text-[11px]"
+                className="flex items-center gap-1 text-[11px] transition hover:text-rose-300"
                 title="Discard Draft"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Clear
@@ -324,7 +324,7 @@ export default function NewTicketPage() {
             <button
               type="submit"
               disabled={loading || uploadingImage}
-              className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs transition shadow-md shadow-blue-600/30 flex items-center gap-2"
+              className="flex items-center gap-2 rounded-full bg-[#6a9bcc] px-6 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-600/30 transition hover:bg-[#84add1] disabled:opacity-50"
             >
               <span>Submit to AI Team</span>
               <ArrowRight className="w-3.5 h-3.5" />

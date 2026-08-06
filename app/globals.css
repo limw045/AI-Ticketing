@@ -1,33 +1,124 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fcfcfc;
-  --foreground: #09090b;
+  --background: #0a0a0c;
+  --foreground: #ffffff;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "SF Pro Display", system-ui, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .glass-panel {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  background: #131316;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 .porcelain-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+  background: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .porcelain-card:hover {
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #161619;
+}
+
+.editorial-shell {
+  position: relative;
+  min-height: 100vh;
+  background: #0a0a0c;
+  color: #fafafa;
+  overflow: hidden;
+}
+
+.editorial-grid-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  max-width: 80rem;
+  margin: 0 auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background-image: linear-gradient(90deg, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.08) 33.333%, transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.08) 66.666%, transparent calc(66.666% + 0.5px));
+}
+
+.editorial-grid-bg::before,
+.editorial-grid-bg::after {
+  content: "+";
+  position: absolute;
+  color: #52525b;
+  font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.editorial-grid-bg::before {
+  top: 4rem;
+  left: 33.333%;
+}
+
+.editorial-grid-bg::after {
+  right: 33.333%;
+  bottom: 4rem;
+}
+
+.editorial-content {
+  position: relative;
+  z-index: 1;
+}
+
+.editorial-rule {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.editorial-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.04em;
+}
+
+.editorial-bubble {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+}
+
+/* Keep old utility-driven surfaces visually coherent while the page modules migrate. */
+.bg-slate-50 { background-color: #0a0a0c !important; }
+.bg-slate-100 { background-color: #141416 !important; }
+.bg-white { background-color: #131316 !important; }
+.bg-white\/90, .bg-white\/95, .bg-white\/85 { background-color: rgba(19, 19, 22, 0.94) !important; }
+.text-slate-900 { color: #fafafa !important; }
+.text-slate-800 { color: #f4f4f5 !important; }
+.text-slate-700 { color: #d4d4d8 !important; }
+.text-slate-600 { color: #a1a1aa !important; }
+.text-slate-500, .text-slate-400 { color: #71717a !important; }
+.border-slate-100, .border-slate-200, .border-slate-300 { border-color: rgba(255, 255, 255, 0.1) !important; }
+.bg-blue-50 { background-color: rgba(106, 155, 204, 0.12) !important; }
+.bg-emerald-50 { background-color: rgba(120, 140, 93, 0.14) !important; }
+.bg-amber-50 { background-color: rgba(217, 119, 87, 0.14) !important; }
+.bg-rose-50, .bg-red-50 { background-color: rgba(190, 60, 75, 0.14) !important; }
+.text-blue-600, .text-blue-700 { color: #8db3d6 !important; }
+.text-emerald-600, .text-emerald-700 { color: #a4b889 !important; }
+.text-amber-600, .text-amber-700, .text-amber-800 { color: #e0a58b !important; }
+.text-rose-600, .text-rose-700, .text-red-600, .text-red-700 { color: #e99aa4 !important; }
+.border-blue-200, .border-blue-300 { border-color: rgba(106, 155, 204, 0.35) !important; }
+.border-emerald-200, .border-emerald-300 { border-color: rgba(120, 140, 93, 0.35) !important; }
+.border-amber-200, .border-amber-300 { border-color: rgba(217, 119, 87, 0.35) !important; }
+.border-rose-200, .border-red-200 { border-color: rgba(190, 60, 75, 0.35) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { CountUp } from "@/components/react-bits/CountUp";
 import { BlurText } from "@/components/react-bits/BlurText";
+import { EditorialGrid } from "@/components/EditorialGrid";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
@@ -13,7 +14,7 @@ import {
   TrendingUp, Clock, CheckCircle, AlertOctagon, Download, Radio, Plus, ShieldCheck
 } from "lucide-react";
 
-const COLORS = ["#3b82f6", "#10b981", "#6366f1", "#f59e0b", "#f43f5e"];
+const COLORS = ["#6a9bcc", "#788c5d", "#9c86b8", "#d97757", "#b85b6b"];
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -116,21 +117,23 @@ export default function AdminDashboard() {
   }));
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
+    <div className="editorial-shell pb-20">
+      <EditorialGrid />
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 pt-8 space-y-8">
+      <main className="editorial-content max-w-7xl mx-auto px-6 pt-10 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <BlurText text="IT Operations & Analytics" className="text-3xl font-extrabold tracking-tight text-slate-900" />
-            <p className="text-xs text-slate-500 mt-1">
+            <div className="editorial-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600">STEP 04 / OBSERVE</div>
+            <BlurText text="The signal behind the queue." className="mt-3 text-4xl font-light tracking-[-0.05em] text-white" />
+            <p className="mt-3 text-xs leading-6 text-zinc-500">
               Real-time service desk metrics, category breakdown, and global incident management.
             </p>
           </div>
 
           <button
             onClick={exportCSV}
-            className="px-4.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center gap-2 self-start md:self-auto"
+            className="flex items-center gap-2 self-start rounded-full bg-[#6a9bcc] px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-500/20 transition hover:bg-[#84add1] md:self-auto"
           >
             <Download className="w-4 h-4" /> Export CSV Report
           </button>
@@ -139,29 +142,29 @@ export default function AdminDashboard() {
         {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <GlassSurface className="!p-5">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Volume</span>
-            <div className="text-4xl font-extrabold mt-2 text-slate-900">
+            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">01 / Total Volume</span>
+            <div className="mt-3 text-4xl font-light text-white">
               <CountUp to={totalVolume} />
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Resolution Rate</span>
-            <div className="text-4xl font-extrabold mt-2 text-emerald-600">
+            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">02 / Resolution Rate</span>
+            <div className="mt-3 text-4xl font-light text-[#a4b889]">
               <CountUp to={resolutionRate} />%
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Avg Response SLA</span>
-            <div className="text-4xl font-extrabold mt-2 text-blue-600">
+            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">03 / Avg Response SLA</span>
+            <div className="mt-3 text-4xl font-light text-[#8db3d6]">
               1.4h
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
-            <span className="text-xs font-bold text-rose-600 uppercase tracking-wider block">Urgent (P0) Breaches</span>
-            <div className="text-4xl font-extrabold mt-2 text-rose-600">
+            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-[#e99aa4]">04 / Urgent Breaches</span>
+            <div className="mt-3 text-4xl font-light text-[#e99aa4]">
               <CountUp to={urgentCount} />
             </div>
           </GlassSurface>
@@ -173,10 +176,10 @@ export default function AdminDashboard() {
             <div className="h-64 mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={categoryData.length > 0 ? categoryData : [{ name: "VPN", count: 4 }, { name: "Hardware", count: 7 }, { name: "Bug", count: 12 }]}>
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: 16, color: "#0f172a" }} />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} />
+                  <Tooltip contentStyle={{ backgroundColor: "#141416", borderColor: "#3f3f46", borderRadius: 12, color: "#fafafa" }} />
+                  <Bar dataKey="count" fill="#6a9bcc" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -199,7 +202,7 @@ export default function AdminDashboard() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: 16, color: "#0f172a" }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#141416", borderColor: "#3f3f46", borderRadius: 12, color: "#fafafa" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -209,14 +212,14 @@ export default function AdminDashboard() {
         {/* Global Incident Manager */}
         <GlassSurface showWindowDots title="Global Incident / Outage Manager">
           <form onSubmit={handlePublishIncident} className="space-y-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <input
                 type="text"
                 placeholder="Incident Title (e.g. Office Wi-Fi Degradation)"
                 value={newIncidentTitle}
                 onChange={(e) => setNewIncidentTitle(e.target.value)}
                 required
-                className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
+                className="border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
               />
               <input
                 type="text"
@@ -224,12 +227,12 @@ export default function AdminDashboard() {
                 value={newIncidentMsg}
                 onChange={(e) => setNewIncidentMsg(e.target.value)}
                 required
-                className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
+                className="border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
               />
               <select
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value)}
-                className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800"
+                className="border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs font-semibold text-white outline-none focus:border-[#6a9bcc]"
               >
                 <option value="warning">Warning (Amber)</option>
                 <option value="critical">Critical Outage (Red)</option>
@@ -238,24 +241,24 @@ export default function AdminDashboard() {
             </div>
             <button
               type="submit"
-              className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/20"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#6a9bcc] py-3.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-500/20 transition hover:bg-[#84add1]"
             >
               <Radio className="w-4 h-4" /> Publish Global Outage Banner
             </button>
           </form>
 
-          <div className="space-y-2 pt-4 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Incidents</h4>
+          <div className="space-y-2 border-t border-white/10 pt-4">
+            <h4 className="editorial-mono mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Current Incidents</h4>
             {incidents.map((inc) => (
-              <div key={inc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+              <div key={inc.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3.5 text-xs">
                 <div>
-                  <span className="font-bold text-slate-900">{inc.title}</span>
-                  <p className="text-slate-500 text-[11px] font-medium">{inc.message}</p>
+                  <span className="font-bold text-white">{inc.title}</span>
+                  <p className="text-[11px] font-medium text-zinc-500">{inc.message}</p>
                 </div>
                 <button
                   onClick={() => handleToggleIncident(inc.id, inc.is_active)}
                   className={`px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase transition ${
-                    inc.is_active ? "bg-rose-100 text-rose-700 border border-rose-200" : "bg-slate-200 text-slate-600"
+                    inc.is_active ? "border border-rose-400/30 bg-rose-400/10 text-rose-200" : "bg-zinc-800 text-zinc-500"
                   }`}
                 >
                   {inc.is_active ? "Deactivate" : "Activate"}

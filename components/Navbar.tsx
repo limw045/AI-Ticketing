@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Ticket, HelpCircle, LayoutDashboard, LogOut, PlusCircle, Cpu } from "lucide-react";
+import { Ticket, HelpCircle, LayoutDashboard, LogOut, PlusCircle, Infinity } from "lucide-react";
 
 export function Navbar() {
   const [profile, setProfile] = useState<any>(null);
@@ -27,50 +27,52 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5 px-6 py-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <header className="sticky top-0 z-50 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/10 px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Brand Header: Apple/Stripe Porcelain Clean */}
+        {/* Brand Header */}
         <Link href="/tickets" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center text-white group-hover:bg-blue-600 transition shadow-sm">
-            <Cpu className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white bg-zinc-900 group-hover:border-blue-400 transition">
+            <Infinity className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-zinc-950 tracking-tight block">GTMSW AI Dept</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-100 text-zinc-600 border border-black/5">AI Desk</span>
+              <span className="font-bold text-base text-white tracking-tight block">Get Blue</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium text-zinc-400 border border-white/10 bg-zinc-900">AI DESK</span>
             </div>
-            <span className="text-[11px] font-medium text-zinc-400 block leading-tight">Internal Support Portal</span>
           </div>
         </Link>
 
         {/* Center Nav Links */}
-        <nav className="flex items-center gap-1 bg-zinc-100/70 p-1 rounded-xl border border-black/5 text-xs font-medium text-zinc-600">
-          <Link href="/tickets" className="px-3 py-1.5 rounded-lg hover:bg-white hover:text-zinc-900 transition flex items-center gap-1.5 font-medium">
-            <Ticket className="w-3.5 h-3.5" /> Tickets
+        <nav className="flex items-center gap-6 text-xs font-mono text-zinc-400">
+          <Link href="/tickets" className="hover:text-white transition flex items-center gap-1.5 font-medium">
+            <Ticket className="w-3.5 h-3.5" /> Process
           </Link>
-          <Link href="/faq" className="px-3 py-1.5 rounded-lg hover:bg-white hover:text-zinc-900 transition flex items-center gap-1.5 font-medium">
-            <HelpCircle className="w-3.5 h-3.5" /> Knowledge Base
+          <Link href="/faq" className="hover:text-white transition flex items-center gap-1.5 font-medium">
+            <HelpCircle className="w-3.5 h-3.5" /> Difference
           </Link>
           {profile?.role && profile.role !== "employee" && (
-            <Link href="/admin/dashboard" className="px-3 py-1.5 rounded-lg bg-white text-blue-600 font-semibold transition flex items-center gap-1.5 shadow-xs border border-black/5">
+            <Link href="/admin/dashboard" className="text-blue-400 hover:text-blue-300 transition flex items-center gap-1.5 font-semibold">
               <LayoutDashboard className="w-3.5 h-3.5" /> Analytics
             </Link>
           )}
         </nav>
 
         {/* Right User Actions */}
-        <div className="flex items-center gap-3">
-          <Link href="/tickets/new" className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition flex items-center gap-1.5 shadow-sm">
-            <PlusCircle className="w-3.5 h-3.5" /> New AI Ticket
+        <div className="flex items-center gap-4">
+          <Link
+            href="/tickets/new"
+            className="px-5 py-2 rounded-full bg-[#6a9bcc]/90 hover:bg-[#6a9bcc] text-zinc-950 font-bold text-xs transition shadow-lg shadow-blue-500/10 flex items-center gap-1.5"
+          >
+            <PlusCircle className="w-3.5 h-3.5" /> Start Ticket
           </Link>
 
           {profile && (
-            <div className="flex items-center gap-2 pl-3 border-l border-black/5">
+            <div className="flex items-center gap-3 pl-3 border-l border-white/10">
               <div className="text-right">
-                <span className="text-xs font-semibold text-zinc-900 block leading-tight">{profile.display_name}</span>
-                <span className="text-[10px] font-mono text-zinc-400 block">
+                <span className="text-xs font-medium text-white block leading-tight">{profile.display_name}</span>
+                <span className="text-[10px] font-mono text-zinc-500 block">
                   {profile.user_type === "intern" ? (
-                    <span className="text-amber-700 font-semibold bg-amber-50 px-1 py-0.5 rounded border border-amber-200">Intern</span>
+                    <span className="text-amber-400 font-bold">Intern</span>
                   ) : (
                     <span>Staff ({profile.department})</span>
                   )}
@@ -79,7 +81,7 @@ export function Navbar() {
               <button
                 onClick={handleSignOut}
                 title="Sign Out"
-                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-red-600 transition"
+                className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-rose-400 transition"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
