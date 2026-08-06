@@ -9,6 +9,7 @@ import { CountUp } from "@/components/react-bits/CountUp";
 import { ShinyText } from "@/components/react-bits/ShinyText";
 import { BlurText } from "@/components/react-bits/BlurText";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
+import { EditorialGrid } from "@/components/EditorialGrid";
 import {
   Search, Filter, CheckSquare, Square, CheckCircle2, Clock, XCircle, AlertTriangle, ArrowUpDown, CornerDownLeft
 } from "lucide-react";
@@ -134,24 +135,26 @@ export default function TicketDashboard() {
   const urgentCount = tickets.filter((t) => t.priority === "urgent" && t.status !== "closed").length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
+    <div className="editorial-shell pb-20">
+      <EditorialGrid />
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 pt-8 space-y-6">
+      <main className="editorial-content max-w-7xl mx-auto px-6 pt-10 space-y-8">
         <IncidentBanner />
 
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <BlurText text="Ticket Management" className="text-3xl font-extrabold tracking-tight text-slate-900" />
-            <p className="text-xs text-slate-500 mt-1">
-              Press <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px]">J</kbd> / <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px]">K</kbd> to navigate, <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px]">M</kbd> to assign self, <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px]">C</kbd> to close.
+            <div className="editorial-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500">STEP 01 / PROCESS</div>
+            <BlurText text="The request queue." className="mt-3 text-4xl font-light tracking-[-0.05em] text-white" />
+            <p className="mt-3 text-xs leading-6 text-zinc-500">
+              Press <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">J</kbd> / <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">K</kbd> to navigate, <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">M</kbd> to assign self, <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">C</kbd> to close.
             </p>
           </div>
 
           <a
             href="/tickets/new"
-            className="self-start md:self-auto px-4.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition"
+            className="self-start md:self-auto rounded-full bg-[#6a9bcc] px-5 py-2.5 text-xs font-bold text-zinc-950 shadow-lg shadow-blue-500/10 transition hover:bg-[#84add1]"
           >
             + Create New Ticket
           </a>
@@ -161,47 +164,47 @@ export default function TicketDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <GlassSurface className="!p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Open Tickets</span>
+              <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">01 / Open</span>
               <Clock className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-3xl font-extrabold mt-2 text-emerald-600">
+            <div className="mt-3 text-4xl font-light text-[#a4b889]">
               <CountUp to={openCount} />
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">In Progress</span>
+              <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">02 / Active</span>
               <ArrowUpDown className="w-4 h-4 text-indigo-600" />
             </div>
-            <div className="text-3xl font-extrabold mt-2 text-indigo-600">
+            <div className="mt-3 text-4xl font-light text-[#8db3d6]">
               <CountUp to={inProgressCount} />
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Resolved</span>
+              <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">03 / Resolved</span>
               <CheckCircle2 className="w-4 h-4 text-slate-400" />
             </div>
-            <div className="text-3xl font-extrabold mt-2 text-slate-700">
+            <div className="mt-3 text-4xl font-light text-white">
               <CountUp to={resolvedCount} />
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Urgent (P0)</span>
+              <span className="editorial-mono text-[10px] uppercase tracking-widest text-[#e99aa4]">04 / Urgent</span>
               <AlertTriangle className="w-4 h-4 text-rose-600 animate-pulse" />
             </div>
-            <div className="text-3xl font-extrabold mt-2 text-rose-600">
+            <div className="mt-3 text-4xl font-light text-[#e99aa4]">
               <CountUp to={urgentCount} />
             </div>
           </GlassSurface>
         </div>
 
         {/* Filter Bar */}
-        <div className="glass-panel p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+        <div className="glass-panel rounded-2xl border-white/10 p-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-[280px]">
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
@@ -210,14 +213,14 @@ export default function TicketDashboard() {
                 placeholder="Search ticket #, title, or category..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-blue-500 focus:bg-white text-slate-800 font-medium"
+                className="w-full border border-white/10 bg-[#0a0a0c] py-2.5 pl-10 pr-4 text-xs font-medium text-white outline-none placeholder:text-zinc-700 focus:border-[#6a9bcc]"
               />
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-semibold focus:outline-none"
+              className="border border-white/10 bg-[#0a0a0c] px-3.5 py-2.5 text-xs font-semibold text-white outline-none focus:border-[#6a9bcc]"
             >
               <option value="all">All Statuses</option>
               <option value="open">Open</option>
@@ -229,7 +232,7 @@ export default function TicketDashboard() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-semibold focus:outline-none"
+              className="border border-white/10 bg-[#0a0a0c] px-3.5 py-2.5 text-xs font-semibold text-white outline-none focus:border-[#6a9bcc]"
             >
               <option value="all">All Categories</option>
               <option value="System Bug">System Bug</option>
@@ -240,7 +243,7 @@ export default function TicketDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs font-bold text-zinc-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={onlyMine}
@@ -254,24 +257,24 @@ export default function TicketDashboard() {
 
         {/* Bulk Action Bar */}
         {selectedIds.length > 0 && (
-          <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-between text-xs text-blue-900 shadow-sm">
+          <div className="p-3.5 rounded-2xl bg-[#141416] border border-[#6a9bcc]/30 flex items-center justify-between text-xs text-[#d7e6f3] shadow-xl">
             <span className="font-bold">{selectedIds.length} tickets selected</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleBulkStatusChange("in_progress")}
-                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold"
+                className="rounded-full bg-[#6a9bcc] px-3 py-1.5 font-bold text-zinc-950 hover:bg-[#84add1]"
               >
                 Mark In Progress
               </button>
               <button
                 onClick={() => handleBulkStatusChange("resolved")}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                className="rounded-full bg-[#788c5d] px-3 py-1.5 font-bold text-zinc-950 hover:bg-[#9aae75]"
               >
                 Mark Resolved
               </button>
               <button
                 onClick={() => handleBulkStatusChange("closed")}
-                className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold"
+                className="rounded-full border border-white/10 bg-zinc-800 px-3 py-1.5 font-bold text-white hover:bg-zinc-700"
               >
                 Mark Closed
               </button>
@@ -281,10 +284,10 @@ export default function TicketDashboard() {
 
         {/* Tickets List */}
         {loading ? (
-          <div className="text-center py-16 text-slate-400 text-sm">Loading tickets...</div>
+          <div className="editorial-mono py-16 text-center text-xs uppercase tracking-widest text-zinc-600">Loading request queue...</div>
         ) : filteredTickets.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 text-sm glass-panel rounded-3xl">
-            No tickets found matching your filters.
+          <div className="glass-panel rounded-2xl py-16 text-center text-sm text-zinc-500">
+            No requests found matching this view.
           </div>
         ) : (
           <div className="space-y-3">
@@ -298,7 +301,7 @@ export default function TicketDashboard() {
                   onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
                   className={`!p-4.5 ${
                     isSelected
-                      ? "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30"
+                      ? "border-[#6a9bcc]/70 ring-1 ring-[#6a9bcc]/30 bg-[#161b21]"
                       : ""
                   }`}
                 >
@@ -310,59 +313,59 @@ export default function TicketDashboard() {
                           e.stopPropagation();
                           toggleSelectOne(ticket.id);
                         }}
-                        className="text-slate-400 hover:text-slate-600"
+                        className="text-zinc-600 hover:text-white"
                       >
                         {isChecked ? (
-                          <CheckSquare className="w-4 h-4 text-blue-600" />
+                          <CheckSquare className="w-4 h-4 text-[#8db3d6]" />
                         ) : (
-                          <Square className="w-4 h-4 text-slate-300" />
+                          <Square className="w-4 h-4 text-zinc-700" />
                         )}
                       </button>
 
                       {ticket.status === "open" && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 shadow-sm shadow-emerald-500/50" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#a4b889] shrink-0 shadow-sm shadow-[#a4b889]/50" />
                       )}
                       {ticket.status === "in_progress" && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0 shadow-sm shadow-indigo-500/50" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#8db3d6] shrink-0 shadow-sm shadow-[#8db3d6]/50" />
                       )}
                       {(ticket.status === "resolved" || ticket.status === "closed") && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-zinc-600 shrink-0" />
                       )}
 
-                      <span className="font-mono text-xs font-bold text-slate-400 shrink-0">
+                      <span className="editorial-mono text-xs font-bold text-zinc-600 shrink-0">
                         #{ticket.ticket_number}
                       </span>
 
-                      <h3 className="text-sm font-bold text-slate-900 truncate hover:text-blue-600 transition">
+                      <h3 className="truncate text-sm font-bold text-white transition hover:text-[#8db3d6]">
                         {ticket.title}
                       </h3>
 
                       {ticket.priority === "urgent" && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-100 text-rose-700 border border-rose-200 uppercase shrink-0">
+                        <span className="rounded border border-rose-400/30 bg-rose-400/10 px-2 py-0.5 text-[10px] font-extrabold uppercase text-rose-200 shrink-0">
                           P0 Urgent
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-4 text-xs shrink-0">
-                      <span className="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-[11px]">
+                      <span className="editorial-mono rounded-full border border-white/10 bg-zinc-900 px-2.5 py-1 text-[10px] font-semibold text-zinc-500">
                         {ticket.category}
                       </span>
 
                       <div className="text-right">
-                        <span className="font-bold text-slate-800 block leading-tight">
+                        <span className="block leading-tight font-bold text-white">
                           {ticket.author?.display_name || "Unknown Author"}
                         </span>
                         <span className="text-[10px] font-bold block">
                           {ticket.author?.user_type === "intern" ? (
-                            <span className="text-amber-700">Intern</span>
+                            <span className="text-[#e0a58b]">Intern</span>
                           ) : (
-                            <span className="text-slate-500">Staff</span>
+                            <span className="text-zinc-500">Staff</span>
                           )}
                         </span>
                       </div>
 
-                      <span className="text-[11px] font-semibold text-slate-400 w-16 text-right">
+                      <span className="editorial-mono w-16 text-right text-[10px] font-semibold text-zinc-600">
                         {new Date(ticket.created_at).toLocaleDateString()}
                       </span>
                     </div>

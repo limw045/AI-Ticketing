@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { User, Mail, KeyRound, Building2, UserCheck, AlertCircle, CheckCircle2, Cpu } from "lucide-react";
-import { DotGridBg } from "@/components/react-bits/DotGridBg";
+import { createClient } from "@/lib/supabase/client";
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, KeyRound, Mail, User, UserCheck, Infinity } from "lucide-react";
+import { EditorialGrid } from "@/components/EditorialGrid";
 
 export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
@@ -20,35 +20,25 @@ export default function RegisterPage() {
   const isIntern = normalizedEmail.endsWith("@outlook.com");
   const isValidDomain = isStaff || isIntern;
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError("");
-
     if (!isValidDomain) {
-      setError("Registration rejected. Allowed domains: @gtmsw.com.my (Staff) and @outlook.com (Interns).");
+      setError("Only @gtmsw.com.my and @outlook.com accounts can join this desk.");
       return;
     }
-
     if (isIntern && !supervisor.trim()) {
-      setError("Interns must specify a Supervisor Name.");
+      setError("Interns must specify a supervisor.");
       return;
     }
 
     setLoading(true);
-    const supabase = createClient();
     const userType = isIntern ? "intern" : "full_time";
-
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const supabase = createClient();
+    const { data, error: authError } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
-      options: {
-        data: {
-          display_name: displayName,
-          user_type: userType,
-          department,
-          supervisor_name: isIntern ? supervisor : null,
-        },
-      },
+      options: { data: { display_name: displayName, user_type: userType, department, supervisor_name: isIntern ? supervisor : null } },
     });
 
     if (authError) {
@@ -56,171 +46,44 @@ export default function RegisterPage() {
       setLoading(false);
       return;
     }
-
-    if (authData.user) {
-      await supabase.from("profiles").upsert({
-        id: authData.user.id,
-        email: normalizedEmail,
-        display_name: displayName,
-        user_type: userType,
-        department,
-        supervisor_name: isIntern ? supervisor : null,
-        role: "employee",
-      });
+    if (data.user) {
+      await supabase.from("profiles").upsert({ id: data.user.id, email: normalizedEmail, display_name: displayName, user_type: userType, department, supervisor_name: isIntern ? supervisor : null, role: "employee" });
     }
-
     window.location.href = "/tickets";
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fcfcfc] text-zinc-950 p-4 relative overflow-hidden">
-      <DotGridBg />
+    <main className="editorial-shell flex min-h-screen items-center justify-center px-6 py-10">
+      <EditorialGrid />
+      <div className="editorial-content grid w-full max-w-6xl grid-cols-1 gap-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+        <section className="hidden lg:block">
+          <div className="editorial-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500">STEP 02 / ACCESS</div>
+          <h1 className="mt-6 max-w-md text-6xl font-light leading-[0.94] tracking-[-0.06em] text-white">Make the next request easier.</h1>
+          <p className="mt-8 max-w-sm text-sm leading-7 text-zinc-500">Create an account once. Every future request carries your department context and routes cleanly to the AI team.</p>
+        </section>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 space-y-6 relative z-10">
-        <div className="flex justify-between items-center border-b border-black/5 pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-zinc-900 flex items-center justify-center text-white text-xs font-bold">
-              <Cpu className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-bold text-zinc-900 tracking-tight">GTMSW AI Dept</span>
+        <section className="mx-auto w-full max-w-xl border border-white/10 bg-[#111113] p-8 shadow-2xl">
+          <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-white"><Infinity className="h-5 w-5" /> Get Blue</div>
+            <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">02 / Register</span>
           </div>
-          <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest bg-zinc-50 border border-black/5 px-2 py-0.5 rounded">
-            Register
-          </span>
-        </div>
+          <h2 className="text-3xl font-light tracking-[-0.04em] text-white">Create your access.</h2>
+          <p className="mt-2 text-xs leading-5 text-zinc-500">Use a GTMSW staff address or your Intern Outlook account.</p>
 
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-zinc-950">Create Account</h1>
-          <p className="text-xs text-zinc-500 mt-1">Full-time Staff and Intern registration for AI Support</p>
-        </div>
+          {error && <div className="mt-6 flex items-center gap-2 border border-rose-400/30 bg-rose-400/10 p-3 text-xs text-rose-200" role="alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
 
-        {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 font-medium">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1.5">Full Name</label>
-            <div className="relative">
-              <User className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Zhang San"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50/50 border border-black/10 text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition placeholder:text-zinc-400 font-medium"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1.5">Company Email</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-400" />
-              <input
-                type="email"
-                placeholder="staff@gtmsw.com.my or intern@outlook.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50/50 border border-black/10 text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition placeholder:text-zinc-400 font-medium"
-              />
-            </div>
-            {normalizedEmail && (
-              <div className="mt-1.5 text-xs flex items-center gap-1.5 font-medium">
-                {isStaff && (
-                  <span className="text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Staff Recognized (@gtmsw.com.my)
-                  </span>
-                )}
-                {isIntern && (
-                  <span className="text-amber-800 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Intern Recognized (@outlook.com)
-                  </span>
-                )}
-                {!isValidDomain && (
-                  <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                    Domain unverified. Must use @gtmsw.com.my or @outlook.com
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {isIntern && (
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
-              <label className="text-[11px] font-semibold text-amber-800 block uppercase tracking-wider">
-                Supervisor Name (Required for Interns)
-              </label>
-              <div className="relative">
-                <UserCheck className="w-4 h-4 absolute left-3.5 top-2.5 text-amber-600" />
-                <input
-                  type="text"
-                  placeholder="e.g. Supervisor Li"
-                  value={supervisor}
-                  onChange={(e) => setSupervisor(e.target.value)}
-                  required={isIntern}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg bg-white border border-amber-300 text-xs text-amber-900 focus:outline-none focus:border-amber-500 font-medium"
-                />
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1.5">Department</label>
-            <div className="relative">
-              <Building2 className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-400" />
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50/50 border border-black/10 text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition text-zinc-800 font-medium"
-              >
-                <option value="AI Department">AI Department User</option>
-                <option value="IT">IT Support & System</option>
-                <option value="HR">Human Resources</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Finance">Finance & Accounting</option>
-                <option value="Product">Product & Engineering</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1.5">Password</label>
-            <div className="relative">
-              <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-400" />
-              <input
-                type="password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50/50 border border-black/10 text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition placeholder:text-zinc-400 font-medium"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !isValidDomain}
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-semibold text-xs transition shadow-sm"
-          >
-            {loading ? "Creating Account..." : "Complete Registration"}
-          </button>
-        </form>
-
-        <div className="text-center text-xs text-zinc-400 pt-2 border-t border-black/5">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline font-semibold">
-            Sign In here
-          </Link>
-        </div>
+          <form onSubmit={handleRegister} className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <label className="block md:col-span-2"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Full name</span><span className="relative block"><User className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Zhang San" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span></label>
+            <label className="block md:col-span-2"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Email address</span><span className="relative block"><Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@gtmsw.com.my" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span></label>
+            {normalizedEmail && <div className="md:col-span-2 text-[11px] editorial-mono">{isStaff && <span className="text-[#a4b889]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />STAFF DOMAIN RECOGNIZED</span>}{isIntern && <span className="text-[#e0a58b]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />INTERN DOMAIN RECOGNIZED</span>}{!isValidDomain && <span className="text-rose-300">DOMAIN NOT ALLOWED</span>}</div>}
+            {isIntern && <label className="block md:col-span-2"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-[#e0a58b]">Supervisor / mentor</span><span className="relative block"><UserCheck className="absolute left-3 top-3 h-4 w-4 text-[#e0a58b]" /><input required value={supervisor} onChange={(event) => setSupervisor(event.target.value)} placeholder="Supervisor name" className="w-full border border-[#d97757]/30 bg-[#1a1414] px-10 py-3 text-xs text-white outline-none focus:border-[#d97757]" /></span></label>}
+            <label className="block"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Department</span><span className="relative block"><Building2 className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><select value={department} onChange={(event) => setDepartment(event.target.value)} className="w-full appearance-none border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]"><option>AI Department</option><option>IT</option><option>HR</option><option>Marketing</option><option>Finance</option><option>Product</option></select></span></label>
+            <label className="block"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Password</span><span className="relative block"><KeyRound className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required minLength={6} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span></label>
+            <button disabled={loading || !isValidDomain} className="md:col-span-2 flex items-center justify-center gap-2 rounded-full bg-[#6a9bcc] px-5 py-3 text-xs font-bold text-zinc-950 transition hover:bg-[#84add1] disabled:opacity-50">{loading ? "Creating access..." : "Create AI desk account"}<ArrowRight className="h-4 w-4" /></button>
+          </form>
+          <p className="mt-8 border-t border-white/10 pt-5 text-center text-xs text-zinc-600">Already have access? <Link href="/login" className="text-[#8db3d6] hover:text-white">Sign in</Link></p>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

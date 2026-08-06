@@ -1,6 +1,6 @@
 # Task Plan: Internal Staff Ticketing System
 
-**Goal:** Build a production-ready, high-efficiency internal staff ticketing platform using Next.js 14+, Supabase, Tailwind CSS with macOS Minimalist Glassmorphism aesthetic, React Bits UI components, AI vector search, and admin analytics.
+**Goal:** Build a production-ready internal AI Department support platform using Next.js, Supabase, Tailwind CSS, React Bits UI components, AI vector search, admin analytics, and a Get Blue editorial dark visual system.
 
 **Architecture:** Next.js 14 App Router on Vercel, Supabase (PostgreSQL + Auth + Storage + Realtime + pgvector), Teams Webhooks, and Vercel AI SDK.
 
@@ -21,7 +21,7 @@
 
 ## Key Decisions & Constraints
 - Domain Restrictions: `@gtmsw.com.my` (Full-time) and `@outlook.com` (Intern).
-- Design Tokens: Translucent glassmorphism (`backdrop-blur-md`, `bg-white/70`, `dark:bg-zinc-900/70`, `border-white/20`).
+- Design Tokens: Matte black editorial surfaces (`#0a0a0c`, `#141416`), hairline grid dividers (`border-white/10`), slate-blue CTA (`#6a9bcc`), white editorial type, and monospace step metadata.
 - RLS Policy: Internal notes restricted to `support_agent` and `admin`.
 
 ## Errors Encountered

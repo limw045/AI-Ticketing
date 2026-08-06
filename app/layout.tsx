@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "GTMSW AI Department Support",
-  description: "Porcelain Clean Light Apple/Stripe-level UI",
+  title: "GTMSW AI Department Support | Get Blue Style",
+  description: "Editorial Dark AI Support & Request Platform",
 };
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="light">
-      <body className="bg-[#fcfcfc] text-zinc-950 antialiased selection:bg-blue-600 selection:text-white">
+    <html lang="en" className="dark">
+      <body className="bg-[#0a0a0c] text-white antialiased selection:bg-blue-500 selection:text-white">
         {children}
       </body>
     </html>

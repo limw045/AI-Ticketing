@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { exportTicketPDF } from "@/lib/pdf-export";
+import { EditorialGrid } from "@/components/EditorialGrid";
 import {
   Clock, CheckCircle2, User, ShieldAlert, Lock, Send, Plus, CheckSquare, Square,
   Download, RotateCcw, AlertTriangle, Monitor, Sparkles, UserCheck, Tag
@@ -135,15 +136,15 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center">
-        <div className="text-slate-400 text-sm font-semibold animate-pulse">Loading Ticket #{ticketId}...</div>
+      <div className="editorial-shell flex min-h-screen items-center justify-center">
+        <div className="editorial-mono text-xs uppercase tracking-widest text-zinc-600 animate-pulse">Loading request #{ticketId}...</div>
       </div>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 p-8 text-center">
+      <div className="editorial-shell p-8 text-center text-zinc-400">
         Ticket not found or access restricted.
       </div>
     );
@@ -154,55 +155,56 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
   const subtaskProgressPct = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
+    <div className="editorial-shell pb-20">
+      <EditorialGrid />
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 pt-8">
+      <main className="editorial-content max-w-7xl mx-auto px-6 pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content Column (75%) */}
           <div className="lg:col-span-3 space-y-6">
             <GlassSurface showWindowDots title={`Ticket #${ticket.ticket_number}`}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="editorial-mono mb-3 flex items-center gap-3 text-[10px] uppercase tracking-widest">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                         ticket.status === "open"
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                          ? "bg-[#788c5d]/15 text-[#a4b889] border border-[#788c5d]/35"
                           : ticket.status === "in_progress"
-                          ? "bg-indigo-100 text-indigo-800 border border-indigo-300"
-                          : "bg-slate-100 text-slate-600 border border-slate-300"
+                          ? "bg-[#6a9bcc]/15 text-[#8db3d6] border border-[#6a9bcc]/35"
+                          : "bg-zinc-800 text-zinc-400 border border-white/10"
                       }`}
                     >
                       {ticket.status}
                     </span>
-                    <span className="text-xs font-semibold text-slate-500">{ticket.category}</span>
+                    <span className="text-zinc-500">{ticket.category}</span>
                     {ticket.priority === "urgent" && (
-                      <span className="px-2.5 py-0.5 rounded text-[11px] font-extrabold bg-rose-100 text-rose-700 border border-rose-300 uppercase">
+                      <span className="rounded border border-rose-400/30 bg-rose-400/10 px-2.5 py-0.5 text-[11px] font-extrabold uppercase text-rose-200">
                         ⚡ P0 URGENT
                       </span>
                     )}
                   </div>
 
-                  <h1 className="text-2xl font-extrabold text-slate-900">{ticket.title}</h1>
+                  <h1 className="text-3xl font-light tracking-[-0.05em] text-white">{ticket.title}</h1>
                 </div>
 
                 <button
                   onClick={() => exportTicketPDF(ticket)}
-                  className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1.5 border border-slate-200 transition"
+                  className="editorial-mono flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900 px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition hover:border-white/25 hover:text-white"
                 >
                   <Download className="w-3.5 h-3.5" /> Export PDF
                 </button>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-500">
-                <User className="w-4 h-4 text-blue-600" />
+              <div className="mt-5 flex items-center gap-3 border-t border-white/10 pt-4 text-xs text-zinc-500">
+                <User className="w-4 h-4 text-[#8db3d6]" />
                 <span>
-                  Opened by <strong className="text-slate-800">{ticket.author?.display_name}</strong> (
+                  Opened by <strong className="text-white">{ticket.author?.display_name}</strong> (
                   {ticket.author?.user_type === "intern" ? (
-                    <span className="text-amber-800 font-bold bg-amber-100 px-1.5 py-0.5 rounded">Intern</span>
+                    <span className="font-bold text-[#e0a58b]">Intern</span>
                   ) : (
-                    <span className="text-slate-700">Staff - {ticket.author?.department}</span>
+                    <span className="text-zinc-300">Staff - {ticket.author?.department}</span>
                   )}
                   ) on {new Date(ticket.created_at).toLocaleString()}
                 </span>
@@ -210,25 +212,25 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
             </GlassSurface>
 
             {/* Description Body */}
-            <div className="glass-panel p-6 rounded-3xl space-y-4">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Issue Description</h3>
-              <div className="prose max-w-none text-sm leading-relaxed font-mono whitespace-pre-wrap text-slate-800 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80">
+            <div className="glass-panel rounded-2xl p-6 space-y-4">
+              <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">01 / Issue Description</h3>
+              <div className="max-w-none rounded-2xl border border-white/10 bg-black/20 p-4 font-mono text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
                 {ticket.description}
               </div>
             </div>
 
             {/* Sub-task Checklist */}
-            <div className="glass-panel p-6 rounded-3xl space-y-4">
+            <div className="glass-panel rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Sub-task Checklist ({completedSubtasks}/{subtasks.length})
+                <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                  02 / Sub-task Checklist ({completedSubtasks}/{subtasks.length})
                 </h3>
-                <span className="text-xs font-bold text-blue-600">{subtaskProgressPct}% Complete</span>
+                <span className="editorial-mono text-[10px] font-bold text-[#8db3d6]">{subtaskProgressPct}% Complete</span>
               </div>
 
-              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+              <div className="h-2.5 w-full overflow-hidden rounded-full border border-white/10 bg-zinc-900">
                 <div
-                  className="bg-blue-600 h-full transition-all duration-300 rounded-full"
+                  className="h-full rounded-full bg-[#6a9bcc] transition-all duration-300"
                   style={{ width: `${subtaskProgressPct}%` }}
                 />
               </div>
@@ -238,14 +240,14 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   <div
                     key={st.id}
                     onClick={() => handleToggleSubtask(st.id)}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80 cursor-pointer hover:border-blue-300 transition"
+                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3 transition hover:border-white/25"
                   >
                     {st.completed ? (
-                      <CheckSquare className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                      <CheckSquare className="h-4 w-4 shrink-0 text-[#8db3d6]" />
                     ) : (
-                      <Square className="w-4.5 h-4.5 text-slate-400 shrink-0" />
+                      <Square className="h-4 w-4 shrink-0 text-zinc-700" />
                     )}
-                    <span className={`text-xs font-medium ${st.completed ? "line-through text-slate-400" : "text-slate-800"}`}>
+                    <span className={`text-xs font-medium ${st.completed ? "line-through text-zinc-600" : "text-zinc-300"}`}>
                       {st.title}
                     </span>
                   </div>
@@ -258,9 +260,9 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   placeholder="Add new subtask step..."
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium focus:outline-none focus:border-blue-500 focus:bg-white"
+                  className="flex-1 border border-white/10 bg-[#0a0a0c] px-3.5 py-2.5 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
                 />
-                <button type="submit" className="px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-slate-800">
+                <button type="submit" className="rounded-full border border-white/10 bg-zinc-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-zinc-700">
                   <Plus className="w-4 h-4" />
                 </button>
               </form>
@@ -268,8 +270,8 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
             {/* Timeline Comments */}
             <div className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Timeline & Discussion ({comments.length})
+              <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                03 / Timeline & Discussion ({comments.length})
               </h3>
 
               {comments.map((comment) => (
@@ -277,22 +279,22 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   key={comment.id}
                   className={`p-5 rounded-3xl border ${
                     comment.is_internal_note
-                      ? "bg-amber-50/90 border-amber-200 text-amber-900"
-                      : "glass-panel text-slate-800"
+                      ? "bg-[#1a1414] border-[#d97757]/30 text-[#e0a58b]"
+                      : "editorial-bubble text-zinc-200"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-slate-900">
+                      <span className="font-bold text-xs text-white">
                         {comment.author?.display_name || "System"}
                       </span>
                       {comment.is_internal_note && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-amber-700" /> Internal Note (Agents Only)
+                        <span className="editorial-mono flex items-center gap-1 rounded border border-[#d97757]/30 bg-[#d97757]/10 px-2 py-0.5 text-[10px] font-bold text-[#e0a58b]">
+                          <Lock className="h-3 w-3" /> Internal Note
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400">
+                    <span className="editorial-mono text-[10px] font-semibold text-zinc-600">
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
@@ -301,26 +303,26 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
               ))}
 
               {/* Reply Box */}
-              <form onSubmit={handlePostComment} className="glass-panel p-5 rounded-3xl space-y-4">
+              <form onSubmit={handlePostComment} className="glass-panel rounded-2xl p-5 space-y-4">
                 <textarea
                   rows={4}
                   placeholder="Leave a comment or reply..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   required
-                  className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-mono focus:outline-none focus:border-blue-500 focus:bg-white text-slate-900"
+                  className="w-full border border-white/10 bg-[#0a0a0c] p-4 text-sm font-mono text-white outline-none focus:border-[#6a9bcc]"
                 />
 
                 <div className="flex items-center justify-between">
                   {isAgent ? (
-                    <label className="flex items-center gap-2 text-xs font-bold text-amber-800 cursor-pointer">
+                    <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-[#e0a58b]">
                       <input
                         type="checkbox"
                         checked={isInternalNote}
                         onChange={(e) => setIsInternalNote(e.target.checked)}
-                        className="rounded border-amber-300 text-amber-600 focus:ring-0"
+                        className="rounded border-white/20 bg-zinc-900 text-[#e0a58b] focus:ring-0"
                       />
-                      <span className="flex items-center gap-1">
+                    <span className="editorial-mono flex items-center gap-1 text-[10px] uppercase tracking-wider">
                         <Lock className="w-3.5 h-3.5" /> Post as Internal Note (Hidden from employee)
                       </span>
                     </label>
@@ -328,7 +330,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-full bg-[#6a9bcc] px-5 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-500/20 hover:bg-[#84add1]"
                   >
                     <Send className="w-3.5 h-3.5" /> Submit Reply
                   </button>
@@ -341,13 +343,13 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
           <div className="space-y-6">
             <GlassSurface className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                  Status
+                <label className="editorial-mono mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                  04 / Status
                 </label>
                 <select
                   value={ticket.status}
                   onChange={(e) => handleUpdateStatus(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800"
+                  className="w-full border border-white/10 bg-[#0a0a0c] p-3 text-xs font-bold text-white outline-none focus:border-[#6a9bcc]"
                 >
                   <option value="open">🟢 Open</option>
                   <option value="in_progress">🟣 In Progress</option>
@@ -357,13 +359,13 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                  Assignee
+                <label className="editorial-mono mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                  05 / Assignee
                 </label>
                 <select
                   value={ticket.assignee_id || ""}
                   onChange={(e) => handleAssigneeChange(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
+                  className="w-full border border-white/10 bg-[#0a0a0c] p-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
                 >
                   <option value="">Unassigned</option>
                   {agents.map((agent) => (
@@ -376,17 +378,17 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
             </GlassSurface>
 
             <GlassSurface className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Reporter Info</h3>
+              <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">06 / Reporter Info</h3>
               <div>
-                <span className="font-bold text-sm text-slate-900 block">{ticket.author?.display_name}</span>
-                <span className="text-xs font-medium text-slate-500 block mt-0.5">{ticket.author?.email}</span>
+                <span className="block text-sm font-bold text-white">{ticket.author?.display_name}</span>
+                <span className="mt-0.5 block text-xs font-medium text-zinc-500">{ticket.author?.email}</span>
                 <div className="mt-2 flex items-center gap-2">
                   {ticket.author?.user_type === "intern" ? (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <span className="rounded border border-[#d97757]/30 bg-[#d97757]/10 px-2 py-0.5 text-[10px] font-bold text-[#e0a58b]">
                       Intern (Supervisor: {ticket.author?.supervisor_name || "N/A"})
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                    <span className="rounded border border-white/10 bg-zinc-900 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
                       Staff ({ticket.author?.department})
                     </span>
                   )}
@@ -395,16 +397,16 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
             </GlassSurface>
 
             <GlassSurface className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Monitor className="w-3.5 h-3.5 text-blue-600" /> Device Context
+              <h3 className="editorial-mono flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                <Monitor className="w-3.5 h-3.5 text-[#8db3d6]" /> System Context
               </h3>
               {ticket.device_context ? (
-                <div className="space-y-1.5 text-xs font-mono text-slate-600">
-                  <p><strong className="text-slate-800">Screen:</strong> {ticket.device_context.screenResolution}</p>
-                  <p className="truncate"><strong className="text-slate-800">Browser:</strong> {ticket.device_context.userAgent}</p>
+                <div className="space-y-1.5 text-xs font-mono text-zinc-500">
+                  <p><strong className="text-zinc-200">Screen:</strong> {ticket.device_context.screenResolution}</p>
+                  <p className="truncate"><strong className="text-zinc-200">Browser:</strong> {ticket.device_context.userAgent}</p>
                 </div>
               ) : (
-                <p className="text-xs text-slate-400">No device context attached.</p>
+                <p className="text-xs text-zinc-600">No device context attached.</p>
               )}
             </GlassSurface>
           </div>
