@@ -6,7 +6,6 @@ import { Navbar } from "@/components/Navbar";
 import { IncidentBanner } from "@/components/IncidentBanner";
 import { scanSensitiveData } from "@/lib/security-scanner";
 import { compressAndUploadImage } from "@/lib/image-upload";
-import { ShinyText } from "@/components/react-bits/ShinyText";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { AlertOctagon, FileText, Image as ImageIcon, Send, Sparkles, Monitor, ShieldCheck, Check } from "lucide-react";
 
@@ -51,7 +50,6 @@ export default function NewTicketPage() {
   const [loading, setLoading] = useState(false);
   const [savedDraftAlert, setSavedDraftAlert] = useState(false);
 
-  // Restore draft on mount
   useEffect(() => {
     const saved = localStorage.getItem("ticketing_draft");
     if (saved) {
@@ -69,7 +67,6 @@ export default function NewTicketPage() {
     }
   }, []);
 
-  // Auto-save draft
   useEffect(() => {
     if (title || description) {
       localStorage.setItem(
@@ -86,7 +83,6 @@ export default function NewTicketPage() {
     }
   };
 
-  // Clipboard paste handler for screenshots
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -112,7 +108,6 @@ export default function NewTicketPage() {
     e.preventDefault();
     setSecurityWarning(null);
 
-    // Scan for sensitive data
     const scan = scanSensitiveData(title + " " + description);
     if (scan.hasSensitive) {
       setSecurityWarning(
@@ -138,18 +133,14 @@ export default function NewTicketPage() {
       submittedAt: new Date().toISOString(),
     };
 
-    const { data: insertedTicket, error: insertError } = await supabase
-      .from("tickets")
-      .insert({
-        title,
-        category,
-        priority,
-        description,
-        author_id: user.id,
-        device_context: deviceContext,
-      })
-      .select()
-      .single();
+    const { error: insertError } = await supabase.from("tickets").insert({
+      title,
+      category,
+      priority,
+      description,
+      author_id: user.id,
+      device_context: deviceContext,
+    });
 
     if (insertError) {
       alert("Failed to submit ticket: " + insertError.message);
@@ -161,22 +152,22 @@ export default function NewTicketPage() {
   };
 
   return (
-    <div className="min-h-screen bg-mac-bg text-zinc-100 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-6 pt-8">
         <IncidentBanner />
 
         {savedDraftAlert && (
-          <div className="mb-4 p-3 rounded-xl bg-blue-950/60 border border-blue-700/60 text-blue-300 text-xs flex items-center gap-2">
-            <Check className="w-4 h-4 text-blue-400" />
+          <div className="mb-4 p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center gap-2">
+            <Check className="w-4 h-4 text-blue-600" />
             <span>Restored auto-saved draft from your previous session.</span>
           </div>
         )}
 
         {securityWarning && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-950/80 border border-amber-500 text-amber-200 text-sm flex items-start gap-3 shadow-xl">
-            <AlertOctagon className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-sm flex items-start gap-3 shadow-md">
+            <AlertOctagon className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
             <div>
               <span className="font-bold block">Sensitive Data Pre-Submit Alert</span>
               <span className="text-xs opacity-90">{securityWarning}</span>
@@ -187,7 +178,7 @@ export default function NewTicketPage() {
         <GlassSurface showWindowDots title="Create Ticket — GTMSW Portal">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
                 Ticket Title
               </label>
               <input
@@ -196,19 +187,19 @@ export default function NewTicketPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl bg-zinc-950/90 border border-zinc-800 text-sm focus:outline-none focus:border-blue-500 transition placeholder:text-zinc-600 font-medium"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition text-slate-900 font-medium"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
                   Category
                 </label>
                 <select
                   value={category}
                   onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-950/90 border border-zinc-800 text-sm focus:outline-none focus:border-blue-500 transition text-zinc-200"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition text-slate-800 font-medium"
                 >
                   <option value="System Bug">System Bug</option>
                   <option value="Hardware">Hardware & Display</option>
@@ -218,13 +209,13 @@ export default function NewTicketPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
                   Priority
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-950/90 border border-zinc-800 text-sm focus:outline-none focus:border-blue-500 transition text-zinc-200"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition text-slate-800 font-medium"
                 >
                   <option value="low">Low (Standard Request)</option>
                   <option value="medium">Medium (Normal Issue)</option>
@@ -236,11 +227,11 @@ export default function NewTicketPage() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
                   Detailed Description (Markdown)
                 </label>
-                <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-                  <ImageIcon className="w-3.5 h-3.5" /> Tip: Press Ctrl + V anywhere to paste screenshot
+                <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+                  <ImageIcon className="w-3.5 h-3.5 text-blue-500" /> Tip: Press Ctrl + V anywhere to paste screenshot
                 </span>
               </div>
               <textarea
@@ -249,23 +240,22 @@ export default function NewTicketPage() {
                 onPaste={handlePaste}
                 onChange={(e) => setDescription(e.target.value)}
                 required
-                className="w-full p-4 rounded-xl bg-zinc-950/90 border border-zinc-800 text-sm font-mono focus:outline-none focus:border-blue-500 transition text-zinc-200 placeholder:text-zinc-700 leading-relaxed"
+                className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition text-slate-900 leading-relaxed"
               />
               {uploadingImage && (
-                <div className="mt-2 text-xs text-blue-400 flex items-center gap-2">
+                <div className="mt-2 text-xs text-blue-600 font-bold flex items-center gap-2">
                   <Sparkles className="w-4 h-4 animate-spin" />
                   <span>Compressing & Uploading Screenshot... {uploadProgress}%</span>
                 </div>
               )}
             </div>
 
-            {/* Auto Device Metadata Info */}
-            <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400">
+            <div className="p-3.5 rounded-2xl bg-slate-100/80 border border-slate-200 flex items-center justify-between text-xs text-slate-600">
               <div className="flex items-center gap-2">
-                <Monitor className="w-4 h-4 text-blue-400" />
-                <span>Auto-captured Device Environment context will be attached for IT diagnostics.</span>
+                <Monitor className="w-4 h-4 text-blue-600" />
+                <span className="font-medium">Auto-captured Device Environment context will be attached for IT diagnostics.</span>
               </div>
-              <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 <ShieldCheck className="w-3.5 h-3.5" /> Context Safe
               </span>
             </div>
@@ -273,16 +263,10 @@ export default function NewTicketPage() {
             <button
               type="submit"
               disabled={loading || uploadingImage}
-              className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-sm transition shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-bold text-sm transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
             >
-              {priority === "urgent" ? (
-                <ShinyText text="Submit Urgent (P0) Ticket →" className="font-bold text-white" />
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Submit Ticket</span>
-                </>
-              )}
+              <Send className="w-4 h-4" />
+              <span>Submit Ticket</span>
             </button>
           </form>
         </GlassSurface>

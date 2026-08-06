@@ -4,7 +4,6 @@ import { use, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
-import { ShinyText } from "@/components/react-bits/ShinyText";
 import { exportTicketPDF } from "@/lib/pdf-export";
 import {
   Clock, CheckCircle2, User, ShieldAlert, Lock, Send, Plus, CheckSquare, Square,
@@ -39,7 +38,6 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
       setCurrentUserProfile(profile);
     }
 
-    // Fetch Ticket
     const { data: ticketData } = await supabase
       .from("tickets")
       .select("*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)")
@@ -48,7 +46,6 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
     if (ticketData) setTicket(ticketData);
 
-    // Fetch Comments
     const { data: commentData } = await supabase
       .from("comments")
       .select("*, author:profiles(*)")
@@ -57,7 +54,6 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
     if (commentData) setComments(commentData);
 
-    // Fetch Agents for Assignee dropdown
     const { data: agentData } = await supabase
       .from("profiles")
       .select("*")
@@ -139,15 +135,15 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-mac-bg text-zinc-100 flex items-center justify-center">
-        <div className="text-zinc-500 text-sm font-mono animate-pulse">Loading Ticket #{ticketId}...</div>
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center">
+        <div className="text-slate-400 text-sm font-semibold animate-pulse">Loading Ticket #{ticketId}...</div>
       </div>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="min-h-screen bg-mac-bg text-zinc-100 p-8 text-center">
+      <div className="min-h-screen bg-slate-50 text-slate-800 p-8 text-center">
         Ticket not found or access restricted.
       </div>
     );
@@ -158,14 +154,13 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
   const subtaskProgressPct = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-mac-bg text-zinc-100 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content Column (75%) */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Header Glass Surface */}
             <GlassSurface showWindowDots title={`Ticket #${ticket.ticket_number}`}>
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -173,40 +168,41 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                         ticket.status === "open"
-                          ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                           : ticket.status === "in_progress"
-                          ? "bg-indigo-950 text-indigo-400 border border-indigo-800"
-                          : "bg-zinc-800 text-zinc-400"
+                          ? "bg-indigo-100 text-indigo-800 border border-indigo-300"
+                          : "bg-slate-100 text-slate-600 border border-slate-300"
                       }`}
                     >
                       {ticket.status}
                     </span>
-                    <span className="text-xs font-mono text-zinc-400">{ticket.category}</span>
+                    <span className="text-xs font-semibold text-slate-500">{ticket.category}</span>
                     {ticket.priority === "urgent" && (
-                      <ShinyText text="⚡ P0 URGENT" className="text-amber-400 text-xs font-bold" />
+                      <span className="px-2.5 py-0.5 rounded text-[11px] font-extrabold bg-rose-100 text-rose-700 border border-rose-300 uppercase">
+                        ⚡ P0 URGENT
+                      </span>
                     )}
                   </div>
 
-                  <h1 className="text-2xl font-bold text-zinc-100">{ticket.title}</h1>
+                  <h1 className="text-2xl font-extrabold text-slate-900">{ticket.title}</h1>
                 </div>
 
                 <button
                   onClick={() => exportTicketPDF(ticket)}
-                  className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300 flex items-center gap-1.5 border border-zinc-700 transition"
+                  className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1.5 border border-slate-200 transition"
                 >
                   <Download className="w-3.5 h-3.5" /> Export PDF
                 </button>
               </div>
 
-              {/* Author Banner */}
-              <div className="mt-4 pt-4 border-t border-zinc-800/80 flex items-center gap-3 text-xs text-zinc-400">
-                <User className="w-4 h-4 text-blue-400" />
+              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-500">
+                <User className="w-4 h-4 text-blue-600" />
                 <span>
-                  Opened by <strong className="text-zinc-200">{ticket.author?.display_name}</strong> (
+                  Opened by <strong className="text-slate-800">{ticket.author?.display_name}</strong> (
                   {ticket.author?.user_type === "intern" ? (
-                    <span className="text-amber-400 font-bold">Intern</span>
+                    <span className="text-amber-800 font-bold bg-amber-100 px-1.5 py-0.5 rounded">Intern</span>
                   ) : (
-                    <span className="text-zinc-300">Staff - {ticket.author?.department}</span>
+                    <span className="text-slate-700">Staff - {ticket.author?.department}</span>
                   )}
                   ) on {new Date(ticket.created_at).toLocaleString()}
                 </span>
@@ -214,26 +210,25 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
             </GlassSurface>
 
             {/* Description Body */}
-            <div className="glass-panel p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Issue Description</h3>
-              <div className="prose prose-invert max-w-none text-sm leading-relaxed font-mono whitespace-pre-wrap text-zinc-200">
+            <div className="glass-panel p-6 rounded-3xl space-y-4">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Issue Description</h3>
+              <div className="prose max-w-none text-sm leading-relaxed font-mono whitespace-pre-wrap text-slate-800 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80">
                 {ticket.description}
               </div>
             </div>
 
             {/* Sub-task Checklist */}
-            <div className="glass-panel p-6 rounded-2xl space-y-4">
+            <div className="glass-panel p-6 rounded-3xl space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Sub-task Checklist ({completedSubtasks}/{subtasks.length})
                 </h3>
-                <span className="text-xs font-mono text-blue-400">{subtaskProgressPct}% Complete</span>
+                <span className="text-xs font-bold text-blue-600">{subtaskProgressPct}% Complete</span>
               </div>
 
-              {/* Progress bar */}
-              <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden border border-zinc-800">
+              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
                 <div
-                  className="bg-blue-600 h-full transition-all duration-300"
+                  className="bg-blue-600 h-full transition-all duration-300 rounded-full"
                   style={{ width: `${subtaskProgressPct}%` }}
                 />
               </div>
@@ -243,30 +238,29 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   <div
                     key={st.id}
                     onClick={() => handleToggleSubtask(st.id)}
-                    className="flex items-center gap-3 p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 cursor-pointer hover:border-zinc-700 transition"
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80 cursor-pointer hover:border-blue-300 transition"
                   >
                     {st.completed ? (
-                      <CheckSquare className="w-4 h-4 text-blue-400 shrink-0" />
+                      <CheckSquare className="w-4.5 h-4.5 text-blue-600 shrink-0" />
                     ) : (
-                      <Square className="w-4 h-4 text-zinc-500 shrink-0" />
+                      <Square className="w-4.5 h-4.5 text-slate-400 shrink-0" />
                     )}
-                    <span className={`text-xs ${st.completed ? "line-through text-zinc-500" : "text-zinc-200"}`}>
+                    <span className={`text-xs font-medium ${st.completed ? "line-through text-slate-400" : "text-slate-800"}`}>
                       {st.title}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* Add subtask input */}
               <form onSubmit={handleAddSubtask} className="flex gap-2 pt-2">
                 <input
                   type="text"
                   placeholder="Add new subtask step..."
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium focus:outline-none focus:border-blue-500 focus:bg-white"
                 />
-                <button type="submit" className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200">
+                <button type="submit" className="px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-slate-800">
                   <Plus className="w-4 h-4" />
                 </button>
               </form>
@@ -274,57 +268,57 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
             {/* Timeline Comments */}
             <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Timeline & Discussion ({comments.length})
               </h3>
 
               {comments.map((comment) => (
                 <div
                   key={comment.id}
-                  className={`p-5 rounded-2xl border ${
+                  className={`p-5 rounded-3xl border ${
                     comment.is_internal_note
-                      ? "bg-amber-950/40 border-amber-600/60 text-amber-100"
-                      : "glass-panel text-zinc-200"
+                      ? "bg-amber-50/90 border-amber-200 text-amber-900"
+                      : "glass-panel text-slate-800"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-xs text-zinc-200">
+                      <span className="font-bold text-xs text-slate-900">
                         {comment.author?.display_name || "System"}
                       </span>
                       {comment.is_internal_note && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/80 text-amber-300 border border-amber-600/60 flex items-center gap-1">
-                          <Lock className="w-3 h-3" /> Internal Note (Agents Only)
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-amber-700" /> Internal Note (Agents Only)
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono text-zinc-500">
+                    <span className="text-[10px] font-semibold text-slate-400">
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-sm font-mono whitespace-pre-wrap">{comment.content}</p>
+                  <p className="text-sm font-mono whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                 </div>
               ))}
 
               {/* Reply Box */}
-              <form onSubmit={handlePostComment} className="glass-panel p-5 rounded-2xl space-y-4">
+              <form onSubmit={handlePostComment} className="glass-panel p-5 rounded-3xl space-y-4">
                 <textarea
                   rows={4}
                   placeholder="Leave a comment or reply..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   required
-                  className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-sm font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-mono focus:outline-none focus:border-blue-500 focus:bg-white text-slate-900"
                 />
 
                 <div className="flex items-center justify-between">
                   {isAgent ? (
-                    <label className="flex items-center gap-2 text-xs text-amber-400 cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs font-bold text-amber-800 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={isInternalNote}
                         onChange={(e) => setIsInternalNote(e.target.checked)}
-                        className="rounded bg-zinc-950 border-amber-600 text-amber-500"
+                        className="rounded border-amber-300 text-amber-600 focus:ring-0"
                       />
                       <span className="flex items-center gap-1">
                         <Lock className="w-3.5 h-3.5" /> Post as Internal Note (Hidden from employee)
@@ -334,7 +328,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2"
                   >
                     <Send className="w-3.5 h-3.5" /> Submit Reply
                   </button>
@@ -345,16 +339,15 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
           {/* Sidebar Column (25%) */}
           <div className="space-y-6">
-            {/* Status & Assignment Box */}
             <GlassSurface className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
                   Status
                 </label>
                 <select
                   value={ticket.status}
                   onChange={(e) => handleUpdateStatus(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-semibold text-zinc-200"
+                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800"
                 >
                   <option value="open">🟢 Open</option>
                   <option value="in_progress">🟣 In Progress</option>
@@ -364,13 +357,13 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block mb-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
                   Assignee
                 </label>
                 <select
                   value={ticket.assignee_id || ""}
                   onChange={(e) => handleAssigneeChange(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200"
+                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
                 >
                   <option value="">Unassigned</option>
                   {agents.map((agent) => (
@@ -382,19 +375,18 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </GlassSurface>
 
-            {/* Reporter Profile Summary Card */}
             <GlassSurface className="space-y-3">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Reporter Info</h3>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Reporter Info</h3>
               <div>
-                <span className="font-bold text-sm text-zinc-100 block">{ticket.author?.display_name}</span>
-                <span className="text-xs font-mono text-zinc-400 block mt-0.5">{ticket.author?.email}</span>
+                <span className="font-bold text-sm text-slate-900 block">{ticket.author?.display_name}</span>
+                <span className="text-xs font-medium text-slate-500 block mt-0.5">{ticket.author?.email}</span>
                 <div className="mt-2 flex items-center gap-2">
                   {ticket.author?.user_type === "intern" ? (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-600/60">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                       Intern (Supervisor: {ticket.author?.supervisor_name || "N/A"})
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                       Staff ({ticket.author?.department})
                     </span>
                   )}
@@ -402,18 +394,17 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </GlassSurface>
 
-            {/* Device & System Logs Panel */}
             <GlassSurface className="space-y-3">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Monitor className="w-3.5 h-3.5 text-blue-400" /> Device Context
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Monitor className="w-3.5 h-3.5 text-blue-600" /> Device Context
               </h3>
               {ticket.device_context ? (
-                <div className="space-y-1.5 text-xs font-mono text-zinc-400">
-                  <p><strong className="text-zinc-300">Screen:</strong> {ticket.device_context.screenResolution}</p>
-                  <p className="truncate"><strong className="text-zinc-300">Browser:</strong> {ticket.device_context.userAgent}</p>
+                <div className="space-y-1.5 text-xs font-mono text-slate-600">
+                  <p><strong className="text-slate-800">Screen:</strong> {ticket.device_context.screenResolution}</p>
+                  <p className="truncate"><strong className="text-slate-800">Browser:</strong> {ticket.device_context.userAgent}</p>
                 </div>
               ) : (
-                <p className="text-xs text-zinc-500">No device context attached.</p>
+                <p className="text-xs text-slate-400">No device context attached.</p>
               )}
             </GlassSurface>
           </div>

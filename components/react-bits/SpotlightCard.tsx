@@ -8,15 +8,13 @@ interface SpotlightCardProps {
   className?: string;
   onClick?: () => void;
   spotlightColor?: string;
-  spotlightRadius?: number;
 }
 
 export function SpotlightCard({
   children,
   className = "",
   onClick,
-  spotlightColor = "rgba(255, 255, 255, 0.12)",
-  spotlightRadius = 500,
+  spotlightColor = "rgba(59, 130, 246, 0.08)",
 }: SpotlightCardProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
@@ -36,15 +34,15 @@ export function SpotlightCard({
       onMouseEnter={() => setOpacity(1)}
       onMouseLeave={() => setOpacity(0)}
       className={clsx(
-        "relative overflow-hidden rounded-2xl bg-zinc-950/70 border border-zinc-800/80 p-5 transition-all duration-300 hover:border-zinc-700/90 shadow-xl group",
+        "relative overflow-hidden rounded-2xl bg-white border border-slate-200/90 p-5 transition-all duration-300 hover:border-blue-300 hover:shadow-lg shadow-sm shadow-slate-200/50 text-slate-800",
         className
       )}
     >
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300 rounded-2xl z-0"
+        className="pointer-events-none absolute -inset-px transition-opacity duration-300"
         style={{
           opacity,
-          background: `radial-gradient(${spotlightRadius}px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
+          background: `radial-gradient(500px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
         }}
       />
       <div className="relative z-10">{children}</div>

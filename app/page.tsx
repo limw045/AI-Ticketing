@@ -1,56 +1,41 @@
 import Link from "next/link";
-import { BlurText } from "@/components/react-bits/BlurText";
-import { ShinyText } from "@/components/react-bits/ShinyText";
-import { GlassSurface } from "@/components/react-bits/GlassSurface";
-import { ArrowRight, Ticket, UserPlus } from "lucide-react";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/15 rounded-full blur-[120px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none animate-pulse-glow" style={{ animationDelay: "3s" }} />
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-blue-50/60 via-slate-50 to-indigo-50/40">
+      <div className="bg-white/90 backdrop-blur-md p-10 rounded-3xl max-w-xl w-full space-y-6 shadow-2xl border border-slate-200/80">
+        <div className="flex justify-center gap-2 mb-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-rose-400" />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-400" />
+          <div className="w-3.5 h-3.5 rounded-full bg-emerald-400" />
+        </div>
+        
+        <span className="px-3.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wider inline-block">
+          GTMSW Internal Portal
+        </span>
 
-      <div className="w-full max-w-2xl relative z-10 text-center">
-        <GlassSurface showWindowDots title="GTMSW Portal" className="p-8 sm:p-12 space-y-6">
-          
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-medium text-zinc-300 mx-auto">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Official Support Channel</span>
-            <span className="text-zinc-600">•</span>
-            <ShinyText text="Enterprise Ready" className="font-semibold text-blue-400" />
-          </div>
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+          Staff & Intern Support
+        </h1>
+        
+        <p className="text-slate-600 text-sm leading-relaxed">
+          Welcome! Submit IT tickets, check real-time resolution status, and access the Q&A knowledge base for Full-time Staff (`@gtmsw.com.my`) and Interns (`@outlook.com`).
+        </p>
 
-          <div className="space-y-3">
-            <BlurText
-              text="Internal Support Portal"
-              className="text-3xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent justify-center"
-              animateBy="words"
-            />
-            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-              Communication & Ticketing platform for GTMSW Staff (<code className="text-blue-300 bg-blue-950/50 px-1.5 py-0.5 rounded font-mono text-xs">@gtmsw.com.my</code>) and Interns (<code className="text-amber-300 bg-amber-950/50 px-1.5 py-0.5 rounded font-mono text-xs">@outlook.com</code>).
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
-            <Link
-              href="/login"
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25"
-            >
-              <Ticket className="w-4 h-4" />
-              <span>Sign In to Portal</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/register"
-              className="px-6 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 font-semibold text-sm transition flex items-center justify-center gap-2"
-            >
-              <UserPlus className="w-4 h-4 text-zinc-400" />
-              <span>Register Account</span>
-            </Link>
-          </div>
-
-        </GlassSurface>
+        <div className="flex justify-center gap-4 pt-4">
+          <Link
+            href="/login"
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 font-bold transition text-white shadow-lg shadow-blue-500/25 text-sm"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/register"
+            className="px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 font-bold transition text-slate-700 border border-slate-200 text-sm"
+          >
+            Create Account
+          </Link>
+        </div>
       </div>
     </main>
   );

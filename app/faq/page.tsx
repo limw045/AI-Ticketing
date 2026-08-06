@@ -105,14 +105,14 @@ export default function FAQPage() {
   const isAgent = currentUser?.role === "support_agent" || currentUser?.role === "admin";
 
   return (
-    <div className="min-h-screen bg-mac-bg text-zinc-100 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-6 pt-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <BlurText text="Q&A Knowledge Base" className="text-3xl font-bold tracking-tight" />
-            <p className="text-xs text-zinc-400 mt-1">
+            <BlurText text="Q&A Knowledge Base" className="text-3xl font-extrabold tracking-tight text-slate-900" />
+            <p className="text-xs text-slate-500 mt-1">
               Search high-frequency solutions before opening a new ticket.
             </p>
           </div>
@@ -120,7 +120,7 @@ export default function FAQPage() {
           {isAgent && (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 transition flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Pin New Q&A
             </button>
@@ -129,13 +129,13 @@ export default function FAQPage() {
 
         {/* Search Bar */}
         <div className="glass-panel p-4 rounded-2xl flex items-center gap-3">
-          <Search className="w-4 h-4 text-zinc-500 shrink-0" />
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
             placeholder="Search keywords (e.g. VPN, Printer, Intern permission)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent text-sm focus:outline-none text-zinc-200 placeholder:text-zinc-600"
+            className="w-full bg-transparent text-sm font-medium focus:outline-none text-slate-800 placeholder:text-slate-400"
           />
         </div>
 
@@ -144,23 +144,23 @@ export default function FAQPage() {
           <GlassSurface showWindowDots title="Pin New Q&A to Knowledge Base">
             <form onSubmit={handleAddFaq} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Question / Title</label>
+                <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">Question / Title</label>
                 <input
                   type="text"
                   placeholder="e.g. How to set up printer drivers on Windows 11?"
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-sm"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Category</label>
+                <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">Category</label>
                 <select
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-sm text-zinc-200"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-800 font-medium"
                 >
                   <option value="VPN & Network">VPN & Network</option>
                   <option value="Hardware">Hardware</option>
@@ -170,20 +170,20 @@ export default function FAQPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1.5">Detailed Answer (Markdown)</label>
+                <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">Detailed Answer (Markdown)</label>
                 <textarea
                   rows={4}
                   placeholder="Steps to resolve..."
                   value={newAnswer}
                   onChange={(e) => setNewAnswer(e.target.value)}
                   required
-                  className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-sm font-mono"
+                  className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-mono text-slate-900"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition"
+                className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition shadow-md shadow-blue-500/20"
               >
                 Publish Pinned Q&A
               </button>
@@ -199,24 +199,24 @@ export default function FAQPage() {
             return (
               <div
                 key={faq.id}
-                className="glass-panel rounded-2xl overflow-hidden border border-zinc-800/80 transition"
+                className="glass-panel rounded-3xl overflow-hidden border border-slate-200/80 transition"
               >
                 <button
                   onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-zinc-900/50 transition"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-100/50 transition"
                 >
                   <div className="flex items-center gap-3">
-                    <Pin className="w-4 h-4 text-amber-400 shrink-0" />
+                    <Pin className="w-4 h-4 text-amber-500 shrink-0" />
                     <div>
-                      <h3 className="text-sm font-semibold text-zinc-100">{faq.question}</h3>
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase">{faq.category}</span>
+                      <h3 className="text-sm font-bold text-slate-900">{faq.question}</h3>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">{faq.category}</span>
                     </div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 pb-5 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 text-xs font-mono leading-relaxed text-zinc-300 whitespace-pre-wrap">
+                  <div className="px-5 pb-5 pt-2 border-t border-slate-100 bg-slate-50/50 text-xs font-mono leading-relaxed text-slate-700 whitespace-pre-wrap">
                     {faq.answer}
                   </div>
                 )}

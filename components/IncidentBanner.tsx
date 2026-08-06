@@ -23,31 +23,31 @@ export function IncidentBanner() {
   if (incidents.length === 0) return null;
 
   return (
-    <div className="space-y-2 mb-6">
+    <div className="space-y-2.5 mb-6">
       {incidents.map((incident) => (
         <div
           key={incident.id}
-          className={`p-4 rounded-2xl border backdrop-blur-md flex items-center justify-between shadow-lg ${
+          className={`p-4 rounded-2xl border flex items-center justify-between shadow-md ${
             incident.severity === "critical"
-              ? "bg-red-950/80 border-red-700/80 text-red-200"
+              ? "bg-rose-50 border-rose-200 text-rose-900"
               : incident.severity === "warning"
-              ? "bg-amber-950/80 border-amber-600/80 text-amber-200"
-              : "bg-blue-950/80 border-blue-600/80 text-blue-200"
+              ? "bg-amber-50 border-amber-200 text-amber-900"
+              : "bg-blue-50 border-blue-200 text-blue-900"
           }`}
         >
           <div className="flex items-center gap-3">
             {incident.severity === "critical" ? (
-              <XCircle className="w-5 h-5 shrink-0 text-red-400" />
+              <XCircle className="w-5 h-5 shrink-0 text-rose-600" />
             ) : (
-              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600" />
             )}
             <div>
               <span className="font-bold text-sm block">{incident.title}</span>
               <span className="text-xs opacity-90 block mt-0.5">{incident.message}</span>
             </div>
           </div>
-          <span className="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-black/40 border border-white/10 font-bold">
-            System Incident Active
+          <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
+            Active System Outage
           </span>
         </div>
       ))}

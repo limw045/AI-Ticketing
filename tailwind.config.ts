@@ -10,9 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         mac: {
-          bg: "#09090b",
-          panel: "rgba(24, 24, 27, 0.75)",
-          border: "rgba(255, 255, 255, 0.12)",
+          bg: "#f8fafc",
+          panel: "rgba(255, 255, 255, 0.85)",
+          border: "rgba(226, 232, 240, 0.8)",
         },
       },
     },
