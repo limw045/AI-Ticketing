@@ -13,7 +13,7 @@ import {
   TrendingUp, Clock, CheckCircle, AlertOctagon, Download, Radio, Plus, ShieldCheck
 } from "lucide-react";
 
-const COLORS = ["#3b82f6", "#10b981", "#6366f1", "#f59e0b", "#ef4444"];
+const COLORS = ["#3b82f6", "#10b981", "#6366f1", "#f59e0b", "#f43f5e"];
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -91,13 +91,11 @@ export default function AdminDashboard() {
     document.body.removeChild(link);
   };
 
-  // Metrics computation
   const totalVolume = tickets.length;
   const resolvedTickets = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
   const resolutionRate = totalVolume > 0 ? Math.round((resolvedTickets / totalVolume) * 100) : 0;
   const urgentCount = tickets.filter((t) => t.priority === "urgent" && t.status !== "closed").length;
 
-  // Chart data: Category breakdown
   const categoryCounts: Record<string, number> = {};
   tickets.forEach((t) => {
     categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
@@ -107,7 +105,6 @@ export default function AdminDashboard() {
     count: categoryCounts[cat],
   }));
 
-  // Chart data: Department ratio
   const deptCounts: Record<string, number> = {};
   tickets.forEach((t) => {
     const dept = t.author?.department || "General";
@@ -119,21 +116,21 @@ export default function AdminDashboard() {
   }));
 
   return (
-    <div className="min-h-screen bg-mac-bg text-zinc-100 pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 pt-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <BlurText text="IT Operations & Analytics" className="text-3xl font-bold tracking-tight" />
-            <p className="text-xs text-zinc-400 mt-1">
+            <BlurText text="IT Operations & Analytics" className="text-3xl font-extrabold tracking-tight text-slate-900" />
+            <p className="text-xs text-slate-500 mt-1">
               Real-time service desk metrics, category breakdown, and global incident management.
             </p>
           </div>
 
           <button
             onClick={exportCSV}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 transition flex items-center gap-2 self-start md:self-auto"
+            className="px-4.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition flex items-center gap-2 self-start md:self-auto"
           >
             <Download className="w-4 h-4" /> Export CSV Report
           </button>
@@ -142,29 +139,29 @@ export default function AdminDashboard() {
         {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <GlassSurface className="!p-5">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Total Volume</span>
-            <div className="text-4xl font-bold mt-2 text-zinc-100">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Volume</span>
+            <div className="text-4xl font-extrabold mt-2 text-slate-900">
               <CountUp to={totalVolume} />
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Resolution Rate</span>
-            <div className="text-4xl font-bold mt-2 text-emerald-400">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Resolution Rate</span>
+            <div className="text-4xl font-extrabold mt-2 text-emerald-600">
               <CountUp to={resolutionRate} />%
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Avg Response SLA</span>
-            <div className="text-4xl font-bold mt-2 text-blue-400">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Avg Response SLA</span>
+            <div className="text-4xl font-extrabold mt-2 text-blue-600">
               1.4h
             </div>
           </GlassSurface>
 
           <GlassSurface className="!p-5">
-            <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider block">Urgent (P0) Breaches</span>
-            <div className="text-4xl font-bold mt-2 text-amber-400">
+            <span className="text-xs font-bold text-rose-600 uppercase tracking-wider block">Urgent (P0) Breaches</span>
+            <div className="text-4xl font-extrabold mt-2 text-rose-600">
               <CountUp to={urgentCount} />
             </div>
           </GlassSurface>
@@ -172,21 +169,19 @@ export default function AdminDashboard() {
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Category Bar Chart */}
           <GlassSurface showWindowDots title="Ticket Volume by Category">
             <div className="h-64 mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={categoryData.length > 0 ? categoryData : [{ name: "VPN", count: 4 }, { name: "Hardware", count: 7 }, { name: "Bug", count: 12 }]}>
-                  <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-                  <YAxis stroke="#71717a" fontSize={12} />
-                  <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#3f3f46", borderRadius: 12 }} />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: 16, color: "#0f172a" }} />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </GlassSurface>
 
-          {/* Department Donut Chart */}
           <GlassSurface showWindowDots title="Department Ticket Ratio">
             <div className="h-64 mt-4 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -204,7 +199,7 @@ export default function AdminDashboard() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#3f3f46", borderRadius: 12 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: 16, color: "#0f172a" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -221,7 +216,7 @@ export default function AdminDashboard() {
                 value={newIncidentTitle}
                 onChange={(e) => setNewIncidentTitle(e.target.value)}
                 required
-                className="px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200"
+                className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
               />
               <input
                 type="text"
@@ -229,12 +224,12 @@ export default function AdminDashboard() {
                 value={newIncidentMsg}
                 onChange={(e) => setNewIncidentMsg(e.target.value)}
                 required
-                className="px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200"
+                className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800"
               />
               <select
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value)}
-                className="px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200"
+                className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800"
               >
                 <option value="warning">Warning (Amber)</option>
                 <option value="critical">Critical Outage (Red)</option>
@@ -243,25 +238,24 @@ export default function AdminDashboard() {
             </div>
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/20"
             >
               <Radio className="w-4 h-4" /> Publish Global Outage Banner
             </button>
           </form>
 
-          {/* Active Incidents List */}
-          <div className="space-y-2 pt-4 border-t border-zinc-800/80">
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Current Incidents</h4>
+          <div className="space-y-2 pt-4 border-t border-slate-100">
+            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Incidents</h4>
             {incidents.map((inc) => (
-              <div key={inc.id} className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between text-xs">
+              <div key={inc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-bold text-zinc-200">{inc.title}</span>
-                  <p className="text-zinc-400 text-[11px]">{inc.message}</p>
+                  <span className="font-bold text-slate-900">{inc.title}</span>
+                  <p className="text-slate-500 text-[11px] font-medium">{inc.message}</p>
                 </div>
                 <button
                   onClick={() => handleToggleIncident(inc.id, inc.is_active)}
-                  className={`px-3 py-1 rounded-lg font-bold text-[10px] uppercase transition ${
-                    inc.is_active ? "bg-red-950 text-red-400 border border-red-800" : "bg-zinc-800 text-zinc-500"
+                  className={`px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase transition ${
+                    inc.is_active ? "bg-rose-100 text-rose-700 border border-rose-200" : "bg-slate-200 text-slate-600"
                   }`}
                 >
                   {inc.is_active ? "Deactivate" : "Activate"}
