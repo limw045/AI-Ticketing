@@ -10,15 +10,24 @@
 
 The goal of this project is to build a modern, high-efficiency internal ticketing and communication platform for company staff (`@gtmsw.com.my`) and interns (`@outlook.com`) to report issues, request IT support, and track resolutions.
 
-The platform combines developer-grade polish (GitHub/Linear inspired timeline & keyboard shortcuts), Markdown support, drag-and-drop clipboard image uploads, Microsoft Teams integration, a Pinned Q&A Knowledge Base with Semantic Vector Search, Category Issue Templates, Auto-Routing Rules, Sub-task Checklists, Admin Analytics Dashboard, Global Outage Banners, External App API Log Ingestion, AI Assist, Sensitive Data Masking, and PDF Compliance Export.
+The platform combines developer-grade polish (GitHub/Linear inspired timeline & keyboard shortcuts), **macOS Minimalist Glassmorphism Aesthetic** (powered by React Bits components), Markdown support, drag-and-drop clipboard image uploads, Microsoft Teams integration, a Pinned Q&A Knowledge Base with Semantic Vector Search, Category Issue Templates, Auto-Routing Rules, Sub-task Checklists, Admin Analytics Dashboard, Global Outage Banners, External App API Log Ingestion, AI Assist, Sensitive Data Masking, and PDF Compliance Export.
 
 ---
 
-## 2. Technical Stack
+## 2. Technical Stack & Design System
 
 * **Frontend & API**: Next.js 14+ (App Router, Server Actions, React Email)
 * **Backend as a Service**: Supabase (PostgreSQL Database, Supabase Auth, Supabase Storage, Supabase Realtime, pgvector for semantic Q&A search)
-* **Styling & UI**: Tailwind CSS, shadcn/ui, Recharts / Tremor (for Analytics charts), Zinc color palette, Geist Sans & Geist Mono typography
+* **UI & Aesthetics (macOS Minimal Style)**:
+  * **Design Tokens**: macOS Translucent Frosted Glass (`backdrop-blur-md bg-white/70 dark:bg-zinc-900/70 border-white/20`), Subtle Radius (`rounded-xl`), Soft Ambient Drop Shadows.
+  * **Typography**: Geist Sans / SF Pro Display & Geist Mono.
+  * **React Bits UI Components**:
+    * `GlassSurface` / `FluidGlass`: Translucent macOS window panels & floating headers.
+    * `Dock`: Floating macOS-style navigation dock for quick filter switching.
+    * `SpotlightCard`: Interactive mouse-following spotlight glow on ticket & stats cards.
+    * `CountUp`: Animated numerical counter on Analytics KPI metrics.
+    * `BlurText`: Smooth blur-in animation on section headers.
+    * `ShinyText`: Subtle shimmer effect on Urgent P0 badges & primary submit CTA buttons.
 * **AI Engine**: Vercel AI SDK (OpenAI / Claude API for Ticket Summarization, Draft Reply Generation & Vector Embeddings)
 * **Integrations & Queue**: Microsoft Teams (Incoming Webhooks / Adaptive Cards), Resend/Nodemailer, Upstash Redis / Vercel Queue (for async Webhook retries & rate-limiting)
 * **Hosting**: Vercel
@@ -129,50 +138,52 @@ Internal applications can submit tickets programmatically via API Key authentica
 |---|---|---|
 | `id` | UUID | PRIMARY KEY, DEFAULT `gen_random_uuid()` |
 | `category_name` | TEXT | UNIQUE, NOT NULL |
-| `template_markdown`| TEXT | NULLABLE (Structured form template) |
+| `template_markdown`| TEXT | NULLABLE |
 | `default_assignee_id`| UUID | NULLABLE, REFERENCES `profiles(id)` |
 | `created_at` | TIMESTAMPTZ | DEFAULT `now()` |
 
 ---
 
-## 5. End-User (Submitter) Feature Enhancements
+## 5. UI & macOS Aesthetic Design Integration
 
-### 5.1 Category Issue Templates
-- Selecting a category (e.g., "Hardware Application" or "Account Permission") auto-fills the Markdown editor with a structured template/checklist (e.g., Device S/N, Software Name, Approver Name).
+### 5.1 macOS Window & Glassmorphism System
+- Translucent sidebar and header navigation panels (`backdrop-blur-md bg-zinc-950/80 border-white/10`).
+- macOS window control dot visual styling (Red, Yellow, Green status lights).
+- React Bits `Dock` component for quick filtering at bottom/top.
 
-### 5.2 7-Day Reopen Grace Period
-- When a ticket is marked `Resolved`, it enters a 7-day grace period.
-- The submitter sees a prominent **"Reopen Ticket"** button if the issue persists, preventing ticket duplication.
+### 5.2 Interactive Micro-Interactions (React Bits)
+- **`SpotlightCard`**: Ticket cards glow subtly on hover following mouse position.
+- **`ShinyText`**: Shimmering metallic badge for `Urgent (P0)` tickets and `[Submit Ticket]` primary CTA.
+- **`BlurText`**: Smooth title entrance on dashboard header.
+- **`CountUp`**: Animated number rollup for KPI metrics on the Admin Dashboard.
 
-### 5.3 AI Semantic Q&A Search (`pgvector`)
-- Search queries use vector embeddings to match user intent rather than literal keyword matching (e.g., "cannot connect wifi" matches "Company Network VPN Troubleshooting").
-
-### 5.4 Form Draft Auto-Save (`localStorage`) & Image Compression
-- Auto-saves form inputs to browser `localStorage`.
-- Client-side image compression before upload to Supabase Storage.
+### 5.3 End-User Submitter Experience
+- **Category Issue Templates**: Auto-fills structured template upon category selection.
+- **7-Day Reopen Grace Period**: 1-click reopen for resolved tickets.
+- **AI Semantic Q&A Search (`pgvector`)**: Intent-based instant FAQ deflection.
+- **Form Draft Auto-Save (`localStorage`) & Image Compression**: Prevents data loss & optimizes upload sizes.
 
 ---
 
-## 6. Maintenance & IT Support Feature Enhancements
+## 6. Maintenance & IT Support Resilience
 
 ### 6.1 Sub-task Checklist Management
-- Support agents can break complex tickets into sub-tasks (e.g., `[x] Create Email`, `[ ] Provision Laptop`, `[ ] Grant VPN Access`) with live progress bars.
+- Interactive progress checklist for complex requests.
 
 ### 6.2 Auto-Routing Rules
-- New tickets automatically route to specific IT team leads based on `category_rules` configuration.
+- Automatic ticket assignment to team leads based on category rules.
 
 ### 6.3 PDF Compliance & Audit Export
-- One-click **"Export Ticket PDF"** for compliance, formal IT sign-offs, and archival records.
+- One-click **"Export Ticket PDF"** for formal IT sign-offs.
 
-### 6.4 Realtime Presence, Optimistic Locking & Audit Logs
-- Realtime badge showing who is currently viewing/editing a ticket.
-- Immutable audit log (`ticket_audit_logs`) tracking status/assignee changes.
+### 6.4 Realtime Presence & Optimistic Locking
+- Realtime "Agent X is viewing this ticket" indicator to prevent duplicate work.
 
 ---
 
-## 7. Admin Analytics & Operations Dashboard (`/admin/dashboard`)
+## 7. Admin Analytics Dashboard (`/admin/dashboard`)
 
-- **KPI Cards**: Volume, Avg Response Time, Resolution Rate, SLA Breaches.
+- **KPI Cards with React Bits `CountUp`**: Animated rollup of Total Volume, Avg Response Time, Resolution Rate, SLA Breaches.
 - **Interactive Charts**: Daily Trend Line, Category Bar Chart, Department Donut Chart, Agent Workload Table.
 - **Category Rules Manager**: Configure structured templates and auto-assignment rules.
 - **CSV & PDF Report Exports**.
@@ -198,7 +209,8 @@ Internal applications can submit tickets programmatically via API Key authentica
 
 ## 10. Self-Review Checklist
 
-- [x] Submitter & Maintenance requirements fully aligned.
+- [x] macOS Minimalist Glassmorphism aesthetic specified.
+- [x] React Bits micro-interaction components (`GlassSurface`, `Dock`, `SpotlightCard`, `ShinyText`, `BlurText`, `CountUp`) integrated seamlessly.
 - [x] Category Issue Templates & 7-Day Reopen Grace Period.
 - [x] AI Semantic FAQ Search via Supabase `pgvector`.
 - [x] Auto-Routing rules & Sub-task Checklists.
