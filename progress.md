@@ -84,3 +84,8 @@
 - [x] Extended the remote verifier to call the production ingestion endpoint. It proved HTTP idempotency, database persistence, API-key revocation, and redaction of nested API keys, bearer tokens, and passwords. Result: `BACKEND_E2E_OK`.
 - Added `.vercelignore` after the first production build reported that the ignored local `.env.production` was still included in the CLI upload; a clean redeployment remains.
 - The first clean-upload redeploy failed because an unanchored `supabase` ignore rule also matched `lib/supabase`; corrected all non-runtime paths to root-anchored patterns. The existing production alias was not replaced by the failed deployment.
+- [x] Clean production redeployment `dpl_A1RpZdszPiNGTjG55rWcvQZ8j52b` completed and was aliased to `https://internal-ticketing-system-lyart.vercel.app`; no local environment file warning remained.
+- [x] Re-ran the full database and production-route verifier against the final alias: every assertion passed and the run ended with `BACKEND_E2E_OK`.
+- [x] Removed disposable E2E tickets, API clients, and Auth users. Both former test accounts now return `invalid_credentials`.
+- [x] Final production checks: `/` and `/login` return 200, `/tickets` redirects unauthenticated users to login, Vercel reports the production deployment as Ready, and local `master` matches `origin/master` before this final documentation commit.
+- [x] Phase 15: Remote migration, clean production deployment, live database verification, and test-data cleanup are complete.

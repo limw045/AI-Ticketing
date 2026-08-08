@@ -47,3 +47,5 @@
 - The reusable remote E2E verifier completed every assertion and printed `BACKEND_E2E_OK`; test-created tickets are soft-deleted, API keys revoked, and Storage objects removed in its cleanup phase.
 - The production Vercel route `/api/v1/tickets` was exercised with a real database-issued key. Repeating the same `Idempotency-Key` returned the same ticket, nested secrets were stored as `[REDACTED]`, and revocation changed the HTTP result to 401.
 - Vercel CLI does not automatically exclude an ignored local `.env.production`; `.vercelignore` is required to ensure the file is not uploaded even though its values are public and already configured in Vercel.
+- Final clean deployment is `dpl_A1RpZdszPiNGTjG55rWcvQZ8j52b` and the production alias resolves to it with status Ready.
+- Disposable Auth users were removed after verification; subsequent password-grant attempts return `invalid_credentials`, proving cleanup rather than merely hiding rows with RLS.

@@ -22,7 +22,7 @@
 | Phase 12 | Database/auth/RLS/Storage remediation and secure migration | complete |
 | Phase 13 | Client/server workflow authorization and error-handling remediation | complete |
 | Phase 14 | Automated tests, local build, and security regression checks | complete |
-| Phase 15 | Remote migration, production deployment, and live database smoke test | in_progress |
+| Phase 15 | Remote migration, production deployment, and live database smoke test | complete |
 
 ## Key Decisions & Constraints
 - Domain Restrictions: `@gtmsw.com.my` (Full-time) and `@outlook.com` (Intern).
