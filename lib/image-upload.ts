@@ -41,7 +41,12 @@ export async function compressAndUploadImage(
             if (onProgress) onProgress(30);
 
             const supabase = createClient();
-            const fileName = `ticket_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            if (authError || !user) {
+              reject(new Error("Please sign in before uploading an attachment."));
+              return;
+            }
+            const fileName = `${user.id}/${crypto.randomUUID()}.jpg`;
             const { data, error } = await supabase.storage
               .from("ticket-attachments")
               .upload(fileName, blob, {
@@ -51,15 +56,10 @@ export async function compressAndUploadImage(
             if (onProgress) onProgress(80);
 
             if (error) {
-              // Fallback to Base64 data URL if Supabase bucket doesn't exist
-              console.warn("Supabase storage error, falling back to inline data URL:", error);
-              resolve(canvas.toDataURL("image/jpeg", 0.8));
+              reject(new Error(`Attachment upload failed: ${error.message}`));
             } else {
-              const { data: publicUrlData } = supabase.storage
-                .from("ticket-attachments")
-                .getPublicUrl(data.path);
               if (onProgress) onProgress(100);
-              resolve(publicUrlData.publicUrl);
+              resolve(`/api/attachments/${data.path.split("/").map(encodeURIComponent).join("/")}`);
             }
           },
           "image/jpeg",

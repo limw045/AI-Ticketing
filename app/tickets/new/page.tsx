@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { IncidentBanner } from "@/components/IncidentBanner";
@@ -8,7 +9,7 @@ import { scanSensitiveData } from "@/lib/security-scanner";
 import { compressAndUploadImage } from "@/lib/image-upload";
 import { EditorialGrid } from "@/components/EditorialGrid";
 import {
-  AlertOctagon, Image as ImageIcon, Send, Sparkles, Monitor, ShieldCheck, Check,
+  AlertOctagon, Image as ImageIcon, Sparkles, Monitor, ShieldCheck, Check,
   Flame, Layers, Trash2, ArrowRight
 } from "lucide-react";
 
@@ -43,6 +44,7 @@ const CATEGORY_TEMPLATES: Record<string, string> = {
 };
 
 export default function NewTicketPage() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("System Bug");
   const [priority, setPriority] = useState("medium");
@@ -53,6 +55,7 @@ export default function NewTicketPage() {
   const [loading, setLoading] = useState(false);
   const [savedDraftAlert, setSavedDraftAlert] = useState(false);
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem("ticketing_draft");
@@ -96,10 +99,11 @@ export default function NewTicketPage() {
           setUploadingImage(true);
           setUploadProgress(10);
           try {
+            setFormError("");
             const url = await compressAndUploadImage(file, (pct) => setUploadProgress(pct));
             setDescription((prev) => prev + `\n\n![Screenshot](${url})\n`);
           } catch (err) {
-            console.error("Paste upload error:", err);
+            setFormError(err instanceof Error ? err.message : "Attachment upload failed.");
           } finally {
             setUploadingImage(false);
           }
@@ -117,6 +121,7 @@ export default function NewTicketPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSecurityWarning(null);
+    setFormError("");
 
     const scan = scanSensitiveData(title + " " + description);
     if (scan.hasSensitive) {
@@ -131,8 +136,19 @@ export default function NewTicketPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      alert("Please sign in first.");
-      window.location.href = "/login";
+      setFormError("Please sign in first.");
+      router.replace("/login");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("account_status")
+      .eq("id", user.id)
+      .single();
+    if (profileError || !profile || profile.account_status !== "active") {
+      setFormError(profileError?.message || "Your staff profile is unavailable or inactive.");
+      setLoading(false);
       return;
     }
 
@@ -143,21 +159,27 @@ export default function NewTicketPage() {
       submittedAt: new Date().toISOString(),
     };
 
-    const { error: insertError } = await supabase.from("tickets").insert({
-      title,
-      category,
-      priority,
-      description,
-      author_id: user.id,
-      device_context: deviceContext,
-    });
+    const { data: createdTicket, error: insertError } = await supabase
+      .from("tickets")
+      .insert({
+        title: title.trim(),
+        category,
+        priority,
+        description,
+        author_id: user.id,
+        device_context: deviceContext,
+        source: "portal",
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
-      alert("Failed to submit ticket: " + insertError.message);
+    if (insertError || !createdTicket) {
+      setFormError(`Failed to submit ticket: ${insertError?.message || "Database did not return the new ticket."}`);
       setLoading(false);
     } else {
       localStorage.removeItem("ticketing_draft");
-      window.location.href = "/tickets";
+      router.replace("/tickets");
+      router.refresh();
     }
   };
 
@@ -168,6 +190,7 @@ export default function NewTicketPage() {
 
       <main className="editorial-content max-w-5xl mx-auto px-6 pt-10 relative z-10 space-y-8">
         <IncidentBanner />
+        {formError && <div role="alert" className="border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{formError}</div>}
 
         {savedDraftAlert && (
           <div className="p-3 rounded-2xl bg-[#141416] border border-[#6a9bcc]/30 text-[#d7e6f3] text-xs font-semibold flex items-center justify-between animate-fade-in shadow-xl">

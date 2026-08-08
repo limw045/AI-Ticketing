@@ -7,11 +7,12 @@ import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { CountUp } from "@/components/react-bits/CountUp";
 import { BlurText } from "@/components/react-bits/BlurText";
 import { EditorialGrid } from "@/components/EditorialGrid";
+import { buildCsv } from "@/lib/csv";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
 import {
-  TrendingUp, Clock, CheckCircle, AlertOctagon, Download, Radio, Plus, ShieldCheck
+  Download, Radio
 } from "lucide-react";
 
 const COLORS = ["#6a9bcc", "#788c5d", "#9c86b8", "#d97757", "#b85b6b"];
@@ -19,27 +20,55 @@ const COLORS = ["#6a9bcc", "#788c5d", "#9c86b8", "#d97757", "#b85b6b"];
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [newIncidentTitle, setNewIncidentTitle] = useState("");
   const [newIncidentMsg, setNewIncidentMsg] = useState("");
   const [severity, setSeverity] = useState("warning");
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [apiClientName, setApiClientName] = useState("");
+  const [generatedApiKey, setGeneratedApiKey] = useState("");
+  const [apiClients, setApiClients] = useState<any[]>([]);
+  const [currentUserRole, setCurrentUserRole] = useState("");
 
   const fetchDashboardData = async () => {
+    setError("");
     const supabase = createClient();
-    const { data: ticketData } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: currentProfile } = user
+      ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+      : { data: null };
+    const role = currentProfile?.role ?? "";
+    setCurrentUserRole(role);
+    const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
       .select("*, author:profiles!tickets_author_id_fkey(*)");
 
-    if (ticketData) setTickets(ticketData);
+    if (ticketError) setError(`Could not load dashboard tickets: ${ticketError.message}`);
+    else setTickets(ticketData ?? []);
 
-    const { data: incidentData } = await supabase
+    const { data: incidentData, error: incidentError } = await supabase
       .from("incidents")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (incidentData) setIncidents(incidentData);
+    if (incidentError) setError(`Could not load incidents: ${incidentError.message}`);
+    else setIncidents(incidentData ?? []);
 
-    setLoading(false);
+    if (role === "admin") {
+      const { data: userData, error: userError } = await supabase
+        .from("profiles")
+        .select("id, display_name, email, department, user_type, role, account_status, created_at")
+        .order("created_at", { ascending: true });
+      if (userError) setError(`Could not load staff accounts: ${userError.message}`);
+      else setUsers(userData ?? []);
+      const { data: clientData, error: clientError } = await supabase
+        .from("api_clients")
+        .select("id, name, is_active, created_at, last_used_at")
+        .order("created_at", { ascending: false });
+      if (clientError) setError(`Could not load API clients: ${clientError.message}`);
+      else setApiClients(clientData ?? []);
+    }
+
   };
 
   useEffect(() => {
@@ -51,12 +80,17 @@ export default function AdminDashboard() {
     if (!newIncidentTitle.trim() || !newIncidentMsg.trim()) return;
 
     const supabase = createClient();
-    await supabase.from("incidents").insert({
+    const { error: insertError } = await supabase.from("incidents").insert({
       title: newIncidentTitle,
       message: newIncidentMsg,
       severity,
       is_active: true,
     });
+
+    if (insertError) {
+      setError(`Incident publish failed: ${insertError.message}`);
+      return;
+    }
 
     setNewIncidentTitle("");
     setNewIncidentMsg("");
@@ -65,7 +99,59 @@ export default function AdminDashboard() {
 
   const handleToggleIncident = async (id: string, currentActive: boolean) => {
     const supabase = createClient();
-    await supabase.from("incidents").update({ is_active: !currentActive }).eq("id", id);
+    const { error: updateError } = await supabase.from("incidents").update({ is_active: !currentActive }).eq("id", id);
+    if (updateError) {
+      setError(`Incident update failed: ${updateError.message}`);
+      return;
+    }
+    fetchDashboardData();
+  };
+
+  const handleCreateApiClient = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!apiClientName.trim()) return;
+    setError("");
+    setGeneratedApiKey("");
+    const supabase = createClient();
+    const { data, error: rpcError } = await supabase.rpc("create_api_client", {
+      client_name: apiClientName.trim(),
+    });
+    if (rpcError || !data?.api_key) {
+      setError(`API client creation failed: ${rpcError?.message || "No key was returned."}`);
+      return;
+    }
+    setGeneratedApiKey(data.api_key);
+    setApiClientName("");
+    await fetchDashboardData();
+  };
+
+  const handleUserAccessChange = async (
+    userId: string,
+    changes: { role?: string; account_status?: string }
+  ) => {
+    setError("");
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update(changes)
+      .eq("id", userId);
+    if (updateError) {
+      setError(`Account update failed: ${updateError.message}`);
+      return;
+    }
+    fetchDashboardData();
+  };
+
+  const handleToggleApiClient = async (clientId: string, active: boolean) => {
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("api_clients")
+      .update({ is_active: !active })
+      .eq("id", clientId);
+    if (updateError) {
+      setError(`API client update failed: ${updateError.message}`);
+      return;
+    }
     fetchDashboardData();
   };
 
@@ -74,7 +160,7 @@ export default function AdminDashboard() {
     const headers = ["Ticket Number", "Title", "Category", "Priority", "Status", "Author", "Created At"];
     const rows = tickets.map((t) => [
       t.ticket_number,
-      `"${t.title.replace(/"/g, '""')}"`,
+      t.title,
       t.category,
       t.priority,
       t.status,
@@ -82,20 +168,28 @@ export default function AdminDashboard() {
       t.created_at,
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvBlob = new Blob([buildCsv([headers, ...rows])], { type: "text/csv;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(csvBlob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", objectUrl);
     link.setAttribute("download", `IT_Ticketing_Report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
   };
 
   const totalVolume = tickets.length;
   const resolvedTickets = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
   const resolutionRate = totalVolume > 0 ? Math.round((resolvedTickets / totalVolume) * 100) : 0;
   const urgentCount = tickets.filter((t) => t.priority === "urgent" && t.status !== "closed").length;
+  const respondedTickets = tickets.filter((ticket) => ticket.first_responded_at && ticket.created_at);
+  const averageResponseHours = respondedTickets.length
+    ? respondedTickets.reduce((sum, ticket) => {
+        const elapsedMs = new Date(ticket.first_responded_at).getTime() - new Date(ticket.created_at).getTime();
+        return sum + Math.max(0, elapsedMs / 3_600_000);
+      }, 0) / respondedTickets.length
+    : null;
 
   const categoryCounts: Record<string, number> = {};
   tickets.forEach((t) => {
@@ -122,6 +216,7 @@ export default function AdminDashboard() {
       <Navbar />
 
       <main className="editorial-content max-w-7xl mx-auto px-6 pt-10 space-y-8">
+        {error && <div role="alert" className="border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="editorial-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600">STEP 04 / OBSERVE</div>
@@ -158,7 +253,7 @@ export default function AdminDashboard() {
           <GlassSurface className="!p-5">
             <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">03 / Avg Response SLA</span>
             <div className="mt-3 text-4xl font-light text-[#8db3d6]">
-              1.4h
+              {averageResponseHours === null ? "N/A" : `${averageResponseHours.toFixed(1)}h`}
             </div>
           </GlassSurface>
 
@@ -175,7 +270,7 @@ export default function AdminDashboard() {
           <GlassSurface showWindowDots title="Ticket Volume by Category">
             <div className="h-64 mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData.length > 0 ? categoryData : [{ name: "VPN", count: 4 }, { name: "Hardware", count: 7 }, { name: "Bug", count: 12 }]}>
+                <BarChart data={categoryData}>
                   <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
                   <YAxis stroke="#71717a" fontSize={11} />
                   <Tooltip contentStyle={{ backgroundColor: "#141416", borderColor: "#3f3f46", borderRadius: 12, color: "#fafafa" }} />
@@ -190,7 +285,7 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={deptData.length > 0 ? deptData : [{ name: "IT", value: 35 }, { name: "HR", value: 20 }, { name: "Marketing", value: 15 }]}
+                    data={deptData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -198,7 +293,7 @@ export default function AdminDashboard() {
                     paddingAngle={4}
                     dataKey="value"
                   >
-                    {(deptData.length > 0 ? deptData : [1, 2, 3]).map((entry, index) => (
+                    {deptData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -267,6 +362,51 @@ export default function AdminDashboard() {
             ))}
           </div>
         </GlassSurface>
+
+        {currentUserRole === "admin" && <GlassSurface showWindowDots title="Internal App API Access">
+          <form onSubmit={handleCreateApiClient} className="flex flex-col gap-3 md:flex-row">
+            <input
+              value={apiClientName}
+              onChange={(event) => setApiClientName(event.target.value)}
+              placeholder="App name, e.g. Model Gateway"
+              required
+              className="flex-1 border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]"
+            />
+            <button className="rounded-full bg-[#6a9bcc] px-5 py-3 text-xs font-bold text-zinc-950 hover:bg-[#84add1]">
+              Generate API key
+            </button>
+          </form>
+          {generatedApiKey && (
+            <div className="mt-4 border border-amber-300/30 bg-amber-300/10 p-4 text-xs text-amber-100">
+              <strong className="block">Copy this key now. It cannot be shown again.</strong>
+              <code className="mt-2 block break-all select-all font-mono">{generatedApiKey}</code>
+            </div>
+          )}
+          <div className="mt-5 divide-y divide-white/10 border-y border-white/10">
+            {apiClients.map((client) => <div key={client.id} className="flex items-center justify-between py-3 text-xs"><span><strong className="block text-white">{client.name}</strong><span className="text-zinc-600">Last used: {client.last_used_at ? new Date(client.last_used_at).toLocaleString() : "Never"}</span></span><button onClick={() => handleToggleApiClient(client.id, client.is_active)} className={`rounded-full px-3 py-1.5 font-bold ${client.is_active ? "border border-rose-400/30 text-rose-200" : "border border-emerald-400/30 text-emerald-200"}`}>{client.is_active ? "Revoke" : "Activate"}</button></div>)}
+          </div>
+        </GlassSurface>}
+
+        {currentUserRole === "admin" && <GlassSurface showWindowDots title="Staff Access & Roles">
+          <div className="divide-y divide-white/10 border-y border-white/10">
+            {users.map((user) => (
+              <div key={user.id} className="grid gap-3 py-4 text-xs md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr] md:items-center">
+                <div><strong className="block text-white">{user.display_name}</strong><span className="text-zinc-600">{user.email}</span></div>
+                <span className="text-zinc-400">{user.department} / {user.user_type}</span>
+                <select value={user.role} onChange={(event) => handleUserAccessChange(user.id, { role: event.target.value })} className="border border-white/10 bg-[#0a0a0c] px-3 py-2 text-white outline-none focus:border-[#6a9bcc]">
+                  <option value="employee">Employee</option>
+                  <option value="support_agent">Support agent</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <select value={user.account_status} onChange={(event) => handleUserAccessChange(user.id, { account_status: event.target.value })} className="border border-white/10 bg-[#0a0a0c] px-3 py-2 text-white outline-none focus:border-[#6a9bcc]">
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              </div>
+            ))}
+            {users.length === 0 && <p className="py-5 text-xs text-zinc-600">No staff profiles have been created yet.</p>}
+          </div>
+        </GlassSurface>}
       </main>
     </div>
   );

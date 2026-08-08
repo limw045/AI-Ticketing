@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
@@ -15,6 +16,7 @@ const SEED_FAQS = [
 ];
 
 export default function FAQPage() {
+  const router = useRouter();
   const [faqs, setFaqs] = useState<any[]>(SEED_FAQS);
   const [searchTerm, setSearchTerm] = useState("");
   const [openFaqId, setOpenFaqId] = useState<string | null>("1");
@@ -23,27 +25,38 @@ export default function FAQPage() {
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
   const [newCategory, setNewCategory] = useState("Network");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchFaqs = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        router.replace("/login");
+        return;
+      }
       if (user) {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+        const { data: profile, error: profileError } = await supabase.from("profiles").select("id, role, account_status").eq("id", user.id).single();
+        if (profileError) setError(`Could not load profile: ${profileError.message}`);
         setCurrentUser(profile);
       }
-      const { data } = await supabase.from("faqs").select("*").order("created_at", { ascending: false });
+      const { data, error: faqError } = await supabase.from("faqs").select("id, question, answer, category, is_pinned, created_at").order("created_at", { ascending: false });
+      if (faqError) setError(`Could not load saved answers: ${faqError.message}`);
       if (data?.length) setFaqs([...SEED_FAQS, ...data]);
     };
     fetchFaqs();
-  }, []);
+  }, [router]);
 
   const handleAddFaq = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newQuestion.trim() || !newAnswer.trim()) return;
     const supabase = createClient();
-    const { data } = await supabase.from("faqs").insert({ question: newQuestion, answer: newAnswer, category: newCategory, is_pinned: true, created_by: currentUser?.id }).select().single();
-    setFaqs((previous) => [data ?? { id: Date.now().toString(), question: newQuestion, answer: newAnswer, category: newCategory, is_pinned: true }, ...previous]);
+    const { data, error: insertError } = await supabase.from("faqs").insert({ question: newQuestion, answer: newAnswer, category: newCategory, is_pinned: true, created_by: currentUser?.id }).select("id, question, answer, category, is_pinned, created_at").single();
+    if (insertError || !data) {
+      setError(`Could not publish answer: ${insertError?.message || "Database did not return the saved answer."}`);
+      return;
+    }
+    setFaqs((previous) => [data, ...previous]);
     setNewQuestion("");
     setNewAnswer("");
     setShowAddForm(false);
@@ -57,6 +70,7 @@ export default function FAQPage() {
       <EditorialGrid />
       <Navbar />
       <main className="editorial-content mx-auto max-w-5xl space-y-8 px-6 pt-12">
+        {error && <div role="alert" className="border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
         <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1fr_1.3fr] lg:items-end">
           <div>
             <div className="editorial-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600">STEP 03 / DIFFERENCE</div>

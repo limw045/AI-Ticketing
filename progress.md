@@ -44,3 +44,37 @@
   - Restyled landing, auth, navigation, dashboard, ticket creation, ticket detail, FAQ, incidents, and admin analytics surfaces while preserving Supabase and ticket workflows.
   - Verified `npm run build` with all 12 routes compiling successfully.
   - Deployed production build to `https://internal-ticketing-system-lyart.vercel.app` and verified the main public routes return HTTP 200.
+
+## Backend Integrity Audit: 2026-08-08
+- [ ] Phase 11: Started a production-oriented backend audit after confirming that previous completion evidence covered compilation and public-route availability, but not actual database persistence.
+- Restored planning context with `planning-with-files`; the working tree had no uncommitted application changes at audit start.
+- Audit scope: signup/profile provisioning, ticket/comment mutations, RLS and privilege escalation, Storage uploads, external ingestion API authentication, admin authorization, production environment linkage, and live end-to-end persistence.
+- Confirmed the direct failure chain: signup cannot insert `profiles` under current RLS, then `tickets.author_id` cannot satisfy its profile foreign key/RLS dependency.
+- Supabase CLI is installed on demand but cannot access project management because no CLI login/access token is configured.
+- Verified Supabase Auth requires email confirmation and Vercel currently has no project-level environment variables.
+- Verified remote REST schema exists but `profiles`, `tickets`, `comments`, `faqs`, `incidents`, `category_rules`, and `ticket_audit_logs` all report zero rows.
+- [x] Phase 11: Completed the backend integrity audit and recorded verified security/persistence defects in `findings.md`.
+- [ ] Phase 12: Added an additive hardening migration with Auth profile provisioning/backfill, role helpers, parent-aware RLS, immutable ticket audit triggers, a private attachment bucket, and database-hashed/rate-limited API clients.
+- Added SSR session refresh/route protection, Auth callback handling, a private attachment download proxy, explicit Supabase configuration errors, and removed the image Base64 fallback.
+- Replaced the external ingestion endpoint's service-role/anon fallback with the database-validated `ingest_ticket` RPC.
+- First remediation build compiled and passed TypeScript, then failed only at `/login` prerender because `useSearchParams` requires Suspense; replaced it with a mount-time URL read.
+- Second `npm run build` passed completely, including TypeScript, static generation, API routes, Auth callback, attachment proxy, and Next.js 16 Proxy compilation.
+- Local Supabase container validation could not start because Docker Desktop is not running.
+- Added 7 passing unit tests for exact domain classification, Intern supervisor enforcement, and API log truncation; `tsc --noEmit` also passes.
+- ESLint initially failed because the project had no ESLint 9 flat config; added the official config shape exported by the installed Next.js 16 package.
+- Added password recovery/reset, database-authorized 7-day ticket reopening, notification triggers and Navbar inbox, administrator role/account controls, API client revocation, idempotent ingestion, recursive log redaction, and formula-safe CSV exports.
+- Expanded the regression suite to 11 passing tests; lint now passes with zero warnings, TypeScript passes, and the 15-route production build completes.
+- Parsed all 95 statements in the hardening migration with PostgreSQL's `pglast` parser successfully.
+- Configured Supabase public variables in Vercel for Production, Preview, and Development; `.env.production` is now ignored/untracked locally and `.env.example` documents required names.
+- Final parallel regression run passed tests, lint, and production build; standalone typecheck raced with the build rewriting `.next/types`, so it is being rerun sequentially.
+- Sequential `npm run typecheck` passed after the build; all local quality gates are now green.
+- [x] Phase 13: Client/server mutations now enforce role visibility, show database errors, protect admin-only controls, and include complete Auth recovery and notification workflows.
+- [x] Phase 14: 11 unit tests, ESLint, standalone TypeScript, PostgreSQL syntax parsing, and the full Next.js production build all pass.
+
+## Remote Backend Verification: 2026-08-08
+- [x] Applied `20260808000000_backend_integrity.sql` to Supabase project `qnlfrcozsthgeoledpjt`; remote REST probes confirm the new tables and profile/ticket columns exist.
+- [x] Verified anonymous callers cannot read profiles, insert tickets, create API clients, or ingest with an invalid API key.
+- [x] Created one disposable Outlook employee and one GTMSW administrator through the real Supabase Auth signup endpoint, confirmed them, and verified the Auth trigger persisted active profiles with the expected type, supervisor, and role.
+- [x] Added and ran `scripts/verify-backend.mjs` against the remote project. It proved portal ticket persistence, employee privilege blocking, comment/internal-note isolation, audit logs, notifications, constrained reopen, private Storage access, API key creation/revocation, reporter mapping, and idempotency. Result: `BACKEND_E2E_OK`.
+- [x] Phase 12: Remote database/auth/RLS/Storage remediation is applied and validated with real data.
+- [ ] Phase 15: Production application deployment and HTTP/UI smoke verification remain.

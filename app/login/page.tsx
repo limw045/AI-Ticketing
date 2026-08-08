@@ -1,29 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, ArrowRight, KeyRound, Mail, Infinity } from "lucide-react";
 import { EditorialGrid } from "@/components/EditorialGrid";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const callbackError = new URLSearchParams(window.location.search).get("error");
+    if (callbackError) setError(callbackError);
+  }, []);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
     setLoading(true);
 
-    const { error: authError } = await createClient().auth.signInWithPassword({ email, password });
+    const supabase = createClient();
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
     if (authError) {
       setError(authError.message);
       setLoading(false);
       return;
     }
-    window.location.href = "/tickets";
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("account_status")
+      .eq("id", data.user.id)
+      .single();
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      setError("Your staff profile is not ready. Please contact the AI Department administrator.");
+      setLoading(false);
+      return;
+    }
+    if (profile.account_status !== "active") {
+      await supabase.auth.signOut();
+      setError("This account is suspended. Please contact the AI Department administrator.");
+      setLoading(false);
+      return;
+    }
+    router.replace("/tickets");
+    router.refresh();
   };
 
   return (
@@ -84,6 +113,7 @@ export default function LoginPage() {
                 <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required placeholder="••••••••" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none transition placeholder:text-zinc-700 focus:border-[#6a9bcc]" />
               </span>
             </label>
+            <div className="text-right"><Link href="/forgot-password" className="text-[11px] text-[#8db3d6] hover:text-white">Forgot password?</Link></div>
             <button disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#6a9bcc] px-5 py-3 text-xs font-bold text-zinc-950 transition hover:bg-[#84add1] disabled:opacity-50">
               {loading ? "Signing in..." : "Sign in to AI desk"}
               {!loading && <ArrowRight className="h-4 w-4" />}

@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { IncidentBanner } from "@/components/IncidentBanner";
 import { SpotlightCard } from "@/components/react-bits/SpotlightCard";
 import { CountUp } from "@/components/react-bits/CountUp";
-import { ShinyText } from "@/components/react-bits/ShinyText";
 import { BlurText } from "@/components/react-bits/BlurText";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { EditorialGrid } from "@/components/EditorialGrid";
 import {
-  Search, Filter, CheckSquare, Square, CheckCircle2, Clock, XCircle, AlertTriangle, ArrowUpDown, CornerDownLeft
+  Search, CheckSquare, Square, CheckCircle2, Clock, AlertTriangle, ArrowUpDown
 } from "lucide-react";
 
 export default function TicketDashboard() {
+  const router = useRouter();
   const [tickets, setTickets] = useState<any[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -25,26 +27,45 @@ export default function TicketDashboard() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [onlyMine, setOnlyMine] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const isAgent = currentUser?.role === "support_agent" || currentUser?.role === "admin";
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
+    setError("");
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUser(user);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      router.replace("/login");
+      return;
+    }
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, display_name, role, account_status")
+      .eq("id", user.id)
+      .single();
+    if (profileError || !profile || profile.account_status !== "active") {
+      setError(profileError?.message || "Your staff profile is unavailable or inactive.");
+      setLoading(false);
+      return;
+    }
+    setCurrentUser(profile);
 
-    const { data } = await supabase
+    const { data, error: ticketError } = await supabase
       .from("tickets")
-      .select("*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)")
+      .select("*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)")
       .order("created_at", { ascending: false });
 
-    if (data) {
-      setTickets(data);
+    if (ticketError) {
+      setError(`Could not load tickets: ${ticketError.message}`);
+    } else {
+      setTickets(data ?? []);
     }
     setLoading(false);
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [fetchTickets]);
 
   useEffect(() => {
     let result = [...tickets];
@@ -84,27 +105,29 @@ export default function TicketDashboard() {
       } else if (e.key === "k" || e.key === "K") {
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Enter" && filteredTickets[selectedIndex]) {
-        window.location.href = `/tickets/${filteredTickets[selectedIndex].id}`;
-      } else if ((e.key === "c" || e.key === "C") && filteredTickets[selectedIndex]) {
+        router.push(`/tickets/${filteredTickets[selectedIndex].id}`);
+      } else if (isAgent && (e.key === "c" || e.key === "C") && filteredTickets[selectedIndex]) {
         const supabase = createClient();
-        await supabase
+        const { error: updateError } = await supabase
           .from("tickets")
           .update({ status: "closed", resolved_at: new Date().toISOString() })
           .eq("id", filteredTickets[selectedIndex].id);
+        if (updateError) setError(`Could not close ticket: ${updateError.message}`);
         fetchTickets();
-      } else if ((e.key === "m" || e.key === "M") && filteredTickets[selectedIndex] && currentUser) {
+      } else if (isAgent && (e.key === "m" || e.key === "M") && filteredTickets[selectedIndex] && currentUser) {
         const supabase = createClient();
-        await supabase
+        const { error: updateError } = await supabase
           .from("tickets")
           .update({ assignee_id: currentUser.id })
           .eq("id", filteredTickets[selectedIndex].id);
+        if (updateError) setError(`Could not assign ticket: ${updateError.message}`);
         fetchTickets();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [filteredTickets, selectedIndex, currentUser]);
+  }, [filteredTickets, selectedIndex, currentUser, isAgent, router, fetchTickets]);
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) =>
@@ -113,9 +136,9 @@ export default function TicketDashboard() {
   };
 
   const handleBulkStatusChange = async (newStatus: string) => {
-    if (selectedIds.length === 0) return;
+    if (!isAgent || selectedIds.length === 0) return;
     const supabase = createClient();
-    await supabase
+    const { error: updateError } = await supabase
       .from("tickets")
       .update({
         status: newStatus,
@@ -124,6 +147,11 @@ export default function TicketDashboard() {
           : {}),
       })
       .in("id", selectedIds);
+
+    if (updateError) {
+      setError(`Bulk update failed: ${updateError.message}`);
+      return;
+    }
 
     setSelectedIds([]);
     fetchTickets();
@@ -141,6 +169,7 @@ export default function TicketDashboard() {
 
       <main className="editorial-content max-w-7xl mx-auto px-6 pt-10 space-y-8">
         <IncidentBanner />
+        {error && <div role="alert" className="border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
 
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -152,12 +181,12 @@ export default function TicketDashboard() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/tickets/new"
             className="self-start md:self-auto rounded-full bg-[#6a9bcc] px-5 py-2.5 text-xs font-bold text-zinc-950 shadow-lg shadow-blue-500/10 transition hover:bg-[#84add1]"
           >
             + Create New Ticket
-          </a>
+          </Link>
         </div>
 
         {/* Top Stats Overview */}
@@ -256,7 +285,7 @@ export default function TicketDashboard() {
         </div>
 
         {/* Bulk Action Bar */}
-        {selectedIds.length > 0 && (
+        {isAgent && selectedIds.length > 0 && (
           <div className="p-3.5 rounded-2xl bg-[#141416] border border-[#6a9bcc]/30 flex items-center justify-between text-xs text-[#d7e6f3] shadow-xl">
             <span className="font-bold">{selectedIds.length} tickets selected</span>
             <div className="flex items-center gap-2">
@@ -298,7 +327,7 @@ export default function TicketDashboard() {
               return (
                 <SpotlightCard
                   key={ticket.id}
-                  onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
+                  onClick={() => router.push(`/tickets/${ticket.id}`)}
                   className={`!p-4.5 ${
                     isSelected
                       ? "border-[#6a9bcc]/70 ring-1 ring-[#6a9bcc]/30 bg-[#161b21]"
@@ -307,7 +336,7 @@ export default function TicketDashboard() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <button
+                      {isAgent && <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -320,7 +349,7 @@ export default function TicketDashboard() {
                         ) : (
                           <Square className="w-4 h-4 text-zinc-700" />
                         )}
-                      </button>
+                      </button>}
 
                       {ticket.status === "open" && (
                         <div className="w-2.5 h-2.5 rounded-full bg-[#a4b889] shrink-0 shadow-sm shadow-[#a4b889]/50" />
