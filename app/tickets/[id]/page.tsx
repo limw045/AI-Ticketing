@@ -1,17 +1,18 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { exportTicketPDF } from "@/lib/pdf-export";
 import { EditorialGrid } from "@/components/EditorialGrid";
 import {
-  Clock, CheckCircle2, User, ShieldAlert, Lock, Send, Plus, CheckSquare, Square,
-  Download, RotateCcw, AlertTriangle, Monitor, Sparkles, UserCheck, Tag
+  User, Lock, Send, Plus, CheckSquare, Square, Download, Monitor, RotateCcw
 } from "lucide-react";
 
 export default function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const ticketId = resolvedParams.id;
 
@@ -23,54 +24,74 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const isAgent = currentUserProfile?.role === "support_agent" || currentUserProfile?.role === "admin";
 
-  const fetchTicketDetails = async () => {
+  const fetchTicketDetails = useCallback(async () => {
+    setError("");
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      setCurrentUserProfile(profile);
+    if (authError || !user) {
+      router.replace("/login");
+      return;
     }
 
-    const { data: ticketData } = await supabase
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, display_name, role, account_status")
+      .eq("id", user.id)
+      .single();
+    if (profileError || !profile || profile.account_status !== "active") {
+      setError(profileError?.message || "Your staff profile is unavailable or inactive.");
+      setLoading(false);
+      return;
+    }
+    setCurrentUserProfile(profile);
+    const profileIsAgent = profile.role === "support_agent" || profile.role === "admin";
+
+    const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
       .select("*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)")
       .eq("id", ticketId)
       .single();
 
-    if (ticketData) setTicket(ticketData);
+    if (ticketError) setError(`Could not load ticket: ${ticketError.message}`);
+    else setTicket(ticketData);
 
-    const { data: commentData } = await supabase
+    const { data: commentData, error: commentError } = await supabase
       .from("comments")
       .select("*, author:profiles(*)")
       .eq("ticket_id", ticketId)
       .order("created_at", { ascending: true });
 
-    if (commentData) setComments(commentData);
+    if (commentError) setError(`Could not load discussion: ${commentError.message}`);
+    else setComments(commentData ?? []);
 
-    const { data: agentData } = await supabase
-      .from("profiles")
-      .select("*")
-      .in("role", ["support_agent", "admin"]);
-
-    if (agentData) setAgents(agentData);
+    if (profileIsAgent) {
+      const { data: agentData, error: agentError } = await supabase
+        .from("profiles")
+        .select("id, display_name, department")
+        .in("role", ["support_agent", "admin"])
+        .eq("account_status", "active");
+      if (agentError) setError(`Could not load assignees: ${agentError.message}`);
+      else setAgents(agentData ?? []);
+    }
     setLoading(false);
-  };
+  }, [router, ticketId]);
 
   useEffect(() => {
     fetchTicketDetails();
-  }, [ticketId]);
+  }, [fetchTicketDetails]);
 
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !currentUserProfile) return;
+    if (isInternalNote && !isAgent) {
+      setError("Only support agents can post internal notes.");
+      return;
+    }
 
     const supabase = createClient();
     const { error } = await supabase.from("comments").insert({
@@ -84,31 +105,43 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
       setNewComment("");
       setIsInternalNote(false);
       fetchTicketDetails();
+    } else {
+      setError(`Reply failed: ${error.message}`);
     }
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
+    if (!isAgent) return;
     const supabase = createClient();
     const updates: any = { status: newStatus };
     if (newStatus === "resolved" || newStatus === "closed") {
       updates.resolved_at = new Date().toISOString();
     }
-    await supabase.from("tickets").update(updates).eq("id", ticketId);
+    const { error: updateError } = await supabase.from("tickets").update(updates).eq("id", ticketId);
+    if (updateError) {
+      setError(`Status update failed: ${updateError.message}`);
+      return;
+    }
     fetchTicketDetails();
   };
 
   const handleAssigneeChange = async (assigneeId: string) => {
+    if (!isAgent) return;
     const supabase = createClient();
-    await supabase
+    const { error: updateError } = await supabase
       .from("tickets")
       .update({ assignee_id: assigneeId || null })
       .eq("id", ticketId);
+    if (updateError) {
+      setError(`Assignment failed: ${updateError.message}`);
+      return;
+    }
     fetchTicketDetails();
   };
 
   const handleAddSubtask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSubtaskTitle.trim() || !ticket) return;
+    if (!isAgent || !newSubtaskTitle.trim() || !ticket) return;
 
     const currentSubtasks = ticket.subtasks || [];
     const updated = [
@@ -117,20 +150,40 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     ];
 
     const supabase = createClient();
-    await supabase.from("tickets").update({ subtasks: updated }).eq("id", ticketId);
+    const { error: updateError } = await supabase.from("tickets").update({ subtasks: updated }).eq("id", ticketId);
+    if (updateError) {
+      setError(`Subtask update failed: ${updateError.message}`);
+      return;
+    }
     setNewSubtaskTitle("");
     fetchTicketDetails();
   };
 
   const handleToggleSubtask = async (subtaskId: string) => {
-    if (!ticket) return;
+    if (!isAgent || !ticket) return;
     const currentSubtasks = ticket.subtasks || [];
     const updated = currentSubtasks.map((st: any) =>
       st.id === subtaskId ? { ...st, completed: !st.completed } : st
     );
 
     const supabase = createClient();
-    await supabase.from("tickets").update({ subtasks: updated }).eq("id", ticketId);
+    const { error: updateError } = await supabase.from("tickets").update({ subtasks: updated }).eq("id", ticketId);
+    if (updateError) {
+      setError(`Subtask update failed: ${updateError.message}`);
+      return;
+    }
+    fetchTicketDetails();
+  };
+
+  const handleReopen = async () => {
+    const supabase = createClient();
+    const { error: reopenError } = await supabase.rpc("reopen_own_ticket", {
+      target_ticket_id: ticketId,
+    });
+    if (reopenError) {
+      setError(`Reopen failed: ${reopenError.message}`);
+      return;
+    }
     fetchTicketDetails();
   };
 
@@ -158,6 +211,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     <div className="editorial-shell pb-20">
       <EditorialGrid />
       <Navbar />
+      {error && <div role="alert" className="editorial-content mx-auto mt-6 max-w-7xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
 
       <main className="editorial-content max-w-7xl mx-auto px-6 pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -239,8 +293,8 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 {subtasks.map((st: any) => (
                   <div
                     key={st.id}
-                    onClick={() => handleToggleSubtask(st.id)}
-                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3 transition hover:border-white/25"
+                    onClick={() => isAgent && handleToggleSubtask(st.id)}
+                    className={`flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3 transition ${isAgent ? "cursor-pointer hover:border-white/25" : "cursor-default"}`}
                   >
                     {st.completed ? (
                       <CheckSquare className="h-4 w-4 shrink-0 text-[#8db3d6]" />
@@ -254,7 +308,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 ))}
               </div>
 
-              <form onSubmit={handleAddSubtask} className="flex gap-2 pt-2">
+              {isAgent && <form onSubmit={handleAddSubtask} className="flex gap-2 pt-2">
                 <input
                   type="text"
                   placeholder="Add new subtask step..."
@@ -265,7 +319,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <button type="submit" className="rounded-full border border-white/10 bg-zinc-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-zinc-700">
                   <Plus className="w-4 h-4" />
                 </button>
-              </form>
+              </form>}
             </div>
 
             {/* Timeline Comments */}
@@ -349,6 +403,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <select
                   value={ticket.status}
                   onChange={(e) => handleUpdateStatus(e.target.value)}
+                  disabled={!isAgent}
                   className="w-full border border-white/10 bg-[#0a0a0c] p-3 text-xs font-bold text-white outline-none focus:border-[#6a9bcc]"
                 >
                   <option value="open">🟢 Open</option>
@@ -356,6 +411,11 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   <option value="resolved">⚪ Resolved</option>
                   <option value="closed">⚪ Closed</option>
                 </select>
+                {!isAgent && ticket.author_id === currentUserProfile?.id && ["resolved", "closed"].includes(ticket.status) && (
+                  <button onClick={handleReopen} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:border-[#6a9bcc]/50">
+                    <RotateCcw className="h-3.5 w-3.5" /> Reopen within 7 days
+                  </button>
+                )}
               </div>
 
               <div>
@@ -365,6 +425,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <select
                   value={ticket.assignee_id || ""}
                   onChange={(e) => handleAssigneeChange(e.target.value)}
+                  disabled={!isAgent}
                   className="w-full border border-white/10 bg-[#0a0a0c] p-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
                 >
                   <option value="">Unassigned</option>

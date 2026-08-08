@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { category, title, description } = await req.json();
+    const access = await requireApiUser({ agentOnly: true });
+    if ("error" in access) return access.error;
+    const { category } = await req.json();
 
     let draftReply = "Hi! Thank you for reporting this issue. Our IT support team is investigating.";
 

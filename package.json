@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "verify:backend": "node scripts/verify-backend.mjs"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3"
+    "@tailwindcss/postcss": "^4.3.3",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

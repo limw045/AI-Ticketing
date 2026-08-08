@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { sanitizeSystemLogs } from "@/lib/api-ingestion";
 
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ") || authHeader.length <= 7) {
       return NextResponse.json({ error: "Unauthorized: Missing API Key" }, { status: 401 });
     }
+    const apiKey = authHeader.slice(7).trim();
+    const idempotencyKey = req.headers.get("idempotency-key")?.trim() || null;
 
     const body = await req.json();
     const { title, description, category = "System Bug", priority = "medium", user_email, system_logs } = body;
@@ -15,45 +19,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields: title, description" }, { status: 400 });
     }
 
-    // Payload Sanitization: Truncate system logs to 50KB max
-    let sanitizedLogs = system_logs;
-    if (typeof system_logs === "string" && system_logs.length > 50000) {
-      sanitizedLogs = system_logs.substring(0, 50000) + "\n...[Truncated logs over 50KB]";
-    } else if (typeof system_logs === "object" && JSON.stringify(system_logs).length > 50000) {
-      sanitizedLogs = { _truncated: true, preview: JSON.stringify(system_logs).substring(0, 50000) };
-    }
+    const sanitizedLogs = sanitizeSystemLogs(system_logs);
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy_key"
-    );
-
-    // Look up profile by user_email
-    let authorId = null;
-    if (user_email) {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("email", user_email.toLowerCase())
-        .single();
-      if (profile) authorId = profile.id;
-    }
-
-    const { data: ticket, error: insertError } = await supabaseAdmin
-      .from("tickets")
-      .insert({
-        title,
-        description,
-        category,
-        priority,
-        author_id: authorId,
-        system_logs: sanitizedLogs,
-      })
-      .select()
-      .single();
+    const { url, anonKey } = getSupabasePublicConfig();
+    const supabase = createClient(url, anonKey, { auth: { persistSession: false } });
+    const { data: ticket, error: insertError } = await supabase.rpc("ingest_ticket", {
+      p_api_key: apiKey,
+      p_ticket_title: title,
+      p_ticket_description: description,
+      p_ticket_category: category,
+      p_ticket_priority: priority,
+      p_user_email: typeof user_email === "string" ? user_email : null,
+      p_system_logs: sanitizedLogs ?? null,
+      p_idempotency_key: idempotencyKey,
+    });
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      const message = insertError.message || "Ticket ingestion failed";
+      const status = message.includes("Invalid API key")
+        ? 401
+        : message.includes("rate limit")
+          ? 429
+          : 400;
+      return NextResponse.json({ error: message }, { status });
     }
 
     return NextResponse.json(

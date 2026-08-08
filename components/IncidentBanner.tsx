@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { AlertTriangle, XCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 export function IncidentBanner() {
   const [incidents, setIncidents] = useState<any[]>([]);
