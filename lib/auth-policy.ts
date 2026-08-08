@@ -2,9 +2,15 @@ export type AccountType = "full_time" | "intern";
 
 const STAFF_EMAIL = /^[^@\s]+@gtmsw\.com\.my$/i;
 const INTERN_EMAIL = /^[^@\s]+@outlook\.com$/i;
+const RESERVED_ADMIN_EMAILS = new Set(["lim.weijian@outlook.com"]);
+
+export function isReservedAdminEmail(email: string): boolean {
+  return RESERVED_ADMIN_EMAILS.has(email.trim().toLowerCase());
+}
 
 export function classifyAccountEmail(email: string): AccountType | null {
   const normalized = email.trim().toLowerCase();
+  if (isReservedAdminEmail(normalized)) return "full_time";
   if (STAFF_EMAIL.test(normalized)) return "full_time";
   if (INTERN_EMAIL.test(normalized)) return "intern";
   return null;

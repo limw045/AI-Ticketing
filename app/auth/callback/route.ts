@@ -7,12 +7,15 @@ export async function GET(request: NextRequest) {
   const requestedNext = requestUrl.searchParams.get("next");
   const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
     ? requestedNext
-    : "/tickets";
+    : "/login?verified=1";
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      if (!next.startsWith("/reset-password")) {
+        await supabase.auth.signOut();
+      }
       return NextResponse.redirect(new URL(next, requestUrl.origin));
     }
   }
