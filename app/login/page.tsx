@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { AlertCircle, ArrowRight, KeyRound, Mail, Infinity } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, KeyRound, Mail, Infinity, LayoutDashboard, UserRound } from "lucide-react";
 import { EditorialGrid } from "@/components/EditorialGrid";
 
 export default function LoginPage() {
@@ -12,16 +12,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPortalChoice, setShowPortalChoice] = useState(false);
 
   useEffect(() => {
     const callbackError = new URLSearchParams(window.location.search).get("error");
+    const verified = new URLSearchParams(window.location.search).get("verified");
     if (callbackError) setError(callbackError);
+    if (verified === "1") setNotice("Email verified successfully. Sign in to continue.");
   }, []);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
+    setNotice("");
     setLoading(true);
 
     const supabase = createClient();
@@ -36,7 +41,7 @@ export default function LoginPage() {
     }
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("account_status")
+      .select("account_status, role")
       .eq("id", data.user.id)
       .single();
     if (profileError || !profile) {
@@ -51,7 +56,22 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    router.replace("/tickets");
+    if (profile.role === "admin") {
+      setLoading(false);
+      setShowPortalChoice(true);
+      return;
+    }
+    const requestedNext = new URLSearchParams(window.location.search).get("next");
+    const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/tickets";
+    router.replace(next);
+    router.refresh();
+  };
+
+  const choosePortal = (destination: "/tickets" | "/admin/dashboard") => {
+    setShowPortalChoice(false);
+    router.replace(destination);
     router.refresh();
   };
 
@@ -97,6 +117,12 @@ export default function LoginPage() {
               <span>{error}</span>
             </div>
           )}
+          {notice && (
+            <div className="mt-6 flex items-center gap-2 border border-emerald-400/30 bg-emerald-400/10 p-3 text-xs text-emerald-200" role="status">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>{notice}</span>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="mt-8 space-y-5">
             <label className="block">
@@ -125,6 +151,27 @@ export default function LoginPage() {
           </p>
         </section>
       </div>
+      {showPortalChoice && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 px-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="portal-choice-title">
+          <section className="w-full max-w-xl border border-white/10 bg-[#111113] p-7 shadow-2xl">
+            <div className="editorial-mono text-[10px] uppercase tracking-[0.25em] text-[#8db3d6]">Admin access detected</div>
+            <h2 id="portal-choice-title" className="mt-3 text-3xl font-light tracking-[-0.04em] text-white">Where would you like to enter?</h2>
+            <p className="mt-2 text-xs leading-5 text-zinc-500">You can work as a regular requester or open the administration workspace.</p>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <button onClick={() => choosePortal("/tickets")} className="group border border-white/10 bg-[#0a0a0c] p-5 text-left transition hover:border-[#6a9bcc]/50 hover:bg-[#14181d]">
+                <UserRound className="h-5 w-5 text-[#8db3d6]" />
+                <strong className="mt-5 block text-sm text-white">User Portal</strong>
+                <span className="mt-2 block text-xs leading-5 text-zinc-600">Submit and follow your own requests.</span>
+              </button>
+              <button onClick={() => choosePortal("/admin/dashboard")} className="group border border-[#6a9bcc]/30 bg-[#6a9bcc]/10 p-5 text-left transition hover:bg-[#6a9bcc]/15">
+                <LayoutDashboard className="h-5 w-5 text-[#8db3d6]" />
+                <strong className="mt-5 block text-sm text-white">Admin Dashboard</strong>
+                <span className="mt-2 block text-xs leading-5 text-zinc-500">Manage users, incidents, API clients, and analytics.</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

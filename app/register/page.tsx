@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, ArrowRight, Building2, CheckCircle2, KeyRound, Mail, User, UserCheck, Infinity } from "lucide-react";
 import { EditorialGrid } from "@/components/EditorialGrid";
-import { classifyAccountEmail, validateRegistration } from "@/lib/auth-policy";
+import { classifyAccountEmail, isReservedAdminEmail, validateRegistration } from "@/lib/auth-policy";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,11 +16,11 @@ export default function RegisterPage() {
   const [department, setDepartment] = useState("AI Department");
   const [supervisor, setSupervisor] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const normalizedEmail = email.trim().toLowerCase();
   const accountType = classifyAccountEmail(normalizedEmail);
+  const isAdminEmail = isReservedAdminEmail(normalizedEmail);
   const isStaff = accountType === "full_time";
   const isIntern = accountType === "intern";
   const isValidDomain = isStaff || isIntern;
@@ -28,7 +28,6 @@ export default function RegisterPage() {
   const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    setSuccess("");
     const validation = validateRegistration({ email: normalizedEmail, displayName, department, supervisor });
     if (!validation.valid) {
       setError(validation.error);
@@ -42,7 +41,7 @@ export default function RegisterPage() {
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/tickets`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/login?verified=1`,
         data: {
           display_name: displayName.trim(),
           user_type: userType,
@@ -62,8 +61,7 @@ export default function RegisterPage() {
       router.refresh();
       return;
     }
-    setSuccess("Account created. Check your email and confirm the address before signing in.");
-    setLoading(false);
+    router.replace("/verify-email");
   };
 
   return (
@@ -85,12 +83,11 @@ export default function RegisterPage() {
           <p className="mt-2 text-xs leading-5 text-zinc-500">Use a GTMSW staff address or your Intern Outlook account.</p>
 
           {error && <div className="mt-6 flex items-center gap-2 border border-rose-400/30 bg-rose-400/10 p-3 text-xs text-rose-200" role="alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
-          {success && <div className="mt-6 flex items-center gap-2 border border-emerald-400/30 bg-emerald-400/10 p-3 text-xs text-emerald-200" role="status"><CheckCircle2 className="h-4 w-4 shrink-0" />{success}</div>}
 
           <form onSubmit={handleRegister} className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
             <label className="block md:col-span-2"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Full name</span><span className="relative block"><User className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Zhang San" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span></label>
             <label className="block md:col-span-2"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Email address</span><span className="relative block"><Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@gtmsw.com.my" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span></label>
-            {normalizedEmail && <div className="md:col-span-2 text-[11px] editorial-mono">{isStaff && <span className="text-[#a4b889]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />STAFF DOMAIN RECOGNIZED</span>}{isIntern && <span className="text-[#e0a58b]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />INTERN DOMAIN RECOGNIZED</span>}{!isValidDomain && <span className="text-rose-300">DOMAIN NOT ALLOWED</span>}</div>}
+            {normalizedEmail && <div className="md:col-span-2 text-[11px] editorial-mono">{isAdminEmail && <span className="text-[#8db3d6]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />ADMIN EMAIL RECOGNIZED</span>}{isStaff && !isAdminEmail && <span className="text-[#a4b889]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />STAFF DOMAIN RECOGNIZED</span>}{isIntern && <span className="text-[#e0a58b]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />INTERN DOMAIN RECOGNIZED</span>}{!isValidDomain && <span className="text-rose-300">DOMAIN NOT ALLOWED</span>}</div>}
             {isIntern && <label className="block md:col-span-2"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-[#e0a58b]">Supervisor / mentor</span><span className="relative block"><UserCheck className="absolute left-3 top-3 h-4 w-4 text-[#e0a58b]" /><input required value={supervisor} onChange={(event) => setSupervisor(event.target.value)} placeholder="Supervisor name" className="w-full border border-[#d97757]/30 bg-[#1a1414] px-10 py-3 text-xs text-white outline-none focus:border-[#d97757]" /></span></label>}
             <label className="block"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Department</span><span className="relative block"><Building2 className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><select value={department} onChange={(event) => setDepartment(event.target.value)} className="w-full appearance-none border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]"><option>AI Department</option><option>IT</option><option>HR</option><option>Marketing</option><option>Finance</option><option>Product</option></select></span></label>
             <label className="block"><span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Password</span><span className="relative block"><KeyRound className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span></label>

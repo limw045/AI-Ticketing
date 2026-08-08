@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyAccountEmail, validateRegistration } from "../lib/auth-policy";
+import { classifyAccountEmail, isReservedAdminEmail, validateRegistration } from "../lib/auth-policy";
 
 describe("classifyAccountEmail", () => {
   it("recognizes staff and intern domains case-insensitively", () => {
@@ -11,6 +11,16 @@ describe("classifyAccountEmail", () => {
     expect(classifyAccountEmail("person@evil-gtmsw.com.my")).toBeNull();
     expect(classifyAccountEmail("person@notoutlook.com")).toBeNull();
     expect(classifyAccountEmail("person@gmail.com")).toBeNull();
+  });
+
+  it("recognizes the reserved Outlook administrator as full-time without Intern metadata", () => {
+    expect(isReservedAdminEmail(" LIM.WEIJIAN@OUTLOOK.COM ")).toBe(true);
+    expect(classifyAccountEmail("lim.weijian@outlook.com")).toBe("full_time");
+    expect(validateRegistration({
+      email: "lim.weijian@outlook.com",
+      displayName: "Lim Weijian",
+      department: "AI Department",
+    })).toEqual({ valid: true, accountType: "full_time" });
   });
 });
 
