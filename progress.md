@@ -78,3 +78,8 @@
 - [x] Added and ran `scripts/verify-backend.mjs` against the remote project. It proved portal ticket persistence, employee privilege blocking, comment/internal-note isolation, audit logs, notifications, constrained reopen, private Storage access, API key creation/revocation, reporter mapping, and idempotency. Result: `BACKEND_E2E_OK`.
 - [x] Phase 12: Remote database/auth/RLS/Storage remediation is applied and validated with real data.
 - [ ] Phase 15: Production application deployment and HTTP/UI smoke verification remain.
+- [x] Pushed commit `502beb5` to GitHub with an English Conventional Commit message.
+- [x] Deployed Vercel production deployment `dpl_8ojmVavmWe59EqKYaGYamWkNwnSV`, aliased to `https://internal-ticketing-system-lyart.vercel.app`.
+- [x] Production smoke checks: public auth pages return 200; `/tickets` and `/admin/dashboard` redirect unauthenticated callers to login; AI, attachment, and ingestion endpoints reject missing authentication with 401.
+- [x] Extended the remote verifier to call the production ingestion endpoint. It proved HTTP idempotency, database persistence, API-key revocation, and redaction of nested API keys, bearer tokens, and passwords. Result: `BACKEND_E2E_OK`.
+- Added `.vercelignore` after the first production build reported that the ignored local `.env.production` was still included in the CLI upload; a clean redeployment remains.

@@ -237,6 +237,50 @@ try {
   assert(!apiTicketsError && apiTickets?.length === 1, "API ticket is not visible to admin");
   assert(apiTickets[0].source === "api" && apiTickets[0].author_id === employeeUser.id, "API ticket reporter mapping is incorrect");
 
+  if (process.env.E2E_BASE_URL) {
+    const baseUrl = process.env.E2E_BASE_URL.replace(/\/$/, "");
+    const httpIdempotencyKey = `http-${runId}`;
+    const httpBody = {
+      title: `[E2E ${runId}] Production API persistence`,
+      description: "Production route backend verification ticket",
+      category: "System Bug",
+      priority: "high",
+      user_email: process.env.E2E_EMPLOYEE_EMAIL,
+      system_logs: {
+        request: { api_key: "must-not-persist", message: "Bearer secret-token password=hunter2" },
+      },
+    };
+    const sendHttpIngest = () => fetch(`${baseUrl}/api/v1/tickets`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${clientResult.api_key}`,
+        "Idempotency-Key": httpIdempotencyKey,
+      },
+      body: JSON.stringify(httpBody),
+    });
+    const firstResponse = await sendHttpIngest();
+    const firstHttpResult = await firstResponse.json();
+    assert(firstResponse.status === 201 && firstHttpResult?.ticket?.id, `Production ingestion failed: ${firstResponse.status} ${JSON.stringify(firstHttpResult)}`);
+    createdTicketIds.push(firstHttpResult.ticket.id);
+    const secondResponse = await sendHttpIngest();
+    const secondHttpResult = await secondResponse.json();
+    assert(secondResponse.status === 201 && secondHttpResult?.ticket?.id === firstHttpResult.ticket.id, "Production route idempotency failed");
+
+    const { data: productionTicket, error: productionTicketError } = await admin
+      .from("tickets")
+      .select("system_logs")
+      .eq("id", firstHttpResult.ticket.id)
+      .single();
+    assert(!productionTicketError && productionTicket?.system_logs, "Production API ticket did not persist logs");
+    assert(productionTicket.system_logs.request.api_key === "[REDACTED]", "Production API persisted an API key from logs");
+    assert(
+      productionTicket.system_logs.request.message === "Bearer [REDACTED] password=[REDACTED]",
+      "Production API did not redact bearer/password text"
+    );
+    pass("Production ingestion route persisted once and redacted sensitive logs");
+  }
+
   const { error: revokeError } = await admin.from("api_clients").update({ is_active: false }).eq("id", apiClientId);
   assert(!revokeError, `API client revocation failed: ${revokeError?.message}`);
   const { error: revokedIngestError } = await anonymous.rpc("ingest_ticket", {
@@ -244,6 +288,18 @@ try {
     p_idempotency_key: `${idempotencyKey}-after-revoke`,
   });
   assert(Boolean(revokedIngestError), "Revoked API key still created a ticket");
+  if (process.env.E2E_BASE_URL) {
+    const revokedResponse = await fetch(`${process.env.E2E_BASE_URL.replace(/\/$/, "")}/api/v1/tickets`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${clientResult.api_key}`,
+        "Idempotency-Key": `revoked-${runId}`,
+      },
+      body: JSON.stringify({ title: "Revoked key probe", description: "Must fail" }),
+    });
+    assert(revokedResponse.status === 401, `Revoked key returned HTTP ${revokedResponse.status} instead of 401`);
+  }
   pass("Hashed API keys, reporter mapping, revocation, and idempotency work");
 
   console.log("BACKEND_E2E_OK");

@@ -45,3 +45,5 @@
 - Anonymous security probes returned zero visible profiles, RLS `42501` for ticket insert, administrator rejection for API client creation, and SQLSTATE `28000` for an invalid ingestion key.
 - Real Auth signups produced an active Outlook `employee` profile with supervisor metadata and an active GTMSW `admin` profile through the bootstrap rule.
 - The reusable remote E2E verifier completed every assertion and printed `BACKEND_E2E_OK`; test-created tickets are soft-deleted, API keys revoked, and Storage objects removed in its cleanup phase.
+- The production Vercel route `/api/v1/tickets` was exercised with a real database-issued key. Repeating the same `Idempotency-Key` returned the same ticket, nested secrets were stored as `[REDACTED]`, and revocation changed the HTTP result to 401.
+- Vercel CLI does not automatically exclude an ignored local `.env.production`; `.vercelignore` is required to ensure the file is not uploaded even though its values are public and already configured in Vercel.
