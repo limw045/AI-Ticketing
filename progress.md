@@ -83,3 +83,4 @@
 - [x] Production smoke checks: public auth pages return 200; `/tickets` and `/admin/dashboard` redirect unauthenticated callers to login; AI, attachment, and ingestion endpoints reject missing authentication with 401.
 - [x] Extended the remote verifier to call the production ingestion endpoint. It proved HTTP idempotency, database persistence, API-key revocation, and redaction of nested API keys, bearer tokens, and passwords. Result: `BACKEND_E2E_OK`.
 - Added `.vercelignore` after the first production build reported that the ignored local `.env.production` was still included in the CLI upload; a clean redeployment remains.
+- The first clean-upload redeploy failed because an unanchored `supabase` ignore rule also matched `lib/supabase`; corrected all non-runtime paths to root-anchored patterns. The existing production alias was not replaced by the failed deployment.

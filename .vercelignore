@@ -1,8 +1,8 @@
 .env
 .env.*
 !.env.example
-tests
-supabase
-task_plan.md
-progress.md
-findings.md
+/tests/
+/supabase/
+/task_plan.md
+/progress.md
+/findings.md
