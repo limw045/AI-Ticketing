@@ -45,3 +45,4 @@
 | Supabase automatic login cannot run in the non-TTY tool process | 2 | Opened a visible interactive PowerShell window for the official Supabase CLI login; poll read-only project access after user confirmation. |
 | Parallel `tsc` raced with `next build` regenerating `.next/types` | 1 | Build itself passed TypeScript; rerun standalone typecheck sequentially after build and keep these two checks non-concurrent. |
 | Vercel ignore rule `supabase` also excluded `lib/supabase` | 1 | Anchor non-runtime exclusions to the repository root (`/supabase/`, `/tests/`) and redeploy; the existing production alias remained healthy. |
+| Final PowerShell probe used reserved `$home` variable name | 1 | Renamed the response variable to `$homeResponse` and reran the read-only production check. |
