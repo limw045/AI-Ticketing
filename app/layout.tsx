@@ -1,9 +1,31 @@
 import "./globals.css";
+import { Manrope, Inter, IBM_Plex_Mono } from "next/font/google";
 import type { Metadata } from "next";
+import { ThemeProvider } from "@/app/theme";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "GTMSW AI Department Support | Get Blue Style",
-  description: "Editorial Dark AI Support & Request Platform",
+  title: "Grant Thornton AI Department | Support Desk",
+  description:
+    "Internal support desk for model access, data pipelines, GPU resources, and production issues.",
 };
 
 export default function RootLayout({
@@ -12,9 +34,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-[#0a0a0c] text-white antialiased selection:bg-blue-500 selection:text-white">
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${manrope.variable} ${inter.variable} ${plexMono.variable} antialiased`}
+      >
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -4,16 +4,27 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { IncidentBanner } from "@/components/IncidentBanner";
-import { SpotlightCard } from "@/components/react-bits/SpotlightCard";
-import { CountUp } from "@/components/react-bits/CountUp";
-import { BlurText } from "@/components/react-bits/BlurText";
-import { GlassSurface } from "@/components/react-bits/GlassSurface";
-import { EditorialGrid } from "@/components/EditorialGrid";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
-  Search, CheckSquare, Square, CheckCircle2, Clock, AlertTriangle, ArrowUpDown
+  StatusBadge,
+  statusTone,
+  priorityTone,
+} from "@/components/ui/StatusBadge";
+import { Alert } from "@/components/ui/Alert";
+import { Button, EmptyState } from "@/components/ui/FormField";
+import {
+  Search,
+  CheckSquare,
+  Square,
+  CheckCircle2,
+  Clock,
+  TriangleAlert,
+  ArrowUpDown,
+  Plus,
 } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 export default function TicketDashboard() {
   const router = useRouter();
@@ -28,7 +39,8 @@ export default function TicketDashboard() {
   const [onlyMine, setOnlyMine] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const isAgent = currentUser?.role === "support_agent" || currentUser?.role === "admin";
+  const isAgent =
+    currentUser?.role === "support_agent" || currentUser?.role === "admin";
 
   const fetchTickets = useCallback(async () => {
     setError("");
@@ -44,7 +56,10 @@ export default function TicketDashboard() {
       .eq("id", user.id)
       .single();
     if (profileError || !profile || profile.account_status !== "active") {
-      setError(profileError?.message || "Your staff profile is unavailable or inactive.");
+      setError(
+        profileError?.message ||
+          "Your staff profile is unavailable or inactive."
+      );
       setLoading(false);
       return;
     }
@@ -52,7 +67,9 @@ export default function TicketDashboard() {
 
     const { data, error: ticketError } = await supabase
       .from("tickets")
-      .select("*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)")
+      .select(
+        "*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)"
+      )
       .order("created_at", { ascending: false });
 
     if (ticketError) {
@@ -66,6 +83,12 @@ export default function TicketDashboard() {
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
+
+  useEffect(() => {
+    if (window.location.search.includes("mine=1")) {
+      setOnlyMine(true);
+    }
+  }, []);
 
   useEffect(() => {
     let result = [...tickets];
@@ -98,23 +121,38 @@ export default function TicketDashboard() {
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
-      if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName)) return;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName))
+        return;
 
       if (e.key === "j" || e.key === "J") {
-        setSelectedIndex((prev) => Math.min(prev + 1, filteredTickets.length - 1));
+        setSelectedIndex((prev) =>
+          Math.min(prev + 1, filteredTickets.length - 1)
+        );
       } else if (e.key === "k" || e.key === "K") {
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Enter" && filteredTickets[selectedIndex]) {
         router.push(`/tickets/${filteredTickets[selectedIndex].id}`);
-      } else if (isAgent && (e.key === "c" || e.key === "C") && filteredTickets[selectedIndex]) {
+      } else if (
+        isAgent &&
+        (e.key === "c" || e.key === "C") &&
+        filteredTickets[selectedIndex]
+      ) {
         const supabase = createClient();
         const { error: updateError } = await supabase
           .from("tickets")
-          .update({ status: "closed", resolved_at: new Date().toISOString() })
+          .update({
+            status: "closed",
+            resolved_at: new Date().toISOString(),
+          })
           .eq("id", filteredTickets[selectedIndex].id);
         if (updateError) setError(`Could not close ticket: ${updateError.message}`);
         fetchTickets();
-      } else if (isAgent && (e.key === "m" || e.key === "M") && filteredTickets[selectedIndex] && currentUser) {
+      } else if (
+        isAgent &&
+        (e.key === "m" || e.key === "M") &&
+        filteredTickets[selectedIndex] &&
+        currentUser
+      ) {
         const supabase = createClient();
         const { error: updateError } = await supabase
           .from("tickets")
@@ -158,253 +196,239 @@ export default function TicketDashboard() {
   };
 
   const openCount = tickets.filter((t) => t.status === "open").length;
-  const inProgressCount = tickets.filter((t) => t.status === "in_progress").length;
-  const resolvedCount = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
-  const urgentCount = tickets.filter((t) => t.priority === "urgent" && t.status !== "closed").length;
+  const inProgressCount = tickets.filter(
+    (t) => t.status === "in_progress"
+  ).length;
+  const resolvedCount = tickets.filter(
+    (t) => t.status === "resolved" || t.status === "closed"
+  ).length;
+  const urgentCount = tickets.filter(
+    (t) => t.priority === "urgent" && t.status !== "closed"
+  ).length;
 
   return (
-    <div className="editorial-shell pb-20">
-      <EditorialGrid />
-      <Navbar />
+    <div className="space-y-10">
+      <IncidentBanner />
+      {error && (
+        <Alert tone="error" role="alert">
+          {error}
+        </Alert>
+      )}
 
-      <main className="editorial-content max-w-7xl mx-auto px-6 pt-10 space-y-8">
-        <IncidentBanner />
-        {error && <div role="alert" className="border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
-
-        {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="editorial-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500">STEP 01 / PROCESS</div>
-            <BlurText text="The request queue." className="mt-3 text-4xl font-light tracking-[-0.05em] text-white" />
-            <p className="mt-3 text-xs leading-6 text-zinc-500">
-              Press <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">J</kbd> / <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">K</kbd> to navigate, <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">M</kbd> to assign self, <kbd className="rounded border border-white/10 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">C</kbd> to close.
-            </p>
-          </div>
-
-          <Link
-            href="/tickets/new"
-            className="self-start md:self-auto rounded-full bg-[#6a9bcc] px-5 py-2.5 text-xs font-bold text-zinc-950 shadow-lg shadow-blue-500/10 transition hover:bg-[#84add1]"
-          >
-            + Create New Ticket
+      <PageHeader
+        eyebrow="Request queue"
+        title="Tickets"
+        description="Search, filter, and move requests through the desk. J / K navigate, M assigns yourself, C closes."
+        actions={
+          <Link href="/tickets/new">
+            <Button>
+              <Plus className="h-4 w-4" /> New ticket
+            </Button>
           </Link>
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard
+          label="Open"
+          value={openCount}
+          animate
+          icon={<Clock className="h-4 w-4" />}
+        />
+        <MetricCard
+          label="In progress"
+          value={inProgressCount}
+          animate
+          icon={<ArrowUpDown className="h-4 w-4" />}
+        />
+        <MetricCard
+          label="Resolved"
+          value={resolvedCount}
+          animate
+          icon={<CheckCircle2 className="h-4 w-4" />}
+        />
+        <MetricCard
+          label="Urgent"
+          value={urgentCount}
+          animate
+          valueClassName="text-[var(--danger)]"
+          icon={<TriangleAlert className="h-4 w-4" />}
+        />
+      </div>
+
+      <div className="surface flex flex-wrap items-center justify-between gap-4 p-4">
+        <div className="flex min-w-[280px] flex-1 items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-[var(--faint)]" />
+            <input
+              type="text"
+              placeholder="Search ticket #, title, or category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] py-2.5 pl-10 pr-4 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)]"
+            />
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]"
+          >
+            <option value="all">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]"
+          >
+            <option value="all">All Categories</option>
+            <option value="System Bug">System Bug</option>
+            <option value="Hardware">Hardware</option>
+            <option value="VPN & Network">VPN & Network</option>
+            <option value="Permissions">Permissions</option>
+          </select>
         </div>
 
-        {/* Top Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <GlassSurface className="!p-5">
-            <div className="flex items-center justify-between">
-              <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">01 / Open</span>
-              <Clock className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div className="mt-3 text-4xl font-light text-[#a4b889]">
-              <CountUp to={openCount} />
-            </div>
-          </GlassSurface>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--muted)]">
+          <input
+            type="checkbox"
+            checked={onlyMine}
+            onChange={(e) => setOnlyMine(e.target.checked)}
+            className="h-4 w-4 rounded border-[var(--line-strong)] text-[var(--brand)] focus:ring-[var(--brand-soft)]"
+          />
+          <span>Created by Me</span>
+        </label>
+      </div>
 
-          <GlassSurface className="!p-5">
-            <div className="flex items-center justify-between">
-              <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">02 / Active</span>
-              <ArrowUpDown className="w-4 h-4 text-indigo-600" />
-            </div>
-            <div className="mt-3 text-4xl font-light text-[#8db3d6]">
-              <CountUp to={inProgressCount} />
-            </div>
-          </GlassSurface>
-
-          <GlassSurface className="!p-5">
-            <div className="flex items-center justify-between">
-              <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">03 / Resolved</span>
-              <CheckCircle2 className="w-4 h-4 text-slate-400" />
-            </div>
-            <div className="mt-3 text-4xl font-light text-white">
-              <CountUp to={resolvedCount} />
-            </div>
-          </GlassSurface>
-
-          <GlassSurface className="!p-5">
-            <div className="flex items-center justify-between">
-              <span className="editorial-mono text-[10px] uppercase tracking-widest text-[#e99aa4]">04 / Urgent</span>
-              <AlertTriangle className="w-4 h-4 text-rose-600 animate-pulse" />
-            </div>
-            <div className="mt-3 text-4xl font-light text-[#e99aa4]">
-              <CountUp to={urgentCount} />
-            </div>
-          </GlassSurface>
-        </div>
-
-        {/* Filter Bar */}
-        <div className="glass-panel rounded-2xl border-white/10 p-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-[280px]">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search ticket #, title, or category..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full border border-white/10 bg-[#0a0a0c] py-2.5 pl-10 pr-4 text-xs font-medium text-white outline-none placeholder:text-zinc-700 focus:border-[#6a9bcc]"
-              />
-            </div>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-white/10 bg-[#0a0a0c] px-3.5 py-2.5 text-xs font-semibold text-white outline-none focus:border-[#6a9bcc]"
+      {isAgent && selectedIds.length > 0 && (
+        <div className="surface flex flex-wrap items-center justify-between gap-3 p-3.5">
+          <span className="text-sm font-semibold">
+            {selectedIds.length} tickets selected
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBulkStatusChange("in_progress")}
+              className="rounded-full bg-[var(--brand)] px-3.5 py-1.5 text-xs font-bold text-[var(--brand-on)] hover:bg-[var(--brand-hover)]"
             >
-              <option value="all">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-            </select>
-
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="border border-white/10 bg-[#0a0a0c] px-3.5 py-2.5 text-xs font-semibold text-white outline-none focus:border-[#6a9bcc]"
+              Mark In Progress
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange("resolved")}
+              className="rounded-full bg-[var(--success)] px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90"
             >
-              <option value="all">All Categories</option>
-              <option value="System Bug">System Bug</option>
-              <option value="Hardware">Hardware</option>
-              <option value="VPN & Network">VPN & Network</option>
-              <option value="Permissions">Permissions</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-xs font-bold text-zinc-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={onlyMine}
-                onChange={(e) => setOnlyMine(e.target.checked)}
-                className="rounded border-slate-300 text-blue-600 focus:ring-0"
-              />
-              <span>Created by Me</span>
-            </label>
+              Mark Resolved
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange("closed")}
+              className="rounded-full border border-[var(--line-strong)] bg-[var(--surface-2)] px-3.5 py-1.5 text-xs font-bold text-[var(--ink)] hover:bg-[var(--surface-3)]"
+            >
+              Mark Closed
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Bulk Action Bar */}
-        {isAgent && selectedIds.length > 0 && (
-          <div className="p-3.5 rounded-2xl bg-[#141416] border border-[#6a9bcc]/30 flex items-center justify-between text-xs text-[#d7e6f3] shadow-xl">
-            <span className="font-bold">{selectedIds.length} tickets selected</span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleBulkStatusChange("in_progress")}
-                className="rounded-full bg-[#6a9bcc] px-3 py-1.5 font-bold text-zinc-950 hover:bg-[#84add1]"
+      {loading ? (
+        <div className="py-16 text-center font-mono text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+          Loading request queue…
+        </div>
+      ) : filteredTickets.length === 0 ? (
+        <EmptyState
+          title="No requests found"
+          description="Try clearing a filter, or open a new request to get started."
+          action={
+            <Link href="/tickets/new">
+              <Button variant="secondary">New ticket</Button>
+            </Link>
+          }
+        />
+      ) : (
+        <div className="space-y-3">
+          {filteredTickets.map((ticket, idx) => {
+            const isSelected = idx === selectedIndex;
+            const isChecked = selectedIds.includes(ticket.id);
+
+            return (
+              <div
+                key={ticket.id}
+                onClick={() => router.push(`/tickets/${ticket.id}`)}
+                className={cn(
+                  "surface flex cursor-pointer items-center justify-between gap-4 p-4 transition hover:border-[var(--line-strong)]",
+                  isSelected &&
+                    "border-[var(--brand)] ring-2 ring-[var(--brand-soft)]"
+                )}
               >
-                Mark In Progress
-              </button>
-              <button
-                onClick={() => handleBulkStatusChange("resolved")}
-                className="rounded-full bg-[#788c5d] px-3 py-1.5 font-bold text-zinc-950 hover:bg-[#9aae75]"
-              >
-                Mark Resolved
-              </button>
-              <button
-                onClick={() => handleBulkStatusChange("closed")}
-                className="rounded-full border border-white/10 bg-zinc-800 px-3 py-1.5 font-bold text-white hover:bg-zinc-700"
-              >
-                Mark Closed
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Tickets List */}
-        {loading ? (
-          <div className="editorial-mono py-16 text-center text-xs uppercase tracking-widest text-zinc-600">Loading request queue...</div>
-        ) : filteredTickets.length === 0 ? (
-          <div className="glass-panel rounded-2xl py-16 text-center text-sm text-zinc-500">
-            No requests found matching this view.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredTickets.map((ticket, idx) => {
-              const isSelected = idx === selectedIndex;
-              const isChecked = selectedIds.includes(ticket.id);
-
-              return (
-                <SpotlightCard
-                  key={ticket.id}
-                  onClick={() => router.push(`/tickets/${ticket.id}`)}
-                  className={`!p-4.5 ${
-                    isSelected
-                      ? "border-[#6a9bcc]/70 ring-1 ring-[#6a9bcc]/30 bg-[#161b21]"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {isAgent && <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSelectOne(ticket.id);
-                        }}
-                        className="text-zinc-600 hover:text-white"
-                      >
-                        {isChecked ? (
-                          <CheckSquare className="w-4 h-4 text-[#8db3d6]" />
-                        ) : (
-                          <Square className="w-4 h-4 text-zinc-700" />
-                        )}
-                      </button>}
-
-                      {ticket.status === "open" && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#a4b889] shrink-0 shadow-sm shadow-[#a4b889]/50" />
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  {isAgent && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelectOne(ticket.id);
+                      }}
+                      aria-label={isChecked ? "Deselect ticket" : "Select ticket"}
+                      className="text-[var(--muted)] hover:text-[var(--brand-ink)]"
+                    >
+                      {isChecked ? (
+                        <CheckSquare className="h-4 w-4 text-[var(--brand)]" />
+                      ) : (
+                        <Square className="h-4 w-4" />
                       )}
-                      {ticket.status === "in_progress" && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#8db3d6] shrink-0 shadow-sm shadow-[#8db3d6]/50" />
-                      )}
-                      {(ticket.status === "resolved" || ticket.status === "closed") && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-zinc-600 shrink-0" />
-                      )}
+                    </button>
+                  )}
 
-                      <span className="editorial-mono text-xs font-bold text-zinc-600 shrink-0">
-                        #{ticket.ticket_number}
-                      </span>
+                  <span className="shrink-0 font-mono text-xs font-semibold text-[var(--faint)]">
+                    #{ticket.ticket_number}
+                  </span>
 
-                      <h3 className="truncate text-sm font-bold text-white transition hover:text-[#8db3d6]">
-                        {ticket.title}
-                      </h3>
+                  <h3 className="truncate text-sm font-semibold text-[var(--ink)]">
+                    {ticket.title}
+                  </h3>
 
-                      {ticket.priority === "urgent" && (
-                        <span className="rounded border border-rose-400/30 bg-rose-400/10 px-2 py-0.5 text-[10px] font-extrabold uppercase text-rose-200 shrink-0">
-                          P0 Urgent
-                        </span>
-                      )}
-                    </div>
+                  {ticket.priority === "urgent" && (
+                    <StatusBadge
+                      tone={priorityTone(ticket.priority)}
+                      className="shrink-0"
+                    >
+                      P0 Urgent
+                    </StatusBadge>
+                  )}
+                </div>
 
-                    <div className="flex items-center gap-4 text-xs shrink-0">
-                      <span className="editorial-mono rounded-full border border-white/10 bg-zinc-900 px-2.5 py-1 text-[10px] font-semibold text-zinc-500">
-                        {ticket.category}
-                      </span>
+                <div className="flex shrink-0 items-center gap-4 text-xs">
+                  <span className="hidden rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)] md:inline-flex">
+                    {ticket.category}
+                  </span>
 
-                      <div className="text-right">
-                        <span className="block leading-tight font-bold text-white">
-                          {ticket.author?.display_name || "Unknown Author"}
-                        </span>
-                        <span className="text-[10px] font-bold block">
-                          {ticket.author?.user_type === "intern" ? (
-                            <span className="text-[#e0a58b]">Intern</span>
-                          ) : (
-                            <span className="text-zinc-500">Staff</span>
-                          )}
-                        </span>
-                      </div>
-
-                      <span className="editorial-mono w-16 text-right text-[10px] font-semibold text-zinc-600">
-                        {new Date(ticket.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
+                  <div className="hidden text-right sm:block">
+                    <span className="block text-xs font-semibold leading-tight text-[var(--ink)]">
+                      {ticket.author?.display_name || "Unknown Author"}
+                    </span>
+                    <span className="mt-0.5 block font-mono text-[10px] text-[var(--faint)]">
+                      {ticket.author?.user_type === "intern"
+                        ? "Intern"
+                        : "Staff"}
+                    </span>
                   </div>
-                </SpotlightCard>
-              );
-            })}
-          </div>
-        )}
-      </main>
+
+                  <span className="hidden w-16 text-right font-mono text-[10px] font-medium text-[var(--faint)] lg:block">
+                    {new Date(ticket.created_at).toLocaleDateString()}
+                  </span>
+
+                  <StatusBadge tone={statusTone(ticket.status)}>
+                    {ticket.status.replace("_", " ")}
+                  </StatusBadge>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

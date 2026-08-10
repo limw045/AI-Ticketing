@@ -6,3 +6,6 @@ node_modules
 dist
 *.tsbuildinfo
 .vercel
+
+# No markdown files should ever be tracked or uploaded to git.
+*.md

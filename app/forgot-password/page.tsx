@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowRight, AlertCircle, CheckCircle2, Infinity } from "lucide-react";
+import { Mail, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { EditorialGrid } from "@/components/EditorialGrid";
+import { AuthShell } from "@/components/public/AuthShell";
+import { Alert } from "@/components/ui/Alert";
+import { Button, FieldLabel, Input } from "@/components/ui/FormField";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -20,7 +22,9 @@ export default function ForgotPasswordPage() {
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
-      { redirectTo: `${window.location.origin}/auth/callback?next=/reset-password` }
+      {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      }
     );
     setLoading(false);
     if (resetError) {
@@ -31,26 +35,56 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="editorial-shell flex min-h-screen items-center justify-center px-6 py-12">
-      <EditorialGrid />
-      <section className="editorial-content w-full max-w-md border border-white/10 bg-[#111113] p-8 shadow-2xl">
-        <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white"><Infinity className="h-5 w-5" /> Get Blue</div>
-          <span className="editorial-mono text-[10px] uppercase tracking-widest text-zinc-500">Recovery / 01</span>
+    <AuthShell step="Recovery / 01">
+      <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
+        Recover your access.
+      </h1>
+      <p className="mt-2 text-sm leading-5 text-[var(--muted)]">
+        We will send a secure reset link to your registered staff or Intern
+        email.
+      </p>
+
+      {error && (
+        <div className="mt-6">
+          <Alert tone="error" role="alert">
+            {error}
+          </Alert>
         </div>
-        <h1 className="text-3xl font-light tracking-[-0.04em] text-white">Recover your access.</h1>
-        <p className="mt-2 text-xs leading-5 text-zinc-500">We will send a secure reset link to your registered staff or Intern email.</p>
-        {error && <div role="alert" className="mt-6 flex gap-2 border border-rose-400/30 bg-rose-400/10 p-3 text-xs text-rose-200"><AlertCircle className="h-4 w-4" />{error}</div>}
-        {success && <div role="status" className="mt-6 flex gap-2 border border-emerald-400/30 bg-emerald-400/10 p-3 text-xs text-emerald-200"><CheckCircle2 className="h-4 w-4" />{success}</div>}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          <label className="block">
-            <span className="editorial-mono mb-2 block text-[10px] uppercase tracking-widest text-zinc-500">Email address</span>
-            <span className="relative block"><Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-600" /><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full border border-white/10 bg-[#0a0a0c] px-10 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]" /></span>
-          </label>
-          <button disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#6a9bcc] px-5 py-3 text-xs font-bold text-zinc-950 disabled:opacity-50">{loading ? "Sending..." : "Send reset link"}<ArrowRight className="h-4 w-4" /></button>
-        </form>
-        <p className="mt-8 border-t border-white/10 pt-5 text-center text-xs text-zinc-600"><Link href="/login" className="text-[#8db3d6] hover:text-white">Back to sign in</Link></p>
-      </section>
-    </main>
+      )}
+      {success && (
+        <div className="mt-6">
+          <Alert tone="success">{success}</Alert>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <label className="block">
+          <FieldLabel>Email address</FieldLabel>
+          <span className="relative block">
+            <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
+            <Input
+              required
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="pl-10"
+            />
+          </span>
+        </label>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? "Sending…" : "Send reset link"}
+          {!loading && <ArrowRight className="h-4 w-4" />}
+        </Button>
+      </form>
+
+      <p className="mt-8 border-t border-[var(--line)] pt-5 text-center text-xs text-[var(--muted)]">
+        <Link
+          href="/login"
+          className="font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]"
+        >
+          Back to sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

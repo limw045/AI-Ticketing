@@ -2,20 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Navbar } from "@/components/Navbar";
-import { GlassSurface } from "@/components/react-bits/GlassSurface";
-import { CountUp } from "@/components/react-bits/CountUp";
-import { BlurText } from "@/components/react-bits/BlurText";
-import { EditorialGrid } from "@/components/EditorialGrid";
 import { buildCsv } from "@/lib/csv";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { StatusBadge, severityTone } from "@/components/ui/StatusBadge";
+import { Alert } from "@/components/ui/Alert";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+  Button,
+  FieldLabel,
+  Input,
+  Select,
+} from "@/components/ui/FormField";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
-import {
-  Download, Radio
-} from "lucide-react";
+import { Download, Radio } from "lucide-react";
 
-const COLORS = ["#6a9bcc", "#788c5d", "#9c86b8", "#d97757", "#b85b6b"];
+const COLORS = ["#5c2d91", "#8b64b8", "#b996d2", "#3d6f9d", "#2e7d5b"];
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -35,7 +46,11 @@ export default function AdminDashboard() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const { data: currentProfile } = user
-      ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+      ? await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
       : { data: null };
     const role = currentProfile?.role ?? "";
     setCurrentUserRole(role);
@@ -57,7 +72,9 @@ export default function AdminDashboard() {
     if (role === "admin") {
       const { data: userData, error: userError } = await supabase
         .from("profiles")
-        .select("id, display_name, email, department, user_type, role, account_status, created_at")
+        .select(
+          "id, display_name, email, department, user_type, role, account_status, created_at"
+        )
         .order("created_at", { ascending: true });
       if (userError) setError(`Could not load staff accounts: ${userError.message}`);
       else setUsers(userData ?? []);
@@ -68,7 +85,6 @@ export default function AdminDashboard() {
       if (clientError) setError(`Could not load API clients: ${clientError.message}`);
       else setApiClients(clientData ?? []);
     }
-
   };
 
   useEffect(() => {
@@ -99,7 +115,10 @@ export default function AdminDashboard() {
 
   const handleToggleIncident = async (id: string, currentActive: boolean) => {
     const supabase = createClient();
-    const { error: updateError } = await supabase.from("incidents").update({ is_active: !currentActive }).eq("id", id);
+    const { error: updateError } = await supabase
+      .from("incidents")
+      .update({ is_active: !currentActive })
+      .eq("id", id);
     if (updateError) {
       setError(`Incident update failed: ${updateError.message}`);
       return;
@@ -117,7 +136,11 @@ export default function AdminDashboard() {
       client_name: apiClientName.trim(),
     });
     if (rpcError || !data?.api_key) {
-      setError(`API client creation failed: ${rpcError?.message || "No key was returned."}`);
+      setError(
+        `API client creation failed: ${
+          rpcError?.message || "No key was returned."
+        }`
+      );
       return;
     }
     setGeneratedApiKey(data.api_key);
@@ -157,7 +180,15 @@ export default function AdminDashboard() {
 
   const exportCSV = () => {
     if (tickets.length === 0) return;
-    const headers = ["Ticket Number", "Title", "Category", "Priority", "Status", "Author", "Created At"];
+    const headers = [
+      "Ticket Number",
+      "Title",
+      "Category",
+      "Priority",
+      "Status",
+      "Author",
+      "Created At",
+    ];
     const rows = tickets.map((t) => [
       t.ticket_number,
       t.title,
@@ -168,11 +199,16 @@ export default function AdminDashboard() {
       t.created_at,
     ]);
 
-    const csvBlob = new Blob([buildCsv([headers, ...rows])], { type: "text/csv;charset=utf-8" });
+    const csvBlob = new Blob([buildCsv([headers, ...rows])], {
+      type: "text/csv;charset=utf-8",
+    });
     const objectUrl = URL.createObjectURL(csvBlob);
     const link = document.createElement("a");
     link.setAttribute("href", objectUrl);
-    link.setAttribute("download", `IT_Ticketing_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute(
+      "download",
+      `IT_Ticketing_Report_${new Date().toISOString().slice(0, 10)}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -180,13 +216,22 @@ export default function AdminDashboard() {
   };
 
   const totalVolume = tickets.length;
-  const resolvedTickets = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
-  const resolutionRate = totalVolume > 0 ? Math.round((resolvedTickets / totalVolume) * 100) : 0;
-  const urgentCount = tickets.filter((t) => t.priority === "urgent" && t.status !== "closed").length;
-  const respondedTickets = tickets.filter((ticket) => ticket.first_responded_at && ticket.created_at);
+  const resolvedTickets = tickets.filter(
+    (t) => t.status === "resolved" || t.status === "closed"
+  ).length;
+  const resolutionRate =
+    totalVolume > 0 ? Math.round((resolvedTickets / totalVolume) * 100) : 0;
+  const urgentCount = tickets.filter(
+    (t) => t.priority === "urgent" && t.status !== "closed"
+  ).length;
+  const respondedTickets = tickets.filter(
+    (ticket) => ticket.first_responded_at && ticket.created_at
+  );
   const averageResponseHours = respondedTickets.length
     ? respondedTickets.reduce((sum, ticket) => {
-        const elapsedMs = new Date(ticket.first_responded_at).getTime() - new Date(ticket.created_at).getTime();
+        const elapsedMs =
+          new Date(ticket.first_responded_at).getTime() -
+          new Date(ticket.created_at).getTime();
         return sum + Math.max(0, elapsedMs / 3_600_000);
       }, 0) / respondedTickets.length
     : null;
@@ -210,204 +255,315 @@ export default function AdminDashboard() {
     value: deptCounts[dept],
   }));
 
+  const chartTooltipStyle = {
+    backgroundColor: "var(--surface)",
+    borderColor: "var(--line-strong)",
+    borderRadius: 12,
+    color: "var(--ink)",
+    fontSize: 12,
+  };
+  const axisColor = "var(--faint)";
+
   return (
-    <div className="editorial-shell pb-20">
-      <EditorialGrid />
-      <Navbar />
+    <div className="space-y-10">
+      {error && (
+        <Alert tone="error" role="alert">
+          {error}
+        </Alert>
+      )}
 
-      <main className="editorial-content max-w-7xl mx-auto px-6 pt-10 space-y-8">
-        {error && <div role="alert" className="border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="editorial-mono text-[10px] uppercase tracking-[0.25em] text-zinc-600">STEP 04 / OBSERVE</div>
-            <BlurText text="The signal behind the queue." className="mt-3 text-4xl font-light tracking-[-0.05em] text-white" />
-            <p className="mt-3 text-xs leading-6 text-zinc-500">
-              Real-time service desk metrics, category breakdown, and global incident management.
-            </p>
+      <PageHeader
+        eyebrow="Operations"
+        title="The signal behind the queue."
+        description="Service desk metrics, category breakdown, and global incident management."
+        actions={
+          <Button type="button" variant="secondary" onClick={exportCSV}>
+            <Download className="h-4 w-4" /> Export CSV report
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Total volume" value={totalVolume} animate />
+        <MetricCard
+          label="Resolution rate"
+          value={`${resolutionRate}%`}
+          valueClassName="text-[var(--success)]"
+        />
+        <MetricCard
+          label="Avg response SLA"
+          value={
+            averageResponseHours === null
+              ? "N/A"
+              : `${averageResponseHours.toFixed(1)}h`
+          }
+          valueClassName="text-[var(--brand-ink)]"
+        />
+        <MetricCard
+          label="Urgent breaches"
+          value={urgentCount}
+          animate
+          valueClassName="text-[var(--danger)]"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section className="surface p-6">
+          <h2 className="font-display text-base font-bold">
+            Ticket volume by category
+          </h2>
+          <div className="mt-4 h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={categoryData}>
+                <XAxis dataKey="name" stroke={axisColor} fontSize={11} />
+                <YAxis stroke={axisColor} fontSize={11} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  fill="var(--brand)"
+                  radius={[6, 6, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
+        </section>
 
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-2 self-start rounded-full bg-[#6a9bcc] px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-500/20 transition hover:bg-[#84add1] md:self-auto"
-          >
-            <Download className="w-4 h-4" /> Export CSV Report
-          </button>
-        </div>
+        <section className="surface p-6">
+          <h2 className="font-display text-base font-bold">
+            Department ticket ratio
+          </h2>
+          <div className="mt-4 flex h-64 items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={deptData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {deptData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={chartTooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      </div>
 
-        {/* KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <GlassSurface className="!p-5">
-            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">01 / Total Volume</span>
-            <div className="mt-3 text-4xl font-light text-white">
-              <CountUp to={totalVolume} />
-            </div>
-          </GlassSurface>
-
-          <GlassSurface className="!p-5">
-            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">02 / Resolution Rate</span>
-            <div className="mt-3 text-4xl font-light text-[#a4b889]">
-              <CountUp to={resolutionRate} />%
-            </div>
-          </GlassSurface>
-
-          <GlassSurface className="!p-5">
-            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-zinc-600">03 / Avg Response SLA</span>
-            <div className="mt-3 text-4xl font-light text-[#8db3d6]">
-              {averageResponseHours === null ? "N/A" : `${averageResponseHours.toFixed(1)}h`}
-            </div>
-          </GlassSurface>
-
-          <GlassSurface className="!p-5">
-            <span className="editorial-mono block text-[10px] font-bold uppercase tracking-widest text-[#e99aa4]">04 / Urgent Breaches</span>
-            <div className="mt-3 text-4xl font-light text-[#e99aa4]">
-              <CountUp to={urgentCount} />
-            </div>
-          </GlassSurface>
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <GlassSurface showWindowDots title="Ticket Volume by Category">
-            <div className="h-64 mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData}>
-                  <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
-                  <YAxis stroke="#71717a" fontSize={11} />
-                  <Tooltip contentStyle={{ backgroundColor: "#141416", borderColor: "#3f3f46", borderRadius: 12, color: "#fafafa" }} />
-                  <Bar dataKey="count" fill="#6a9bcc" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </GlassSurface>
-
-          <GlassSurface showWindowDots title="Department Ticket Ratio">
-            <div className="h-64 mt-4 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={deptData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {deptData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "#141416", borderColor: "#3f3f46", borderRadius: 12, color: "#fafafa" }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </GlassSurface>
-        </div>
-
-        {/* Global Incident Manager */}
-        <GlassSurface showWindowDots title="Global Incident / Outage Manager">
-          <form onSubmit={handlePublishIncident} className="space-y-4 mb-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <input
+      <section id="admin" className="surface p-6">
+        <h2 className="font-display text-base font-bold">
+          Global incident / outage manager
+        </h2>
+        <form onSubmit={handlePublishIncident} className="mt-5 space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <FieldLabel>Title</FieldLabel>
+              <Input
                 type="text"
-                placeholder="Incident Title (e.g. Office Wi-Fi Degradation)"
+                placeholder="Incident title (e.g. Office Wi-Fi Degradation)"
                 value={newIncidentTitle}
                 onChange={(e) => setNewIncidentTitle(e.target.value)}
                 required
-                className="border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
               />
-              <input
+            </div>
+            <div>
+              <FieldLabel>Message</FieldLabel>
+              <Input
                 type="text"
                 placeholder="Announcement message for staff..."
                 value={newIncidentMsg}
                 onChange={(e) => setNewIncidentMsg(e.target.value)}
                 required
-                className="border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
               />
-              <select
+            </div>
+            <div>
+              <FieldLabel>Severity</FieldLabel>
+              <Select
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value)}
-                className="border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs font-semibold text-white outline-none focus:border-[#6a9bcc]"
               >
-                <option value="warning">Warning (Amber)</option>
-                <option value="critical">Critical Outage (Red)</option>
-                <option value="info">Information (Blue)</option>
-              </select>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+                <option value="info">Information</option>
+              </Select>
             </div>
-            <button
-              type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#6a9bcc] py-3.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-500/20 transition hover:bg-[#84add1]"
-            >
-              <Radio className="w-4 h-4" /> Publish Global Outage Banner
-            </button>
-          </form>
+          </div>
+          <Button type="submit" className="w-full">
+            <Radio className="h-4 w-4" /> Publish global outage banner
+          </Button>
+        </form>
 
-          <div className="space-y-2 border-t border-white/10 pt-4">
-            <h4 className="editorial-mono mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Current Incidents</h4>
-            {incidents.map((inc) => (
-              <div key={inc.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3.5 text-xs">
-                <div>
-                  <span className="font-bold text-white">{inc.title}</span>
-                  <p className="text-[11px] font-medium text-zinc-500">{inc.message}</p>
-                </div>
+        <div className="mt-6 space-y-2 border-t border-[var(--line)] pt-4">
+          <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Current incidents
+          </h3>
+          {incidents.map((inc) => (
+            <div
+              key={inc.id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3.5 text-sm"
+            >
+              <div className="min-w-0">
+                <span className="block font-semibold text-[var(--ink)]">
+                  {inc.title}
+                </span>
+                <p className="text-xs font-medium text-[var(--muted)]">
+                  {inc.message}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <StatusBadge tone={severityTone(inc.severity)}>
+                  {inc.severity}
+                </StatusBadge>
                 <button
                   onClick={() => handleToggleIncident(inc.id, inc.is_active)}
-                  className={`px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase transition ${
-                    inc.is_active ? "border border-rose-400/30 bg-rose-400/10 text-rose-200" : "bg-zinc-800 text-zinc-500"
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                    inc.is_active
+                      ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+                      : "bg-[var(--surface-3)] text-[var(--muted)] hover:text-[var(--ink)]"
                   }`}
                 >
                   {inc.is_active ? "Deactivate" : "Activate"}
                 </button>
               </div>
-            ))}
-          </div>
-        </GlassSurface>
+            </div>
+          ))}
+          {incidents.length === 0 && (
+            <p className="py-4 text-xs text-[var(--faint)]">
+              No incidents published yet.
+            </p>
+          )}
+        </div>
+      </section>
 
-        {currentUserRole === "admin" && <GlassSurface showWindowDots title="Internal App API Access">
-          <form onSubmit={handleCreateApiClient} className="flex flex-col gap-3 md:flex-row">
-            <input
+      {currentUserRole === "admin" && (
+        <section className="surface p-6">
+          <h2 className="font-display text-base font-bold">
+            Internal app API access
+          </h2>
+          <form
+            onSubmit={handleCreateApiClient}
+            className="mt-5 flex flex-col gap-3 md:flex-row"
+          >
+            <Input
               value={apiClientName}
               onChange={(event) => setApiClientName(event.target.value)}
               placeholder="App name, e.g. Model Gateway"
               required
-              className="flex-1 border border-white/10 bg-[#0a0a0c] px-4 py-3 text-xs text-white outline-none focus:border-[#6a9bcc]"
+              className="flex-1"
             />
-            <button className="rounded-full bg-[#6a9bcc] px-5 py-3 text-xs font-bold text-zinc-950 hover:bg-[#84add1]">
-              Generate API key
-            </button>
+            <Button type="submit">Generate API key</Button>
           </form>
           {generatedApiKey && (
-            <div className="mt-4 border border-amber-300/30 bg-amber-300/10 p-4 text-xs text-amber-100">
+            <div className="mt-4 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
               <strong className="block">Copy this key now. It cannot be shown again.</strong>
-              <code className="mt-2 block break-all select-all font-mono">{generatedApiKey}</code>
+              <code className="mt-2 block select-all break-all font-mono text-xs">
+                {generatedApiKey}
+              </code>
             </div>
           )}
-          <div className="mt-5 divide-y divide-white/10 border-y border-white/10">
-            {apiClients.map((client) => <div key={client.id} className="flex items-center justify-between py-3 text-xs"><span><strong className="block text-white">{client.name}</strong><span className="text-zinc-600">Last used: {client.last_used_at ? new Date(client.last_used_at).toLocaleString() : "Never"}</span></span><button onClick={() => handleToggleApiClient(client.id, client.is_active)} className={`rounded-full px-3 py-1.5 font-bold ${client.is_active ? "border border-rose-400/30 text-rose-200" : "border border-emerald-400/30 text-emerald-200"}`}>{client.is_active ? "Revoke" : "Activate"}</button></div>)}
+          <div className="mt-5 divide-y divide-[var(--line)] border-y border-[var(--line)]">
+            {apiClients.map((client) => (
+              <div
+                key={client.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
+              >
+                <span>
+                  <strong className="block text-[var(--ink)]">
+                    {client.name}
+                  </strong>
+                  <span className="font-mono text-xs text-[var(--faint)]">
+                    Last used:{" "}
+                    {client.last_used_at
+                      ? new Date(client.last_used_at).toLocaleString()
+                      : "Never"}
+                  </span>
+                </span>
+                <button
+                  onClick={() => handleToggleApiClient(client.id, client.is_active)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                    client.is_active
+                      ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+                      : "bg-[var(--success-soft)] text-[var(--success)]"
+                  }`}
+                >
+                  {client.is_active ? "Revoke" : "Activate"}
+                </button>
+              </div>
+            ))}
+            {apiClients.length === 0 && (
+              <p className="py-5 text-xs text-[var(--faint)]">
+                No API clients created yet.
+              </p>
+            )}
           </div>
-        </GlassSurface>}
+        </section>
+      )}
 
-        {currentUserRole === "admin" && <GlassSurface showWindowDots title="Staff Access & Roles">
-          <div className="divide-y divide-white/10 border-y border-white/10">
+      {currentUserRole === "admin" && (
+        <section className="surface p-6">
+          <h2 className="font-display text-base font-bold">
+            Staff access &amp; roles
+          </h2>
+          <div className="mt-4 divide-y divide-[var(--line)] border-y border-[var(--line)]">
             {users.map((user) => (
-              <div key={user.id} className="grid gap-3 py-4 text-xs md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr] md:items-center">
-                <div><strong className="block text-white">{user.display_name}</strong><span className="text-zinc-600">{user.email}</span></div>
-                <span className="text-zinc-400">{user.department} / {user.user_type}</span>
-                <select value={user.role} onChange={(event) => handleUserAccessChange(user.id, { role: event.target.value })} className="border border-white/10 bg-[#0a0a0c] px-3 py-2 text-white outline-none focus:border-[#6a9bcc]">
+              <div
+                key={user.id}
+                className="grid gap-3 py-4 text-sm md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr] md:items-center"
+              >
+                <div>
+                  <strong className="block text-[var(--ink)]">
+                    {user.display_name}
+                  </strong>
+                  <span className="font-mono text-xs text-[var(--faint)]">
+                    {user.email}
+                  </span>
+                </div>
+                <span className="text-xs text-[var(--muted)]">
+                  {user.department} / {user.user_type}
+                </span>
+                <Select
+                  value={user.role}
+                  onChange={(event) =>
+                    handleUserAccessChange(user.id, {
+                      role: event.target.value,
+                    })
+                  }
+                  className="!py-2"
+                >
                   <option value="employee">Employee</option>
                   <option value="support_agent">Support agent</option>
                   <option value="admin">Admin</option>
-                </select>
-                <select value={user.account_status} onChange={(event) => handleUserAccessChange(user.id, { account_status: event.target.value })} className="border border-white/10 bg-[#0a0a0c] px-3 py-2 text-white outline-none focus:border-[#6a9bcc]">
+                </Select>
+                <Select
+                  value={user.account_status}
+                  onChange={(event) =>
+                    handleUserAccessChange(user.id, {
+                      account_status: event.target.value,
+                    })
+                  }
+                  className="!py-2"
+                >
                   <option value="active">Active</option>
                   <option value="suspended">Suspended</option>
-                </select>
+                </Select>
               </div>
             ))}
-            {users.length === 0 && <p className="py-5 text-xs text-zinc-600">No staff profiles have been created yet.</p>}
+            {users.length === 0 && (
+              <p className="py-5 text-xs text-[var(--faint)]">
+                No staff profiles have been created yet.
+              </p>
+            )}
           </div>
-        </GlassSurface>}
-      </main>
+        </section>
+      )}
     </div>
   );
 }

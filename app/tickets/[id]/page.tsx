@@ -3,15 +3,42 @@
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Navbar } from "@/components/Navbar";
-import { GlassSurface } from "@/components/react-bits/GlassSurface";
 import { exportTicketPDF } from "@/lib/pdf-export";
-import { EditorialGrid } from "@/components/EditorialGrid";
 import {
-  User, Lock, Send, Plus, CheckSquare, Square, Download, Monitor, RotateCcw
+  StatusBadge,
+  statusTone,
+  priorityTone,
+} from "@/components/ui/StatusBadge";
+import { Alert } from "@/components/ui/Alert";
+import {
+  Button,
+  FieldLabel,
+  Select,
+  Textarea,
+  Input,
+} from "@/components/ui/FormField";
+import {
+  User,
+  Lock,
+  Send,
+  Plus,
+  CheckSquare,
+  Square,
+  Download,
+  Monitor,
+  RotateCcw,
+  Circle,
+  Check,
 } from "lucide-react";
+import { cn } from "@/lib/cn";
 
-export default function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+const STATUS_STEPS = ["open", "in_progress", "resolved", "closed"];
+
+export default function TicketDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const resolvedParams = use(params);
   const ticketId = resolvedParams.id;
@@ -26,7 +53,9 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const isAgent = currentUserProfile?.role === "support_agent" || currentUserProfile?.role === "admin";
+  const isAgent =
+    currentUserProfile?.role === "support_agent" ||
+    currentUserProfile?.role === "admin";
 
   const fetchTicketDetails = useCallback(async () => {
     setError("");
@@ -44,16 +73,22 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
       .eq("id", user.id)
       .single();
     if (profileError || !profile || profile.account_status !== "active") {
-      setError(profileError?.message || "Your staff profile is unavailable or inactive.");
+      setError(
+        profileError?.message ||
+          "Your staff profile is unavailable or inactive."
+      );
       setLoading(false);
       return;
     }
     setCurrentUserProfile(profile);
-    const profileIsAgent = profile.role === "support_agent" || profile.role === "admin";
+    const profileIsAgent =
+      profile.role === "support_agent" || profile.role === "admin";
 
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
-      .select("*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)")
+      .select(
+        "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)"
+      )
       .eq("id", ticketId)
       .single();
 
@@ -117,7 +152,10 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     if (newStatus === "resolved" || newStatus === "closed") {
       updates.resolved_at = new Date().toISOString();
     }
-    const { error: updateError } = await supabase.from("tickets").update(updates).eq("id", ticketId);
+    const { error: updateError } = await supabase
+      .from("tickets")
+      .update(updates)
+      .eq("id", ticketId);
     if (updateError) {
       setError(`Status update failed: ${updateError.message}`);
       return;
@@ -150,7 +188,10 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     ];
 
     const supabase = createClient();
-    const { error: updateError } = await supabase.from("tickets").update({ subtasks: updated }).eq("id", ticketId);
+    const { error: updateError } = await supabase
+      .from("tickets")
+      .update({ subtasks: updated })
+      .eq("id", ticketId);
     if (updateError) {
       setError(`Subtask update failed: ${updateError.message}`);
       return;
@@ -167,7 +208,10 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     );
 
     const supabase = createClient();
-    const { error: updateError } = await supabase.from("tickets").update({ subtasks: updated }).eq("id", ticketId);
+    const { error: updateError } = await supabase
+      .from("tickets")
+      .update({ subtasks: updated })
+      .eq("id", ticketId);
     if (updateError) {
       setError(`Subtask update failed: ${updateError.message}`);
       return;
@@ -189,15 +233,15 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="editorial-shell flex min-h-screen items-center justify-center">
-        <div className="editorial-mono text-xs uppercase tracking-widest text-zinc-600 animate-pulse">Loading request #{ticketId}...</div>
+      <div className="flex min-h-[50vh] items-center justify-center font-mono text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+        Loading request #{ticketId}…
       </div>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="editorial-shell p-8 text-center text-zinc-400">
+      <div className="py-20 text-center text-sm text-[var(--muted)]">
         Ticket not found or access restricted.
       </div>
     );
@@ -205,274 +249,353 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
   const subtasks = ticket.subtasks || [];
   const completedSubtasks = subtasks.filter((st: any) => st.completed).length;
-  const subtaskProgressPct = subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+  const subtaskProgressPct =
+    subtasks.length > 0
+      ? Math.round((completedSubtasks / subtasks.length) * 100)
+      : 0;
+  const statusIndex = STATUS_STEPS.indexOf(ticket.status);
 
   return (
-    <div className="editorial-shell pb-20">
-      <EditorialGrid />
-      <Navbar />
-      {error && <div role="alert" className="editorial-content mx-auto mt-6 max-w-7xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">{error}</div>}
+    <div className="space-y-8">
+      {error && (
+        <Alert tone="error" role="alert">
+          {error}
+        </Alert>
+      )}
 
-      <main className="editorial-content max-w-7xl mx-auto px-6 pt-10">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content Column (75%) */}
-          <div className="lg:col-span-3 space-y-6">
-            <GlassSurface showWindowDots title={`Ticket #${ticket.ticket_number}`}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="editorial-mono mb-3 flex items-center gap-3 text-[10px] uppercase tracking-widest">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                        ticket.status === "open"
-                          ? "bg-[#788c5d]/15 text-[#a4b889] border border-[#788c5d]/35"
-                          : ticket.status === "in_progress"
-                          ? "bg-[#6a9bcc]/15 text-[#8db3d6] border border-[#6a9bcc]/35"
-                          : "bg-zinc-800 text-zinc-400 border border-white/10"
-                      }`}
-                    >
-                      {ticket.status}
-                    </span>
-                    <span className="text-zinc-500">{ticket.category}</span>
-                    {ticket.priority === "urgent" && (
-                      <span className="rounded border border-rose-400/30 bg-rose-400/10 px-2.5 py-0.5 text-[11px] font-extrabold uppercase text-rose-200">
-                        ⚡ P0 URGENT
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <StatusBadge tone={statusTone(ticket.status)}>
+              {ticket.status.replace("_", " ")}
+            </StatusBadge>
+            <StatusBadge tone="neutral">{ticket.category}</StatusBadge>
+            <StatusBadge tone={priorityTone(ticket.priority)}>
+              {ticket.priority === "urgent" ? "P0 Urgent" : ticket.priority}
+            </StatusBadge>
+            <span className="font-mono text-xs font-semibold text-[var(--faint)]">
+              #{ticket.ticket_number}
+            </span>
+          </div>
+          <h1 className="heading-page text-2xl md:text-3xl">{ticket.title}</h1>
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Opened by{" "}
+            <strong className="font-semibold text-[var(--ink)]">
+              {ticket.author?.display_name}
+            </strong>{" "}
+            ({ticket.author?.user_type === "intern" ? "Intern" : "Staff"} ·{" "}
+            {ticket.author?.department}) on{" "}
+            {new Date(ticket.created_at).toLocaleString()}
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => exportTicketPDF(ticket)}
+          className="shrink-0"
+        >
+          <Download className="h-4 w-4" /> Export PDF
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
+          {/* Case path lifecycle */}
+          <section className="surface p-6">
+            <h2 className="font-display text-base font-bold">Case path</h2>
+            <div className="case-path mt-5 space-y-0 pl-0">
+              <ol className="relative ml-2 space-y-7 border-l-2 border-[var(--line-strong)] pl-6">
+                {STATUS_STEPS.map((step, idx) => {
+                  const reached = idx <= statusIndex;
+                  const isCurrent = idx === statusIndex;
+                  return (
+                    <li key={step} className="relative">
+                      <span
+                        className={cn(
+                          "absolute -left-[31px] top-0 flex h-4 w-4 items-center justify-center rounded-full border-2",
+                          reached
+                            ? "border-[var(--brand)] bg-[var(--brand)]"
+                            : "border-[var(--line-strong)] bg-[var(--surface)]"
+                        )}
+                      >
+                        {reached ? (
+                          <Check className="h-2.5 w-2.5 text-[var(--brand-on)]" />
+                        ) : (
+                          <Circle className="h-2 w-2 text-[var(--faint)]" />
+                        )}
                       </span>
-                    )}
-                  </div>
+                      <span
+                        className={cn(
+                          "font-mono text-[11px] font-bold uppercase tracking-[0.12em]",
+                          isCurrent
+                            ? "text-[var(--brand-ink)]"
+                            : reached
+                            ? "text-[var(--ink)]"
+                            : "text-[var(--faint)]"
+                        )}
+                      >
+                        {step.replace("_", " ")}
+                      </span>
+                      {isCurrent && (
+                        <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 font-mono text-[9px] font-bold text-[var(--brand-ink)]">
+                          Current
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </section>
 
-                  <h1 className="text-3xl font-light tracking-[-0.05em] text-white">{ticket.title}</h1>
-                </div>
+          {/* Description */}
+          <section className="surface p-6">
+            <h2 className="font-display text-base font-bold">
+              Issue description
+            </h2>
+            <div className="mt-4 whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-5 font-mono text-sm leading-relaxed text-[var(--ink-2)]">
+              {ticket.description}
+            </div>
+          </section>
 
-                <button
-                  onClick={() => exportTicketPDF(ticket)}
-                  className="editorial-mono flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-900 px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition hover:border-white/25 hover:text-white"
-                >
-                  <Download className="w-3.5 h-3.5" /> Export PDF
-                </button>
-              </div>
-
-              <div className="mt-5 flex items-center gap-3 border-t border-white/10 pt-4 text-xs text-zinc-500">
-                <User className="w-4 h-4 text-[#8db3d6]" />
-                <span>
-                  Opened by <strong className="text-white">{ticket.author?.display_name}</strong> (
-                  {ticket.author?.user_type === "intern" ? (
-                    <span className="font-bold text-[#e0a58b]">Intern</span>
-                  ) : (
-                    <span className="text-zinc-300">Staff - {ticket.author?.department}</span>
-                  )}
-                  ) on {new Date(ticket.created_at).toLocaleString()}
-                </span>
-              </div>
-            </GlassSurface>
-
-            {/* Description Body */}
-            <div className="glass-panel rounded-2xl p-6 space-y-4">
-              <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">01 / Issue Description</h3>
-              <div className="max-w-none rounded-2xl border border-white/10 bg-black/20 p-4 font-mono text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
-                {ticket.description}
-              </div>
+          {/* Subtasks */}
+          <section className="surface p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-base font-bold">
+                Sub-task checklist ({completedSubtasks}/{subtasks.length})
+              </h2>
+              <span className="font-mono text-xs font-bold text-[var(--brand-ink)]">
+                {subtaskProgressPct}% complete
+              </span>
             </div>
 
-            {/* Sub-task Checklist */}
-            <div className="glass-panel rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                  02 / Sub-task Checklist ({completedSubtasks}/{subtasks.length})
-                </h3>
-                <span className="editorial-mono text-[10px] font-bold text-[#8db3d6]">{subtaskProgressPct}% Complete</span>
-              </div>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
+              <div
+                className="h-full rounded-full bg-[var(--brand)] transition-all duration-300"
+                style={{ width: `${subtaskProgressPct}%` }}
+              />
+            </div>
 
-              <div className="h-2.5 w-full overflow-hidden rounded-full border border-white/10 bg-zinc-900">
-                <div
-                  className="h-full rounded-full bg-[#6a9bcc] transition-all duration-300"
-                  style={{ width: `${subtaskProgressPct}%` }}
-                />
-              </div>
-
-              <div className="space-y-2">
-                {subtasks.map((st: any) => (
-                  <div
-                    key={st.id}
-                    onClick={() => isAgent && handleToggleSubtask(st.id)}
-                    className={`flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3 transition ${isAgent ? "cursor-pointer hover:border-white/25" : "cursor-default"}`}
-                  >
-                    {st.completed ? (
-                      <CheckSquare className="h-4 w-4 shrink-0 text-[#8db3d6]" />
-                    ) : (
-                      <Square className="h-4 w-4 shrink-0 text-zinc-700" />
+            <ul className="mt-4 space-y-2">
+              {subtasks.map((st: any) => (
+                <li
+                  key={st.id}
+                  onClick={() => isAgent && handleToggleSubtask(st.id)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3 transition",
+                    isAgent && "cursor-pointer hover:border-[var(--line-strong)]"
+                  )}
+                >
+                  {st.completed ? (
+                    <CheckSquare className="h-4 w-4 shrink-0 text-[var(--brand)]" />
+                  ) : (
+                    <Square className="h-4 w-4 shrink-0 text-[var(--faint)]" />
+                  )}
+                  <span
+                    className={cn(
+                      "text-sm",
+                      st.completed
+                        ? "text-[var(--faint)] line-through"
+                        : "text-[var(--ink)]"
                     )}
-                    <span className={`text-xs font-medium ${st.completed ? "line-through text-zinc-600" : "text-zinc-300"}`}>
-                      {st.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  >
+                    {st.title}
+                  </span>
+                </li>
+              ))}
+            </ul>
 
-              {isAgent && <form onSubmit={handleAddSubtask} className="flex gap-2 pt-2">
-                <input
+            {isAgent && (
+              <form onSubmit={handleAddSubtask} className="mt-4 flex gap-2">
+                <Input
                   type="text"
                   placeholder="Add new subtask step..."
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  className="flex-1 border border-white/10 bg-[#0a0a0c] px-3.5 py-2.5 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
                 />
-                <button type="submit" className="rounded-full border border-white/10 bg-zinc-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-zinc-700">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </form>}
-            </div>
+                <Button type="submit" variant="secondary" className="shrink-0 !px-4">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </form>
+            )}
+          </section>
 
-            {/* Timeline Comments */}
-            <div className="space-y-4">
-              <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                03 / Timeline & Discussion ({comments.length})
-              </h3>
-
+          {/* Timeline */}
+          <section>
+            <h2 className="font-display text-base font-bold">
+              Timeline &amp; discussion ({comments.length})
+            </h2>
+            <div className="mt-4 space-y-4">
               {comments.map((comment) => (
                 <div
                   key={comment.id}
-                  className={`p-5 rounded-3xl border ${
+                  className={cn(
+                    "rounded-2xl border p-5",
                     comment.is_internal_note
-                      ? "bg-[#1a1414] border-[#d97757]/30 text-[#e0a58b]"
-                      : "editorial-bubble text-zinc-200"
-                  }`}
+                      ? "border-[var(--warning)]/30 bg-[var(--warning-soft)]"
+                      : "border-[var(--line)] bg-[var(--surface)]"
+                  )}
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-white">
+                      <span className="text-xs font-bold text-[var(--ink)]">
                         {comment.author?.display_name || "System"}
                       </span>
                       {comment.is_internal_note && (
-                        <span className="editorial-mono flex items-center gap-1 rounded border border-[#d97757]/30 bg-[#d97757]/10 px-2 py-0.5 text-[10px] font-bold text-[#e0a58b]">
-                          <Lock className="h-3 w-3" /> Internal Note
-                        </span>
+                        <StatusBadge tone="warning">
+                          <Lock className="h-3 w-3" /> Internal note
+                        </StatusBadge>
                       )}
                     </div>
-                    <span className="editorial-mono text-[10px] font-semibold text-zinc-600">
+                    <span className="font-mono text-[10px] font-medium text-[var(--faint)]">
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-sm font-mono whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+                  <p className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-[var(--ink-2)]">
+                    {comment.content}
+                  </p>
                 </div>
               ))}
 
-              {/* Reply Box */}
-              <form onSubmit={handlePostComment} className="glass-panel rounded-2xl p-5 space-y-4">
-                <textarea
+              <form
+                onSubmit={handlePostComment}
+                className="surface space-y-4 p-5"
+              >
+                <Textarea
                   rows={4}
                   placeholder="Leave a comment or reply..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   required
-                  className="w-full border border-white/10 bg-[#0a0a0c] p-4 text-sm font-mono text-white outline-none focus:border-[#6a9bcc]"
+                  className="font-mono text-sm"
                 />
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   {isAgent ? (
-                    <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-[#e0a58b]">
+                    <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]">
                       <input
                         type="checkbox"
                         checked={isInternalNote}
                         onChange={(e) => setIsInternalNote(e.target.checked)}
-                        className="rounded border-white/20 bg-zinc-900 text-[#e0a58b] focus:ring-0"
+                        className="h-4 w-4 rounded border-[var(--line-strong)] text-[var(--warning)] focus:ring-[var(--warning-soft)]"
                       />
-                    <span className="editorial-mono flex items-center gap-1 text-[10px] uppercase tracking-wider">
-                        <Lock className="w-3.5 h-3.5" /> Post as Internal Note (Hidden from employee)
-                      </span>
+                      Post as internal note (hidden from employee)
                     </label>
-                  ) : <div />}
-
-                  <button
-                    type="submit"
-                    className="flex items-center gap-2 rounded-full bg-[#6a9bcc] px-5 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-blue-500/20 hover:bg-[#84add1]"
-                  >
-                    <Send className="w-3.5 h-3.5" /> Submit Reply
-                  </button>
+                  ) : (
+                    <div />
+                  )}
+                  <Button type="submit">
+                    <Send className="h-4 w-4" /> Submit reply
+                  </Button>
                 </div>
               </form>
             </div>
-          </div>
-
-          {/* Sidebar Column (25%) */}
-          <div className="space-y-6">
-            <GlassSurface className="space-y-4">
-              <div>
-                <label className="editorial-mono mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                  04 / Status
-                </label>
-                <select
-                  value={ticket.status}
-                  onChange={(e) => handleUpdateStatus(e.target.value)}
-                  disabled={!isAgent}
-                  className="w-full border border-white/10 bg-[#0a0a0c] p-3 text-xs font-bold text-white outline-none focus:border-[#6a9bcc]"
-                >
-                  <option value="open">🟢 Open</option>
-                  <option value="in_progress">🟣 In Progress</option>
-                  <option value="resolved">⚪ Resolved</option>
-                  <option value="closed">⚪ Closed</option>
-                </select>
-                {!isAgent && ticket.author_id === currentUserProfile?.id && ["resolved", "closed"].includes(ticket.status) && (
-                  <button onClick={handleReopen} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:border-[#6a9bcc]/50">
-                    <RotateCcw className="h-3.5 w-3.5" /> Reopen within 7 days
-                  </button>
-                )}
-              </div>
-
-              <div>
-                <label className="editorial-mono mb-2 block text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                  05 / Assignee
-                </label>
-                <select
-                  value={ticket.assignee_id || ""}
-                  onChange={(e) => handleAssigneeChange(e.target.value)}
-                  disabled={!isAgent}
-                  className="w-full border border-white/10 bg-[#0a0a0c] p-3 text-xs font-medium text-white outline-none focus:border-[#6a9bcc]"
-                >
-                  <option value="">Unassigned</option>
-                  {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.display_name} ({agent.department})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </GlassSurface>
-
-            <GlassSurface className="space-y-3">
-              <h3 className="editorial-mono text-[10px] font-bold uppercase tracking-widest text-zinc-600">06 / Reporter Info</h3>
-              <div>
-                <span className="block text-sm font-bold text-white">{ticket.author?.display_name}</span>
-                <span className="mt-0.5 block text-xs font-medium text-zinc-500">{ticket.author?.email}</span>
-                <div className="mt-2 flex items-center gap-2">
-                  {ticket.author?.user_type === "intern" ? (
-                    <span className="rounded border border-[#d97757]/30 bg-[#d97757]/10 px-2 py-0.5 text-[10px] font-bold text-[#e0a58b]">
-                      Intern (Supervisor: {ticket.author?.supervisor_name || "N/A"})
-                    </span>
-                  ) : (
-                    <span className="rounded border border-white/10 bg-zinc-900 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
-                      Staff ({ticket.author?.department})
-                    </span>
-                  )}
-                </div>
-              </div>
-            </GlassSurface>
-
-            <GlassSurface className="space-y-3">
-              <h3 className="editorial-mono flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                <Monitor className="w-3.5 h-3.5 text-[#8db3d6]" /> System Context
-              </h3>
-              {ticket.device_context ? (
-                <div className="space-y-1.5 text-xs font-mono text-zinc-500">
-                  <p><strong className="text-zinc-200">Screen:</strong> {ticket.device_context.screenResolution}</p>
-                  <p className="truncate"><strong className="text-zinc-200">Browser:</strong> {ticket.device_context.userAgent}</p>
-                </div>
-              ) : (
-                <p className="text-xs text-zinc-600">No device context attached.</p>
-              )}
-            </GlassSurface>
-          </div>
+          </section>
         </div>
-      </main>
+
+        <aside className="space-y-6">
+          <section className="surface space-y-5 p-5">
+            <div>
+              <FieldLabel>Status</FieldLabel>
+              <Select
+                value={ticket.status}
+                onChange={(e) => handleUpdateStatus(e.target.value)}
+                disabled={!isAgent}
+              >
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </Select>
+              {!isAgent &&
+                ticket.author_id === currentUserProfile?.id &&
+                ["resolved", "closed"].includes(ticket.status) && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleReopen}
+                    className="mt-3 w-full"
+                  >
+                    <RotateCcw className="h-4 w-4" /> Reopen within 7 days
+                  </Button>
+                )}
+            </div>
+
+            <div>
+              <FieldLabel>Assignee</FieldLabel>
+              <Select
+                value={ticket.assignee_id || ""}
+                onChange={(e) => handleAssigneeChange(e.target.value)}
+                disabled={!isAgent}
+              >
+                <option value="">Unassigned</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.display_name} ({agent.department})
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </section>
+
+          <section className="surface space-y-3 p-5">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Reporter info
+            </h3>
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]">
+                <User className="h-4 w-4 text-[var(--brand-ink)]" />
+              </span>
+              <div>
+                <span className="block text-sm font-semibold text-[var(--ink)]">
+                  {ticket.author?.display_name}
+                </span>
+                <span className="block text-xs text-[var(--muted)]">
+                  {ticket.author?.email}
+                </span>
+              </div>
+            </div>
+            <StatusBadge
+              tone={
+                ticket.author?.user_type === "intern" ? "warning" : "neutral"
+              }
+            >
+              {ticket.author?.user_type === "intern"
+                ? `Intern (Supervisor: ${
+                    ticket.author?.supervisor_name || "N/A"
+                  })`
+                : `Staff (${ticket.author?.department})`}
+            </StatusBadge>
+          </section>
+
+          <section className="surface space-y-3 p-5">
+            <h3 className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+              <Monitor className="h-3.5 w-3.5" /> System context
+            </h3>
+            {ticket.device_context ? (
+              <div className="space-y-1.5 font-mono text-xs text-[var(--muted)]">
+                <p>
+                  <strong className="font-semibold text-[var(--ink)]">
+                    Screen:
+                  </strong>{" "}
+                  {ticket.device_context.screenResolution}
+                </p>
+                <p className="break-all">
+                  <strong className="font-semibold text-[var(--ink)]">
+                    Browser:
+                  </strong>{" "}
+                  {ticket.device_context.userAgent}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--faint)]">
+                No device context attached.
+              </p>
+            )}
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }
