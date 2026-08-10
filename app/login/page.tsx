@@ -11,6 +11,7 @@ import {
   FieldLabel,
   Input,
 } from "@/components/ui/FormField";
+import { setPortalMode } from "@/lib/portal-mode";
 import { ArrowRight, KeyRound, Mail, LayoutDashboard, UserRound } from "lucide-react";
 
 export default function LoginPage() {
@@ -81,6 +82,7 @@ export default function LoginPage() {
   };
 
   const choosePortal = (destination: "/dashboard" | "/admin/dashboard") => {
+    setPortalMode(destination === "/dashboard" ? "user" : "admin");
     setShowPortalChoice(false);
     router.replace(destination);
     router.refresh();

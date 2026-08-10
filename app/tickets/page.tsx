@@ -13,7 +13,7 @@ import {
   priorityTone,
 } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
-import { Button, EmptyState } from "@/components/ui/FormField";
+import { Button } from "@/components/ui/FormField";
 import {
   Search,
   CheckSquare,
@@ -338,15 +338,53 @@ export default function TicketDashboard() {
           Loading request queue…
         </div>
       ) : filteredTickets.length === 0 ? (
-        <EmptyState
-          title="No requests found"
-          description="Try clearing a filter, or open a new request to get started."
-          action={
-            <Link href="/tickets/new">
-              <Button variant="secondary">New ticket</Button>
-            </Link>
-          }
-        />
+        <section className="surface p-6 md:p-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-soft)]">
+              <Search className="h-5 w-5 text-[var(--brand-ink)]" />
+            </div>
+            <h2 className="font-display text-xl font-bold">
+              No requests found
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
+              {onlyMine
+                ? "You haven't opened any requests yet."
+                : "Try clearing a filter to widen the view, or start a new request."}
+            </p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/tickets/new"
+                className="group rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 text-left transition hover:border-[var(--brand)]"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-on)]">
+                  <Plus className="h-4 w-4" />
+                </span>
+                <strong className="mt-4 block text-sm text-[var(--ink)]">
+                  Open a new request
+                </strong>
+                <span className="mt-1.5 block text-xs leading-5 text-[var(--muted)]">
+                  Use a category template and paste screenshots to describe
+                  what is blocked.
+                </span>
+              </Link>
+              <Link
+                href="/faq"
+                className="group rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 text-left transition hover:border-[var(--brand)]"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)]">
+                  <Search className="h-4 w-4" />
+                </span>
+                <strong className="mt-4 block text-sm text-[var(--ink)]">
+                  Search Knowledge first
+                </strong>
+                <span className="mt-1.5 block text-xs leading-5 text-[var(--muted)]">
+                  VPN, model access, and GPU requests often already have
+                  step-by-step answers.
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
       ) : (
         <div className="space-y-3">
           {filteredTickets.map((ticket, idx) => {
