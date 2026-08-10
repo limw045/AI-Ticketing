@@ -54,8 +54,8 @@ export default function TicketDetailPage({
   const [error, setError] = useState("");
 
   const isAgent =
-    currentUserProfile?.role === "support_agent" ||
-    currentUserProfile?.role === "admin";
+    currentUserProfile?.role === "admin" ||
+    currentUserProfile?.role === "super_admin";
 
   const fetchTicketDetails = useCallback(async () => {
     setError("");
@@ -82,7 +82,7 @@ export default function TicketDetailPage({
     }
     setCurrentUserProfile(profile);
     const profileIsAgent =
-      profile.role === "support_agent" || profile.role === "admin";
+      profile.role === "admin" || profile.role === "super_admin";
 
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
@@ -108,7 +108,7 @@ export default function TicketDetailPage({
       const { data: agentData, error: agentError } = await supabase
         .from("profiles")
         .select("id, display_name, department")
-        .in("role", ["support_agent", "admin"])
+        .in("role", ["admin", "super_admin"])
         .eq("account_status", "active");
       if (agentError) setError(`Could not load assignees: ${agentError.message}`);
       else setAgents(agentData ?? []);

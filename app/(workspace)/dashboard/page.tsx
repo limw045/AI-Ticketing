@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   TriangleAlert,
   Inbox,
-  Users,
   ArrowRight,
   LayoutDashboard,
 } from "lucide-react";
@@ -28,10 +27,14 @@ export default function DashboardPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [accessNotice, setAccessNotice] = useState("");
   const [portalMode, setPortalModeState] = useState<PortalMode>("admin");
 
   useEffect(() => {
     setPortalModeState(getPortalMode());
+    if (new URLSearchParams(window.location.search).get("error") === "forbidden") {
+      setAccessNotice("You do not have permission to open that administration page.");
+    }
   }, []);
 
   useEffect(() => {
@@ -98,8 +101,9 @@ export default function DashboardPage() {
   }
 
   const role = profile?.role || "employee";
+  const isAdministrator = role === "admin" || role === "super_admin";
   const viewRole =
-    role === "admin" && portalMode === "user" ? "employee" : role;
+    isAdministrator && portalMode === "user" ? "employee" : isAdministrator ? "admin" : role;
   const m = getRoleHomeMetrics(tickets, profile?.id);
   const recent = tickets.slice(0, 5);
   const myRecent = tickets
@@ -114,8 +118,6 @@ export default function DashboardPage() {
         description={
           viewRole === "admin"
             ? "Service desk health, staff access, and the queue behind the numbers."
-            : viewRole === "support_agent"
-            ? "The queue waiting on your team, and what needs attention first."
             : "Your requests, and answers worth reading before you open a new one."
         }
         actions={
@@ -124,6 +126,8 @@ export default function DashboardPage() {
           </Link>
         }
       />
+
+      {accessNotice && <Alert tone="warning" role="alert">{accessNotice}</Alert>}
 
       {incidents.length > 0 && (
         <Alert tone="warning" role="alert">
@@ -134,7 +138,7 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      {role === "admin" && portalMode === "user" && (
+      {isAdministrator && portalMode === "user" && (
         <Alert tone="info">
           <strong className="block">You&apos;re viewing the user portal.</strong>
           <span className="mt-0.5 block opacity-85">
@@ -231,79 +235,6 @@ export default function DashboardPage() {
                 See the queue <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          </section>
-        </>
-      )}
-
-      {viewRole === "support_agent" && (
-        <>
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              label="Open"
-              value={m.openCount}
-              animate
-              icon={<Inbox className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="In progress"
-              value={m.inProgressCount}
-              animate
-              icon={<Clock className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="Unassigned"
-              value={m.unassignedCount}
-              animate
-              icon={<Users className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="Urgent"
-              value={m.urgentCount}
-              animate
-              valueClassName="text-[var(--danger)]"
-              icon={<TriangleAlert className="h-4 w-4" />}
-            />
-          </section>
-
-          <section className="surface p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold">Queue</h2>
-              <Link
-                href="/tickets"
-                className="text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]"
-              >
-                Open queue
-              </Link>
-            </div>
-            {recent.length === 0 ? (
-              <div className="py-10 text-center text-sm text-[var(--muted)]">
-                The queue is clear.
-              </div>
-            ) : (
-              <ul className="divide-y divide-[var(--line)]">
-                {recent.map((ticket) => (
-                  <li key={ticket.id}>
-                    <Link
-                      href={`/tickets/${ticket.id}`}
-                      className="flex items-center gap-4 py-3.5 transition hover:bg-[var(--surface-2)]"
-                    >
-                      <span className="font-mono text-xs font-semibold text-[var(--faint)]">
-                        #{ticket.ticket_number}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ink)]">
-                        {ticket.title}
-                      </span>
-                      <span className="hidden font-mono text-xs text-[var(--muted)] sm:block">
-                        {ticket.author?.display_name}
-                      </span>
-                      <StatusBadge tone={statusTone(ticket.status)}>
-                        {ticket.status.replace("_", " ")}
-                      </StatusBadge>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
           </section>
         </>
       )}

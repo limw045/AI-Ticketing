@@ -114,10 +114,10 @@ function SidebarContent({
               </span>
               <span className="block truncate font-mono text-[10px] text-[var(--muted)]">
                 {profile
-                  ? profile.role === "admin"
+                  ? profile.role === "super_admin"
+                    ? "Super Admin"
+                    : profile.role === "admin"
                     ? "Admin"
-                    : profile.role === "support_agent"
-                    ? "Support agent"
                     : profile.user_type === "intern"
                     ? "Intern"
                     : "Staff"
@@ -188,7 +188,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   };
 
   const role = (profile?.role as WorkspaceRole) || "employee";
-  const isAdmin = role === "admin";
+  const isAdmin = role === "admin" || role === "super_admin";
   const navItems =
     isAdmin && portalMode === "admin"
       ? ADMIN_CONSOLE_ITEMS
