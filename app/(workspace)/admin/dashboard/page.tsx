@@ -25,6 +25,7 @@ import {
   Cell,
 } from "recharts";
 import { Download, Radio } from "lucide-react";
+import { setPortalMode } from "@/lib/portal-mode";
 
 const COLORS = ["#5c2d91", "#8b64b8", "#b996d2", "#3d6f9d", "#2e7d5b"];
 
@@ -88,6 +89,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setPortalMode("admin");
     fetchDashboardData();
   }, []);
 
@@ -284,11 +286,17 @@ export default function AdminDashboard() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Total volume" value={totalVolume} animate />
+        <MetricCard
+          label="Total volume"
+          value={totalVolume}
+          animate
+          hint="Requests across all departments"
+        />
         <MetricCard
           label="Resolution rate"
           value={`${resolutionRate}%`}
           valueClassName="text-[var(--success)]"
+          hint="Resolved or closed of all time"
         />
         <MetricCard
           label="Avg response SLA"
@@ -298,20 +306,32 @@ export default function AdminDashboard() {
               : `${averageResponseHours.toFixed(1)}h`
           }
           valueClassName="text-[var(--brand-ink)]"
+          hint="First reply after creation"
         />
         <MetricCard
           label="Urgent breaches"
           value={urgentCount}
           animate
           valueClassName="text-[var(--danger)]"
+          hint="P0 tickets still open"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="surface p-6">
-          <h2 className="font-display text-base font-bold">
-            Ticket volume by category
-          </h2>
+        <section className="surface">
+          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <div>
+              <h2 className="font-display text-base font-bold">
+                Ticket volume by category
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">
+                Where the queue is coming from
+              </p>
+            </div>
+            <span className="rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)]">
+              {categoryData.length} categories
+            </span>
+          </header>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
@@ -326,12 +346,27 @@ export default function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          {categoryData.length === 0 && (
+            <p className="px-6 pb-6 text-center text-xs text-[var(--faint)]">
+              No tickets yet — data will appear here as requests come in.
+            </p>
+          )}
         </section>
 
-        <section className="surface p-6">
-          <h2 className="font-display text-base font-bold">
-            Department ticket ratio
-          </h2>
+        <section className="surface">
+          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <div>
+              <h2 className="font-display text-base font-bold">
+                Department ticket ratio
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">
+                Share of requests by department
+              </p>
+            </div>
+            <span className="rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)]">
+              {deptData.length} departments
+            </span>
+          </header>
           <div className="mt-4 flex h-64 items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -355,13 +390,33 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           </div>
+          {deptData.length === 0 && (
+            <p className="px-6 pb-6 text-center text-xs text-[var(--faint)]">
+              No tickets yet — department mix will appear here.
+            </p>
+          )}
         </section>
       </div>
 
-      <section id="admin" className="surface p-6">
-        <h2 className="font-display text-base font-bold">
-          Global incident / outage manager
-        </h2>
+      <section id="admin" className="surface">
+        <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+          <div>
+            <h2 className="font-display text-base font-bold">
+              Global incident / outage manager
+            </h2>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              Publish a banner every staff member sees
+            </p>
+          </div>
+          <StatusBadge
+            tone={incidents.some((i) => i.is_active) ? "warning" : "success"}
+          >
+            {incidents.some((i) => i.is_active)
+              ? `${incidents.filter((i) => i.is_active).length} active`
+              : "No active incidents"}
+          </StatusBadge>
+        </header>
+        <div className="p-6">
         <form onSubmit={handlePublishIncident} className="mt-5 space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
@@ -437,17 +492,30 @@ export default function AdminDashboard() {
           ))}
           {incidents.length === 0 && (
             <p className="py-4 text-xs text-[var(--faint)]">
-              No incidents published yet.
+              No incidents published yet. Use the form above to announce an
+              outage or maintenance window.
             </p>
           )}
+        </div>
         </div>
       </section>
 
       {currentUserRole === "admin" && (
-        <section className="surface p-6">
-          <h2 className="font-display text-base font-bold">
-            Internal app API access
-          </h2>
+        <section className="surface">
+          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <div>
+              <h2 className="font-display text-base font-bold">
+                Internal app API access
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">
+                Keys for external systems to file tickets
+              </p>
+            </div>
+            <StatusBadge tone="neutral">
+              {apiClients.length} clients
+            </StatusBadge>
+          </header>
+          <div className="p-6">
           <form
             onSubmit={handleCreateApiClient}
             className="mt-5 flex flex-col gap-3 md:flex-row"
@@ -500,18 +568,29 @@ export default function AdminDashboard() {
             ))}
             {apiClients.length === 0 && (
               <p className="py-5 text-xs text-[var(--faint)]">
-                No API clients created yet.
+                No API clients yet. Generate the first key above when an
+                internal app needs to file tickets.
               </p>
             )}
+          </div>
           </div>
         </section>
       )}
 
       {currentUserRole === "admin" && (
-        <section className="surface p-6">
-          <h2 className="font-display text-base font-bold">
-            Staff access &amp; roles
-          </h2>
+        <section className="surface">
+          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <div>
+              <h2 className="font-display text-base font-bold">
+                Staff access &amp; roles
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">
+                Who can work the desk and what they can do
+              </p>
+            </div>
+            <StatusBadge tone="neutral">{users.length} staff</StatusBadge>
+          </header>
+          <div className="p-6">
           <div className="mt-4 divide-y divide-[var(--line)] border-y border-[var(--line)]">
             {users.map((user) => (
               <div
@@ -558,9 +637,11 @@ export default function AdminDashboard() {
             ))}
             {users.length === 0 && (
               <p className="py-5 text-xs text-[var(--faint)]">
-                No staff profiles have been created yet.
+                No staff profiles yet. Profiles appear automatically after
+                staff and interns register.
               </p>
             )}
+          </div>
           </div>
         </section>
       )}

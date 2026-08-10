@@ -10,6 +10,7 @@ import { StatusBadge, statusTone } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/FormField";
 import { getRoleHomeMetrics } from "@/lib/dashboard-metrics";
+import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
 import {
   Clock,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
   Inbox,
   Users,
   ArrowRight,
+  LayoutDashboard,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -26,6 +28,11 @@ export default function DashboardPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [portalMode, setPortalModeState] = useState<PortalMode>("admin");
+
+  useEffect(() => {
+    setPortalModeState(getPortalMode());
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -91,6 +98,8 @@ export default function DashboardPage() {
   }
 
   const role = profile?.role || "employee";
+  const viewRole =
+    role === "admin" && portalMode === "user" ? "employee" : role;
   const m = getRoleHomeMetrics(tickets, profile?.id);
   const recent = tickets.slice(0, 5);
   const myRecent = tickets
@@ -103,9 +112,9 @@ export default function DashboardPage() {
         eyebrow="Grant Thornton · AI Department"
         title={`Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, ${profile?.display_name?.split(" ")[0] || "there"}.`}
         description={
-          role === "admin"
+          viewRole === "admin"
             ? "Service desk health, staff access, and the queue behind the numbers."
-            : role === "support_agent"
+            : viewRole === "support_agent"
             ? "The queue waiting on your team, and what needs attention first."
             : "Your requests, and answers worth reading before you open a new one."
         }
@@ -125,7 +134,23 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      {role === "employee" && (
+      {role === "admin" && portalMode === "user" && (
+        <Alert tone="info">
+          <strong className="block">You&apos;re viewing the user portal.</strong>
+          <span className="mt-0.5 block opacity-85">
+            Submit and follow your own requests here. Switch back to the admin
+            console anytime.
+          </span>
+          <Link
+            href="/admin/dashboard"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold underline"
+          >
+            <LayoutDashboard className="h-4 w-4" /> Open admin console
+          </Link>
+        </Alert>
+      )}
+
+      {viewRole === "employee" && (
         <>
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard
@@ -210,7 +235,7 @@ export default function DashboardPage() {
         </>
       )}
 
-      {role === "support_agent" && (
+      {viewRole === "support_agent" && (
         <>
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
@@ -283,7 +308,7 @@ export default function DashboardPage() {
         </>
       )}
 
-      {role === "admin" && (
+      {viewRole === "admin" && (
         <>
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
