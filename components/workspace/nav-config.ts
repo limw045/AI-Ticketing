@@ -4,7 +4,6 @@ import {
   PlusCircle,
   BookOpen,
   BarChart3,
-  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,12 +46,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Analytics",
     icon: BarChart3,
     roles: ["support_agent", "admin"],
-  },
-  {
-    href: "/admin/dashboard",
-    label: "Administration",
-    icon: ShieldCheck,
-    roles: ["admin"],
   },
 ];
 
