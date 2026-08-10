@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
-const protectedPrefixes = ["/tickets", "/faq", "/admin"];
+const protectedPrefixes = ["/tickets", "/faq", "/admin", "/dashboard"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
 
   if (user && (pathname === "/login" || pathname === "/register")) {
     const ticketsUrl = request.nextUrl.clone();
-    ticketsUrl.pathname = "/tickets";
+    ticketsUrl.pathname = "/dashboard";
     ticketsUrl.search = "";
     return NextResponse.redirect(ticketsUrl);
   }
