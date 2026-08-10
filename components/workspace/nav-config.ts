@@ -4,6 +4,10 @@ import {
   PlusCircle,
   BookOpen,
   BarChart3,
+  Radio,
+  KeyRound,
+  Users,
+  TicketCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -46,6 +50,39 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Analytics",
     icon: BarChart3,
     roles: ["support_agent", "admin"],
+  },
+];
+
+export const ADMIN_CONSOLE_ITEMS: NavItem[] = [
+  {
+    href: "/admin/dashboard",
+    label: "Operations",
+    icon: BarChart3,
+    roles: ["admin"],
+  },
+  {
+    href: "/admin/tickets",
+    label: "Tickets",
+    icon: TicketCheck,
+    roles: ["admin"],
+  },
+  {
+    href: "/admin/incidents",
+    label: "Incidents",
+    icon: Radio,
+    roles: ["admin"],
+  },
+  {
+    href: "/admin/api-clients",
+    label: "API clients",
+    icon: KeyRound,
+    roles: ["admin"],
+  },
+  {
+    href: "/admin/staff",
+    label: "Staff",
+    icon: Users,
+    roles: ["admin"],
   },
 ];
 

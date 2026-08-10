@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { buildCsv } from "@/lib/csv";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { StatusBadge, severityTone } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
-import {
-  Button,
-  FieldLabel,
-  Input,
-  Select,
-} from "@/components/ui/FormField";
+import { Button } from "@/components/ui/FormField";
+import { setPortalMode } from "@/lib/portal-mode";
 import {
   BarChart,
   Bar,
@@ -24,41 +21,28 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Download, Radio } from "lucide-react";
-import { setPortalMode } from "@/lib/portal-mode";
+import {
+  Download,
+  Radio,
+  KeyRound,
+  Users,
+  TicketCheck,
+  ArrowRight,
+} from "lucide-react";
 
 const COLORS = ["#5c2d91", "#8b64b8", "#b996d2", "#3d6f9d", "#2e7d5b"];
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [newIncidentTitle, setNewIncidentTitle] = useState("");
-  const [newIncidentMsg, setNewIncidentMsg] = useState("");
-  const [severity, setSeverity] = useState("warning");
   const [error, setError] = useState("");
-  const [apiClientName, setApiClientName] = useState("");
-  const [generatedApiKey, setGeneratedApiKey] = useState("");
-  const [apiClients, setApiClients] = useState<any[]>([]);
-  const [currentUserRole, setCurrentUserRole] = useState("");
 
   const fetchDashboardData = async () => {
     setError("");
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: currentProfile } = user
-      ? await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single()
-      : { data: null };
-    const role = currentProfile?.role ?? "";
-    setCurrentUserRole(role);
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
       .select("*, author:profiles!tickets_author_id_fkey(*)");
-
     if (ticketError) setError(`Could not load dashboard tickets: ${ticketError.message}`);
     else setTickets(ticketData ?? []);
 
@@ -66,119 +50,14 @@ export default function AdminDashboard() {
       .from("incidents")
       .select("*")
       .order("created_at", { ascending: false });
-
     if (incidentError) setError(`Could not load incidents: ${incidentError.message}`);
     else setIncidents(incidentData ?? []);
-
-    if (role === "admin") {
-      const { data: userData, error: userError } = await supabase
-        .from("profiles")
-        .select(
-          "id, display_name, email, department, user_type, role, account_status, created_at"
-        )
-        .order("created_at", { ascending: true });
-      if (userError) setError(`Could not load staff accounts: ${userError.message}`);
-      else setUsers(userData ?? []);
-      const { data: clientData, error: clientError } = await supabase
-        .from("api_clients")
-        .select("id, name, is_active, created_at, last_used_at")
-        .order("created_at", { ascending: false });
-      if (clientError) setError(`Could not load API clients: ${clientError.message}`);
-      else setApiClients(clientData ?? []);
-    }
   };
 
   useEffect(() => {
     setPortalMode("admin");
     fetchDashboardData();
   }, []);
-
-  const handlePublishIncident = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newIncidentTitle.trim() || !newIncidentMsg.trim()) return;
-
-    const supabase = createClient();
-    const { error: insertError } = await supabase.from("incidents").insert({
-      title: newIncidentTitle,
-      message: newIncidentMsg,
-      severity,
-      is_active: true,
-    });
-
-    if (insertError) {
-      setError(`Incident publish failed: ${insertError.message}`);
-      return;
-    }
-
-    setNewIncidentTitle("");
-    setNewIncidentMsg("");
-    fetchDashboardData();
-  };
-
-  const handleToggleIncident = async (id: string, currentActive: boolean) => {
-    const supabase = createClient();
-    const { error: updateError } = await supabase
-      .from("incidents")
-      .update({ is_active: !currentActive })
-      .eq("id", id);
-    if (updateError) {
-      setError(`Incident update failed: ${updateError.message}`);
-      return;
-    }
-    fetchDashboardData();
-  };
-
-  const handleCreateApiClient = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!apiClientName.trim()) return;
-    setError("");
-    setGeneratedApiKey("");
-    const supabase = createClient();
-    const { data, error: rpcError } = await supabase.rpc("create_api_client", {
-      client_name: apiClientName.trim(),
-    });
-    if (rpcError || !data?.api_key) {
-      setError(
-        `API client creation failed: ${
-          rpcError?.message || "No key was returned."
-        }`
-      );
-      return;
-    }
-    setGeneratedApiKey(data.api_key);
-    setApiClientName("");
-    await fetchDashboardData();
-  };
-
-  const handleUserAccessChange = async (
-    userId: string,
-    changes: { role?: string; account_status?: string }
-  ) => {
-    setError("");
-    const supabase = createClient();
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update(changes)
-      .eq("id", userId);
-    if (updateError) {
-      setError(`Account update failed: ${updateError.message}`);
-      return;
-    }
-    fetchDashboardData();
-  };
-
-  const handleToggleApiClient = async (clientId: string, active: boolean) => {
-    const supabase = createClient();
-    const { error: updateError } = await supabase
-      .from("api_clients")
-      .update({ is_active: !active })
-      .eq("id", clientId);
-    if (updateError) {
-      setError(`API client update failed: ${updateError.message}`);
-      return;
-    }
-    fetchDashboardData();
-  };
 
   const exportCSV = () => {
     if (tickets.length === 0) return;
@@ -226,6 +105,7 @@ export default function AdminDashboard() {
   const urgentCount = tickets.filter(
     (t) => t.priority === "urgent" && t.status !== "closed"
   ).length;
+  const activeIncidents = incidents.filter((i) => i.is_active).length;
   const respondedTickets = tickets.filter(
     (ticket) => ticket.first_responded_at && ticket.created_at
   );
@@ -266,6 +146,37 @@ export default function AdminDashboard() {
   };
   const axisColor = "var(--faint)";
 
+  const quickLinks = [
+    {
+      href: "/admin/tickets",
+      label: "Tickets",
+      description: "View, edit, and soft-delete every request.",
+      icon: TicketCheck,
+      badge: `${totalVolume} total`,
+    },
+    {
+      href: "/admin/incidents",
+      label: "Incidents",
+      description: "Publish, edit, and remove outage banners.",
+      icon: Radio,
+      badge: `${activeIncidents} active`,
+    },
+    {
+      href: "/admin/api-clients",
+      label: "API clients",
+      description: "Generate keys and manage internal app access.",
+      icon: KeyRound,
+      badge: "Keys",
+    },
+    {
+      href: "/admin/staff",
+      label: "Staff",
+      description: "Manage roles and account status.",
+      icon: Users,
+      badge: "Access",
+    },
+  ];
+
   return (
     <div className="space-y-10">
       {error && (
@@ -284,6 +195,21 @@ export default function AdminDashboard() {
           </Button>
         }
       />
+
+      {activeIncidents > 0 && (
+        <Alert tone="warning" role="alert">
+          <strong className="block">
+            {activeIncidents} active incident
+            {activeIncidents > 1 ? "s" : ""}
+          </strong>
+          <Link
+            href="/admin/incidents"
+            className="mt-1 inline-flex items-center gap-1 text-sm font-semibold underline"
+          >
+            Manage in Incidents <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
@@ -317,6 +243,35 @@ export default function AdminDashboard() {
         />
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {quickLinks.map((link) => {
+          const Icon = link.icon;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="group surface flex items-start justify-between gap-4 p-6 transition hover:border-[var(--line-strong)]"
+            >
+              <div>
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]">
+                  <Icon className="h-4 w-4 text-[var(--brand-ink)]" />
+                </span>
+                <h2 className="mt-4 font-display text-base font-bold">
+                  {link.label}
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                  {link.description}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <StatusBadge tone="brand">{link.badge}</StatusBadge>
+                <ArrowRight className="h-4 w-4 text-[var(--faint)] transition group-hover:text-[var(--brand-ink)]" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="surface">
           <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
@@ -332,7 +287,7 @@ export default function AdminDashboard() {
               {categoryData.length} categories
             </span>
           </header>
-          <div className="mt-4 h-64">
+          <div className="mt-4 h-64 px-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
                 <XAxis dataKey="name" stroke={axisColor} fontSize={11} />
@@ -367,7 +322,7 @@ export default function AdminDashboard() {
               {deptData.length} departments
             </span>
           </header>
-          <div className="mt-4 flex h-64 items-center justify-center">
+          <div className="mt-4 flex h-64 items-center justify-center px-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -398,253 +353,55 @@ export default function AdminDashboard() {
         </section>
       </div>
 
-      <section id="admin" className="surface">
+      <section className="surface">
         <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
           <div>
             <h2 className="font-display text-base font-bold">
-              Global incident / outage manager
+              Latest requests
             </h2>
             <p className="mt-0.5 text-xs text-[var(--muted)]">
-              Publish a banner every staff member sees
+              The most recent tickets across the desk
             </p>
           </div>
-          <StatusBadge
-            tone={incidents.some((i) => i.is_active) ? "warning" : "success"}
+          <Link
+            href="/admin/tickets"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]"
           >
-            {incidents.some((i) => i.is_active)
-              ? `${incidents.filter((i) => i.is_active).length} active`
-              : "No active incidents"}
-          </StatusBadge>
+            Open tickets table <ArrowRight className="h-4 w-4" />
+          </Link>
         </header>
         <div className="p-6">
-        <form onSubmit={handlePublishIncident} className="mt-5 space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div>
-              <FieldLabel>Title</FieldLabel>
-              <Input
-                type="text"
-                placeholder="Incident title (e.g. Office Wi-Fi Degradation)"
-                value={newIncidentTitle}
-                onChange={(e) => setNewIncidentTitle(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <FieldLabel>Message</FieldLabel>
-              <Input
-                type="text"
-                placeholder="Announcement message for staff..."
-                value={newIncidentMsg}
-                onChange={(e) => setNewIncidentMsg(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <FieldLabel>Severity</FieldLabel>
-              <Select
-                value={severity}
-                onChange={(e) => setSeverity(e.target.value)}
-              >
-                <option value="warning">Warning</option>
-                <option value="critical">Critical</option>
-                <option value="info">Information</option>
-              </Select>
-            </div>
-          </div>
-          <Button type="submit" className="w-full">
-            <Radio className="h-4 w-4" /> Publish global outage banner
-          </Button>
-        </form>
-
-        <div className="mt-6 space-y-2 border-t border-[var(--line)] pt-4">
-          <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-            Current incidents
-          </h3>
-          {incidents.map((inc) => (
-            <div
-              key={inc.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3.5 text-sm"
-            >
-              <div className="min-w-0">
-                <span className="block font-semibold text-[var(--ink)]">
-                  {inc.title}
-                </span>
-                <p className="text-xs font-medium text-[var(--muted)]">
-                  {inc.message}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <StatusBadge tone={severityTone(inc.severity)}>
-                  {inc.severity}
-                </StatusBadge>
-                <button
-                  onClick={() => handleToggleIncident(inc.id, inc.is_active)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                    inc.is_active
-                      ? "bg-[var(--danger-soft)] text-[var(--danger)]"
-                      : "bg-[var(--surface-3)] text-[var(--muted)] hover:text-[var(--ink)]"
-                  }`}
-                >
-                  {inc.is_active ? "Deactivate" : "Activate"}
-                </button>
-              </div>
-            </div>
-          ))}
-          {incidents.length === 0 && (
-            <p className="py-4 text-xs text-[var(--faint)]">
-              No incidents published yet. Use the form above to announce an
-              outage or maintenance window.
+          {tickets.length === 0 ? (
+            <p className="py-8 text-center text-xs text-[var(--faint)]">
+              No tickets yet — the latest requests will appear here.
             </p>
+          ) : (
+            <ul className="divide-y divide-[var(--line)]">
+              {tickets.slice(0, 6).map((ticket) => (
+                <li key={ticket.id}>
+                  <Link
+                    href={`/admin/tickets`}
+                    className="flex items-center gap-4 py-3.5 transition hover:bg-[var(--surface-2)]"
+                  >
+                    <span className="font-mono text-xs font-semibold text-[var(--faint)]">
+                      #{ticket.ticket_number}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ink)]">
+                      {ticket.title}
+                    </span>
+                    <span className="hidden font-mono text-xs text-[var(--muted)] sm:block">
+                      {ticket.author?.display_name}
+                    </span>
+                    <StatusBadge tone={severityTone(ticket.status)}>
+                      {ticket.status.replace("_", " ")}
+                    </StatusBadge>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
         </div>
       </section>
-
-      {currentUserRole === "admin" && (
-        <section className="surface">
-          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
-            <div>
-              <h2 className="font-display text-base font-bold">
-                Internal app API access
-              </h2>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">
-                Keys for external systems to file tickets
-              </p>
-            </div>
-            <StatusBadge tone="neutral">
-              {apiClients.length} clients
-            </StatusBadge>
-          </header>
-          <div className="p-6">
-          <form
-            onSubmit={handleCreateApiClient}
-            className="mt-5 flex flex-col gap-3 md:flex-row"
-          >
-            <Input
-              value={apiClientName}
-              onChange={(event) => setApiClientName(event.target.value)}
-              placeholder="App name, e.g. Model Gateway"
-              required
-              className="flex-1"
-            />
-            <Button type="submit">Generate API key</Button>
-          </form>
-          {generatedApiKey && (
-            <div className="mt-4 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]">
-              <strong className="block">Copy this key now. It cannot be shown again.</strong>
-              <code className="mt-2 block select-all break-all font-mono text-xs">
-                {generatedApiKey}
-              </code>
-            </div>
-          )}
-          <div className="mt-5 divide-y divide-[var(--line)] border-y border-[var(--line)]">
-            {apiClients.map((client) => (
-              <div
-                key={client.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
-              >
-                <span>
-                  <strong className="block text-[var(--ink)]">
-                    {client.name}
-                  </strong>
-                  <span className="font-mono text-xs text-[var(--faint)]">
-                    Last used:{" "}
-                    {client.last_used_at
-                      ? new Date(client.last_used_at).toLocaleString()
-                      : "Never"}
-                  </span>
-                </span>
-                <button
-                  onClick={() => handleToggleApiClient(client.id, client.is_active)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                    client.is_active
-                      ? "bg-[var(--danger-soft)] text-[var(--danger)]"
-                      : "bg-[var(--success-soft)] text-[var(--success)]"
-                  }`}
-                >
-                  {client.is_active ? "Revoke" : "Activate"}
-                </button>
-              </div>
-            ))}
-            {apiClients.length === 0 && (
-              <p className="py-5 text-xs text-[var(--faint)]">
-                No API clients yet. Generate the first key above when an
-                internal app needs to file tickets.
-              </p>
-            )}
-          </div>
-          </div>
-        </section>
-      )}
-
-      {currentUserRole === "admin" && (
-        <section className="surface">
-          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
-            <div>
-              <h2 className="font-display text-base font-bold">
-                Staff access &amp; roles
-              </h2>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">
-                Who can work the desk and what they can do
-              </p>
-            </div>
-            <StatusBadge tone="neutral">{users.length} staff</StatusBadge>
-          </header>
-          <div className="p-6">
-          <div className="mt-4 divide-y divide-[var(--line)] border-y border-[var(--line)]">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="grid gap-3 py-4 text-sm md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr] md:items-center"
-              >
-                <div>
-                  <strong className="block text-[var(--ink)]">
-                    {user.display_name}
-                  </strong>
-                  <span className="font-mono text-xs text-[var(--faint)]">
-                    {user.email}
-                  </span>
-                </div>
-                <span className="text-xs text-[var(--muted)]">
-                  {user.department} / {user.user_type}
-                </span>
-                <Select
-                  value={user.role}
-                  onChange={(event) =>
-                    handleUserAccessChange(user.id, {
-                      role: event.target.value,
-                    })
-                  }
-                  className="!py-2"
-                >
-                  <option value="employee">Employee</option>
-                  <option value="support_agent">Support agent</option>
-                  <option value="admin">Admin</option>
-                </Select>
-                <Select
-                  value={user.account_status}
-                  onChange={(event) =>
-                    handleUserAccessChange(user.id, {
-                      account_status: event.target.value,
-                    })
-                  }
-                  className="!py-2"
-                >
-                  <option value="active">Active</option>
-                  <option value="suspended">Suspended</option>
-                </Select>
-              </div>
-            ))}
-            {users.length === 0 && (
-              <p className="py-5 text-xs text-[var(--faint)]">
-                No staff profiles yet. Profiles appear automatically after
-                staff and interns register.
-              </p>
-            )}
-          </div>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

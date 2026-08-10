@@ -7,8 +7,17 @@ import { createClient } from "@/lib/supabase/client";
 import { BrandLockup, BrandMark } from "@/components/ui/BrandLockup";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NotificationsMenu } from "@/components/workspace/NotificationsMenu";
-import { getNavItems, type WorkspaceRole } from "@/components/workspace/nav-config";
-import { LogOut, Menu, X } from "lucide-react";
+import {
+  getNavItems,
+  ADMIN_CONSOLE_ITEMS,
+  type WorkspaceRole,
+} from "@/components/workspace/nav-config";
+import {
+  getPortalMode,
+  setPortalMode,
+  type PortalMode,
+} from "@/lib/portal-mode";
+import { LogOut, Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 function SidebarContent({
@@ -19,6 +28,8 @@ function SidebarContent({
   isMobile = false,
   onSignOut,
   onClose,
+  showPortalSwitch = false,
+  onSwitchToUserPortal,
 }: {
   profile: any;
   navItems: ReturnType<typeof getNavItems>;
@@ -27,6 +38,8 @@ function SidebarContent({
   isMobile?: boolean;
   onSignOut: () => void;
   onClose?: () => void;
+  showPortalSwitch?: boolean;
+  onSwitchToUserPortal?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -72,6 +85,16 @@ function SidebarContent({
             </Link>
           );
         })}
+        {showPortalSwitch && (
+          <button
+            type="button"
+            onClick={onSwitchToUserPortal}
+            className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
+          >
+            <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>View user portal</span>
+          </button>
+        )}
       </nav>
 
       <div className="border-t border-[var(--line)] p-3">
@@ -123,6 +146,11 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [portalMode, setPortalModeState] = useState<PortalMode>("admin");
+
+  useEffect(() => {
+    setPortalModeState(getPortalMode());
+  }, [pathname]);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -160,7 +188,17 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   };
 
   const role = (profile?.role as WorkspaceRole) || "employee";
-  const navItems = getNavItems(role);
+  const isAdmin = role === "admin";
+  const navItems =
+    isAdmin && portalMode === "admin"
+      ? ADMIN_CONSOLE_ITEMS
+      : getNavItems(role);
+
+  const switchToUserPortal = () => {
+    setPortalMode("user");
+    setPortalModeState("user");
+    router.push("/dashboard");
+  };
 
   return (
     <div className="min-h-screen bg-[var(--canvas)]">
@@ -177,6 +215,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           pathname={pathname}
           sidebarCollapsed={sidebarCollapsed}
           onSignOut={handleSignOut}
+          showPortalSwitch={isAdmin && portalMode === "admin"}
+          onSwitchToUserPortal={switchToUserPortal}
         />
       </aside>
 
@@ -205,6 +245,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               isMobile
               onSignOut={handleSignOut}
               onClose={() => setDrawerOpen(false)}
+              showPortalSwitch={isAdmin && portalMode === "admin"}
+              onSwitchToUserPortal={switchToUserPortal}
             />
           </aside>
         </div>
