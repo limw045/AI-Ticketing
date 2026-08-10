@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 export function exportTicketPDF(ticket: any) {
   const doc = new jsPDF();
   doc.setFontSize(16);
-  doc.text(`GTMSW Support Ticket Report: #${ticket.ticket_number || "1001"}`, 20, 20);
+  doc.text(`Grant Thornton AI Department · Ticket Report: #${ticket.ticket_number || "1001"}`, 20, 20);
   doc.setFontSize(12);
   doc.text(`Title: ${ticket.title || "N/A"}`, 20, 35);
   doc.text(`Category: ${ticket.category || "General"}`, 20, 45);

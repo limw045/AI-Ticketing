@@ -11,6 +11,112 @@ import { getNavItems, type WorkspaceRole } from "@/components/workspace/nav-conf
 import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
+function SidebarContent({
+  profile,
+  navItems,
+  pathname,
+  sidebarCollapsed = false,
+  isMobile = false,
+  onSignOut,
+  onClose,
+}: {
+  profile: any;
+  navItems: ReturnType<typeof getNavItems>;
+  pathname: string;
+  sidebarCollapsed?: boolean;
+  isMobile?: boolean;
+  onSignOut: () => void;
+  onClose?: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div
+        className={cn(
+          "flex items-center border-b border-[var(--line)]",
+          isMobile || !sidebarCollapsed ? "px-5 py-4" : "justify-center px-2 py-4"
+        )}
+      >
+        <Link href="/dashboard" className="flex items-center">
+          {sidebarCollapsed && !isMobile ? (
+            <BrandMark size={30} />
+          ) : (
+            <BrandLockup compact={isMobile} />
+          )}
+        </Link>
+      </div>
+
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        {navItems.map((item) => {
+          const active =
+            pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={onClose}
+              className={cn(
+                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                sidebarCollapsed && !isMobile && "justify-center px-2",
+                active
+                  ? "bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-sm)]"
+                  : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
+              )}
+              title={sidebarCollapsed && !isMobile ? item.label : undefined}
+            >
+              {active && (
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--brand)]" />
+              )}
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {(!sidebarCollapsed || isMobile) && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-[var(--line)] p-3">
+        <div
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-2 py-2",
+            sidebarCollapsed && !isMobile && "justify-center"
+          )}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] font-display text-xs font-bold text-[var(--brand-ink)]">
+            {profile?.display_name?.slice(0, 1) || "U"}
+          </span>
+          {(!sidebarCollapsed || isMobile) && (
+            <span className="min-w-0 flex-1 leading-tight">
+              <span className="block truncate text-xs font-semibold text-[var(--ink)]">
+                {profile?.display_name || "AI Department"}
+              </span>
+              <span className="block truncate font-mono text-[10px] text-[var(--muted)]">
+                {profile
+                  ? profile.role === "admin"
+                    ? "Admin"
+                    : profile.role === "support_agent"
+                    ? "Support agent"
+                    : profile.user_type === "intern"
+                    ? "Intern"
+                    : "Staff"
+                  : "Loading profile…"}
+              </span>
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onSignOut}
+            aria-label="Sign out"
+            title="Sign out"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -56,90 +162,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const role = (profile?.role as WorkspaceRole) || "employee";
   const navItems = getNavItems(role);
 
-  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className="flex h-full flex-col">
-      <div
-        className={cn(
-          "flex items-center border-b border-[var(--line)]",
-          isMobile || !sidebarCollapsed ? "px-5 py-4" : "justify-center px-2 py-4"
-        )}
-      >
-        <Link href="/dashboard" className="flex items-center">
-          {sidebarCollapsed && !isMobile ? (
-            <BrandMark size={30} />
-          ) : (
-            <BrandLockup compact={isMobile} />
-          )}
-        </Link>
-      </div>
-
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                sidebarCollapsed && !isMobile && "justify-center px-2",
-                active
-                  ? "bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-sm)]"
-                  : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
-              )}
-              title={sidebarCollapsed && !isMobile ? item.label : undefined}
-            >
-              {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--brand)]" />
-              )}
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {(!sidebarCollapsed || isMobile) && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="border-t border-[var(--line)] p-3">
-        <div
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-2 py-2",
-            sidebarCollapsed && !isMobile && "justify-center"
-          )}
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] font-display text-xs font-bold text-[var(--brand-ink)]">
-            {profile?.display_name?.slice(0, 1) || "U"}
-          </span>
-          {(!sidebarCollapsed || isMobile) && (
-            <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-xs font-semibold text-[var(--ink)]">
-                {profile?.display_name || "Loading…"}
-              </span>
-              <span className="block truncate font-mono text-[10px] text-[var(--muted)]">
-                {profile?.role === "admin"
-                  ? "Admin"
-                  : profile?.role === "support_agent"
-                  ? "Support agent"
-                  : profile?.user_type === "intern"
-                  ? "Intern"
-                  : "Staff"}
-              </span>
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={handleSignOut}
-            aria-label="Sign out"
-            title="Sign out"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-[var(--canvas)]">
       {/* Desktop sidebar */}
@@ -149,7 +171,13 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           sidebarCollapsed ? "w-[76px]" : "w-[248px]"
         )}
       >
-        <SidebarContent />
+        <SidebarContent
+          profile={profile}
+          navItems={navItems}
+          pathname={pathname}
+          sidebarCollapsed={sidebarCollapsed}
+          onSignOut={handleSignOut}
+        />
       </aside>
 
       {/* Mobile drawer */}
@@ -170,7 +198,14 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             >
               <X className="h-4 w-4" />
             </button>
-            <SidebarContent isMobile />
+            <SidebarContent
+              profile={profile}
+              navItems={navItems}
+              pathname={pathname}
+              isMobile
+              onSignOut={handleSignOut}
+              onClose={() => setDrawerOpen(false)}
+            />
           </aside>
         </div>
       )}

@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Alert } from "@/components/ui/Alert";
 import { Button, FieldLabel, Input, Select, Textarea } from "@/components/ui/FormField";
 import {
-  AlertOctagon,
   Image as ImageIcon,
   Sparkles,
   ShieldCheck,
