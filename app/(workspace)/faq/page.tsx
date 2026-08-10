@@ -107,7 +107,7 @@ export default function FAQPage() {
       .includes(searchTerm.toLowerCase())
   );
   const isAgent =
-    currentUser?.role === "support_agent" || currentUser?.role === "admin";
+    currentUser?.role === "admin" || currentUser?.role === "super_admin";
 
   return (
     <div className="space-y-10">

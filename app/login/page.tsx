@@ -67,7 +67,7 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    if (profile.role === "admin") {
+    if (profile.role === "admin" || profile.role === "super_admin") {
       setLoading(false);
       setShowPortalChoice(true);
       return;
@@ -172,7 +172,7 @@ export default function LoginPage() {
         >
           <section className="surface w-full max-w-xl p-7">
             <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
-              Admin access detected
+              Administrative access detected
             </div>
             <h2
               id="portal-choice-title"

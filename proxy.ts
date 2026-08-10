@@ -40,20 +40,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(ticketsUrl);
   }
 
-  if (user && pathname.startsWith("/admin")) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, account_status")
-      .eq("id", user.id)
-      .single();
-    if (!profile || profile.account_status !== "active" || !["support_agent", "admin"].includes(profile.role)) {
-      const ticketsUrl = request.nextUrl.clone();
-      ticketsUrl.pathname = "/tickets";
-      ticketsUrl.search = "";
-      return NextResponse.redirect(ticketsUrl);
-    }
-  }
-
   return response;
 }
 

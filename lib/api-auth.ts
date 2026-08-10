@@ -19,8 +19,8 @@ export async function requireApiUser(options?: { agentOnly?: boolean }) {
     return { error: NextResponse.json({ error: "Account is not active" }, { status: 403 }) };
   }
 
-  if (options?.agentOnly && !["support_agent", "admin"].includes(profile.role)) {
-    return { error: NextResponse.json({ error: "Support agent access required" }, { status: 403 }) };
+  if (options?.agentOnly && !["admin", "super_admin"].includes(profile.role)) {
+    return { error: NextResponse.json({ error: "Administrator access required" }, { status: 403 }) };
   }
 
   return { user, profile, supabase };

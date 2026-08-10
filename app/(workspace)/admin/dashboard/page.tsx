@@ -28,6 +28,11 @@ import {
   Users,
   TicketCheck,
   ArrowRight,
+  MessageSquareText,
+  Library,
+  ShieldCheck,
+  ArchiveRestore,
+  ScrollText,
 } from "lucide-react";
 
 const COLORS = ["#5c2d91", "#8b64b8", "#b996d2", "#3d6f9d", "#2e7d5b"];
@@ -35,11 +40,21 @@ const COLORS = ["#5c2d91", "#8b64b8", "#b996d2", "#3d6f9d", "#2e7d5b"];
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
+  const [viewerRole, setViewerRole] = useState("admin");
   const [error, setError] = useState("");
 
   const fetchDashboardData = async () => {
     setError("");
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (profile?.role) setViewerRole(profile.role);
+    }
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
       .select("*, author:profiles!tickets_author_id_fkey(*)");
@@ -162,6 +177,20 @@ export default function AdminDashboard() {
       badge: `${activeIncidents} active`,
     },
     {
+      href: "/admin/comments",
+      label: "Comments",
+      description: "Moderate replies and internal notes across tickets.",
+      icon: MessageSquareText,
+      badge: "Discussion",
+    },
+    {
+      href: "/admin/knowledge",
+      label: "Knowledge",
+      description: "Manage FAQs and request routing rules.",
+      icon: Library,
+      badge: "Content",
+    },
+    {
       href: "/admin/api-clients",
       label: "API clients",
       description: "Generate keys and manage internal app access.",
@@ -175,6 +204,31 @@ export default function AdminDashboard() {
       icon: Users,
       badge: "Access",
     },
+    ...(viewerRole === "super_admin"
+      ? [
+          {
+            href: "/admin/admin-management",
+            label: "Admin management",
+            description: "Promote, demote, suspend, or restore administrators.",
+            icon: ShieldCheck,
+            badge: "Super Admin",
+          },
+          {
+            href: "/admin/recycle-bin",
+            label: "Recycle bin",
+            description: "Restore deleted business records across modules.",
+            icon: ArchiveRestore,
+            badge: "Recovery",
+          },
+          {
+            href: "/admin/system-logs",
+            label: "System logs",
+            description: "Review immutable activity, API, and notification logs.",
+            icon: ScrollText,
+            badge: "Read only",
+          },
+        ]
+      : []),
   ];
 
   return (

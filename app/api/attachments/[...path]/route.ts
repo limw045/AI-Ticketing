@@ -24,7 +24,7 @@ export async function GET(
       .select("role")
       .eq("id", user.id)
       .single();
-    if (!profile || !["support_agent", "admin"].includes(profile.role)) {
+    if (!profile || !["admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Attachment access denied" }, { status: 403 });
     }
   }

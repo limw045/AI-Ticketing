@@ -40,7 +40,7 @@ export default function TicketDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const isAgent =
-    currentUser?.role === "support_agent" || currentUser?.role === "admin";
+    currentUser?.role === "admin" || currentUser?.role === "super_admin";
 
   const fetchTickets = useCallback(async () => {
     setError("");
