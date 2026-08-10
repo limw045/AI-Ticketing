@@ -206,7 +206,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="8+ characters"
               className="pl-10"
             />
           </span>
