@@ -27,17 +27,21 @@ export function IncidentBanner() {
       {incidents.map((incident, idx) => (
         <div
           key={incident.id}
-          className="p-4 rounded-2xl bg-[#141417] border border-amber-500/30 text-amber-200 flex items-center justify-between shadow-xl"
+          className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--warning)]/30 bg-[var(--warning-soft)] p-4"
         >
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+            <AlertTriangle className="h-5 w-5 shrink-0 text-[var(--warning)]" />
             <div>
-              <span className="font-bold text-sm block tracking-wide">{incident.title}</span>
-              <span className="text-xs text-amber-200/80 block mt-0.5">{incident.message}</span>
+              <span className="block text-sm font-bold tracking-wide text-[var(--warning)]">
+                {incident.title}
+              </span>
+              <span className="mt-0.5 block text-xs text-[var(--warning)]/80">
+                {incident.message}
+              </span>
             </div>
           </div>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300">
-            STEP 0{idx + 1} • INCIDENT ACTIVE
+          <span className="shrink-0 rounded-full border border-[var(--warning)]/30 bg-[var(--warning-soft)] px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--warning)]">
+            Incident {idx + 1} · Active
           </span>
         </div>
       ))}

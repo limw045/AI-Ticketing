@@ -1,97 +1,107 @@
 import Link from "next/link";
-import { EditorialGrid } from "@/components/EditorialGrid";
-import { ArrowRight, Infinity } from "lucide-react";
+import { BrandLockup } from "@/components/ui/BrandLockup";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ArrowRight, BookOpen, ClipboardCheck, Route } from "lucide-react";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-white relative overflow-hidden flex flex-col justify-between p-8 md:p-16">
-      <EditorialGrid />
-
-      {/* Top Bar */}
-      <header className="relative z-10 flex items-center justify-between">
+    <main className="relative flex min-h-screen flex-col bg-[var(--canvas)] text-[var(--ink)]">
+      <header className="flex items-center justify-between px-5 py-5 sm:px-10">
+        <BrandLockup />
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center bg-zinc-900">
-            <Infinity className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-lg tracking-tight">Get Blue</span>
-        </div>
-
-        <div className="flex items-center gap-6 text-xs font-mono text-zinc-400">
-          <span>The Process</span>
-          <span>The Difference</span>
-          <Link href="/login" className="px-5 py-2 rounded-full bg-[#6a9bcc] hover:bg-[#5b8ab8] text-zinc-950 font-bold transition">
-            Start Today
+          <ThemeToggle />
+          <Link
+            href="/login"
+            className="hidden rounded-full px-4 py-2 text-sm font-semibold text-[var(--muted)] transition hover:text-[var(--ink)] sm:inline-flex"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-[var(--brand-on)] transition hover:bg-[var(--brand-hover)]"
+          >
+            Start today <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </header>
 
-      {/* Main Editorial Hero */}
-      <section className="relative z-10 my-auto py-16 grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
-        {/* Left Column: Floating AI Conversation Card */}
-        <div className="space-y-4">
-          <div className="p-6 rounded-2xl bg-[#141416] border border-white/10 space-y-3 shadow-2xl max-w-md">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-zinc-800 border border-white/20 flex items-center justify-center text-[10px]">
-                <Infinity className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-xs font-semibold text-zinc-300">Blue Coach</span>
-              <span className="text-[10px] font-mono text-zinc-500 ml-auto">2:13 PM</span>
-            </div>
-            <p className="text-xs font-mono text-zinc-300 leading-relaxed">
-              Your data is now fully integrated. GTMSW AI Department has processed your system request.
-            </p>
-            <div className="text-[11px] font-mono bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-zinc-400">
-              Want me to log this to your schedule?
-            </div>
-          </div>
+      <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 py-16 sm:px-10">
+        <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
+          Grant Thornton · AI Department
         </div>
 
-        {/* Center & Right Column: Large Headlines & Step Counters */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest px-2.5 py-1 rounded border border-white/10 bg-zinc-900">
-              PRESCRIBE
-            </span>
-            <span className="text-xs font-mono text-zinc-500">STEP 01</span>
-          </div>
+        <h1 className="heading-hero max-w-4xl text-4xl sm:text-6xl">
+          A clear route from request to resolution.
+        </h1>
 
-          <h1 className="text-4xl md:text-6xl font-light tracking-tight text-white leading-tight">
-            Responsive AI that turns your data into clear, personalized daily guidance.
-          </h1>
+        <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
+          The AI Department support desk for model access, data pipelines, GPU
+          resources, and production issues. Tell us what is blocked — we route
+          it to the right specialist with the context they need.
+        </p>
 
-          <p className="text-sm font-mono text-zinc-400 max-w-xl leading-relaxed">
-            Receive an automated protocol built on evidence and tailored to your department. System-level recommendations grounded in live data.
-          </p>
-
-          <div className="pt-4 flex items-center gap-6">
-            <Link
-              href="/login"
-              className="px-8 py-3.5 rounded-full bg-[#6a9bcc] hover:bg-[#5b8ab8] text-zinc-950 font-bold text-sm transition flex items-center gap-2"
-            >
-              <span>Sign In to AI Desk</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/register" className="text-xs font-mono text-zinc-400 hover:text-white underline">
-              Create Staff Account
-            </Link>
-          </div>
+        <div className="mt-10 flex flex-wrap items-center gap-4">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-7 py-3.5 text-sm font-bold text-[var(--brand-on)] transition hover:bg-[var(--brand-hover)]"
+          >
+            Sign in to AI desk <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-7 py-3.5 text-sm font-semibold text-[var(--ink)] transition hover:border-[var(--brand)] hover:text-[var(--brand-ink)]"
+          >
+            Create staff account
+          </Link>
         </div>
       </section>
 
-      {/* Editorial Footer */}
-      <footer className="relative z-10 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-xs font-mono text-zinc-500 gap-4">
-        <div className="flex items-center gap-6">
-          <Link href="/login" className="hover:text-white">Home</Link>
-          <Link href="/faq" className="hover:text-white">About Us</Link>
-          <Link href="/faq" className="hover:text-white">Insights</Link>
-          <Link href="/faq" className="hover:text-white">FAQs</Link>
+      <section className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 px-5 pb-20 sm:grid-cols-3 sm:px-10">
+        <div className="surface p-6">
+          <ClipboardCheck className="h-5 w-5 text-[var(--brand-ink)]" />
+          <h2 className="mt-5 font-display text-base font-bold">
+            Structured requests
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Category templates, auto-context, and data-guard checks keep every
+            request complete from the start.
+          </p>
         </div>
+        <div className="surface p-6">
+          <Route className="h-5 w-5 text-[var(--brand-ink)]" />
+          <h2 className="mt-5 font-display text-base font-bold">
+            Tracked case path
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Every request moves through a visible lifecycle with subtasks,
+            assignees, and a full timeline.
+          </p>
+        </div>
+        <div className="surface p-6">
+          <BookOpen className="h-5 w-5 text-[var(--brand-ink)]" />
+          <h2 className="mt-5 font-display text-base font-bold">
+            Answers first
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Search the AI team&apos;s knowledge base before opening a ticket —
+            the desk learns as it resolves.
+          </p>
+        </div>
+      </section>
 
-        <h2 className="text-2xl font-light text-white tracking-tight">
-          Live better for longer
-        </h2>
-
-        <div>© 2026 GTMSW AI Department. All rights reserved.</div>
+      <footer className="border-t border-[var(--line)] px-5 py-8 sm:px-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-[var(--faint)] md:flex-row">
+          <div className="flex items-center gap-6">
+            <Link href="/login" className="hover:text-[var(--ink)]">
+              Home
+            </Link>
+            <Link href="/faq" className="hover:text-[var(--ink)]">
+              FAQs
+            </Link>
+          </div>
+          <span>© 2026 Grant Thornton · AI Department. All rights reserved.</span>
+        </div>
       </footer>
     </main>
   );
