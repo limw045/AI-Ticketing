@@ -23,12 +23,25 @@ import {
   validateRegistration,
 } from "@/lib/auth-policy";
 
+const DEPARTMENTS = [
+  "AI & Automation Transformation",
+  "AUDIT",
+  "Indirect Tax & Admin",
+  "M.S.WONG & CO",
+  "RockAcc",
+  "TAX",
+  "TYM",
+  "HR",
+  "Secretary",
+  "IT",
+] as const;
+
 export default function RegisterPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [department, setDepartment] = useState("AI Department");
+  const [department, setDepartment] = useState<string>(DEPARTMENTS[0]);
   const [supervisor, setSupervisor] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -186,12 +199,11 @@ export default function RegisterPage() {
               onChange={(event) => setDepartment(event.target.value)}
               className="pl-10"
             >
-              <option>AI Department</option>
-              <option>IT</option>
-              <option>HR</option>
-              <option>Marketing</option>
-              <option>Finance</option>
-              <option>Product</option>
+              {DEPARTMENTS.map((departmentName) => (
+                <option key={departmentName} value={departmentName}>
+                  {departmentName}
+                </option>
+              ))}
             </Select>
           </span>
         </label>
