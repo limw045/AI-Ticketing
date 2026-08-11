@@ -10,3 +10,6 @@ dist
 
 # No markdown files should ever be tracked or uploaded to git.
 *.md
+
+# Local Superpowers workspace data.
+.superpowers/
