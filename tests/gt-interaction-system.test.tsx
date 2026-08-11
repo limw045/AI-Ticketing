@@ -4,15 +4,39 @@ import { describe, expect, it } from "vitest";
 const loader = readFileSync(new URL("../components/ui/GTLoader.tsx", import.meta.url), "utf8");
 const skeleton = readFileSync(new URL("../components/ui/PageSkeleton.tsx", import.meta.url), "utf8");
 const backButton = readFileSync(new URL("../components/ui/BackButton.tsx", import.meta.url), "utf8");
+const globalCss = readFileSync(
+  new URL("../app/globals.css", import.meta.url),
+  "utf8"
+);
 
 describe("GT route loader", () => {
-  it("exposes status semantics, accessible copy, and scoped classes", () => {
+  it("exposes status semantics and the approved GT path structure", () => {
     expect(loader).toContain('role="status"');
     expect(loader).toContain('aria-live="polite"');
     expect(loader).toContain("aria-label={label}");
     expect(loader).toContain("gt-loader--delayed");
-    expect(loader).toContain("gt-loader__letters");
+    expect(loader).toContain("gt-loader__track");
+    expect(loader).toContain("gt-loader__route");
     expect(loader).toContain("gt-loader__dot");
+    expect(loader).toContain('pathLength="100"');
+    expect(loader).not.toContain("gt-loader__letters");
+  });
+
+  it("uses the approved timing and removes circular and pulse motion", () => {
+    expect(globalCss).toContain("--loader-duration: 3s");
+    expect(globalCss).toContain(
+      "cubic-bezier(0.785, 0.135, 0.15, 0.86)"
+    );
+    expect(globalCss).toContain("@keyframes gt-loader-path");
+    expect(globalCss).toContain("@keyframes gt-loader-dot");
+    expect(globalCss).not.toContain("@keyframes gt-loader-orbit");
+    expect(globalCss).not.toContain("@keyframes gt-loader-pulse");
+  });
+
+  it("provides a static reduced-motion fallback", () => {
+    expect(globalCss).toContain(".gt-loader__route,\n  .gt-loader__dot");
+    expect(globalCss).toContain(".gt-loader__track {");
+    expect(globalCss).toContain("stroke: var(--brand)");
   });
 });
 
