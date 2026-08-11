@@ -87,7 +87,7 @@ try {
     .insert({
       title: `[E2E ${runId}] Portal persistence`,
       description: "Backend verification ticket",
-      category: "System Bug",
+      category: "Risk Screen",
       priority: "high",
       author_id: employeeUser.id,
       source: "portal",
@@ -218,7 +218,7 @@ try {
     p_api_key: clientResult.api_key,
     p_ticket_title: `[E2E ${runId}] API persistence`,
     p_ticket_description: "API backend verification ticket",
-    p_ticket_category: "System Bug",
+    p_ticket_category: "Risk Screen",
     p_ticket_priority: "urgent",
     p_user_email: process.env.E2E_EMPLOYEE_EMAIL,
     p_system_logs: { source: "e2e", token: "[REDACTED]" },
@@ -243,7 +243,7 @@ try {
     const httpBody = {
       title: `[E2E ${runId}] Production API persistence`,
       description: "Production route backend verification ticket",
-      category: "System Bug",
+      category: "Risk Screen",
       priority: "high",
       user_email: process.env.E2E_EMPLOYEE_EMAIL,
       system_logs: {

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const idempotencyKey = req.headers.get("idempotency-key")?.trim() || null;
 
     const body = await req.json();
-    const { title, description, category = "System Bug", priority = "medium", user_email, system_logs } = body;
+    const { title, description, category, priority = "medium", user_email, system_logs } = body;
 
     if (!title || !description) {
       return NextResponse.json({ error: "Missing required fields: title, description" }, { status: 400 });
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       p_api_key: apiKey,
       p_ticket_title: title,
       p_ticket_description: description,
-      p_ticket_category: category,
+      p_ticket_category: typeof category === "string" ? category : null,
       p_ticket_priority: priority,
       p_user_email: typeof user_email === "string" ? user_email : null,
       p_system_logs: sanitizedLogs ?? null,
