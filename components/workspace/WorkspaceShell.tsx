@@ -10,6 +10,7 @@ import { NotificationsMenu } from "@/components/workspace/NotificationsMenu";
 import { IncidentBanner } from "@/components/IncidentBanner";
 import {
   getNavItems,
+  getActiveNavHref,
   ADMIN_CONSOLE_ITEMS,
   type WorkspaceRole,
 } from "@/components/workspace/nav-config";
@@ -46,6 +47,8 @@ function SidebarContent({
   showPortalSwitch?: boolean;
   onSwitchToUserPortal?: () => void;
 }) {
+  const activeHref = getActiveNavHref(pathname, navItems);
+
   return (
     <div className="flex h-full flex-col">
       <div
@@ -65,8 +68,7 @@ function SidebarContent({
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+          const active = activeHref === item.href;
           const Icon = item.icon;
           return (
             <Link

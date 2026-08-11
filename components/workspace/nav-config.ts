@@ -126,3 +126,27 @@ export function getNavItems(role: WorkspaceRole | null | undefined) {
   if (!role) return [];
   return NAV_ITEMS.filter((item) => item.roles.includes(role));
 }
+
+/**
+ * Returns the href of the nav item that best matches the current pathname.
+ * When several items match (e.g. "/tickets" and "/tickets/new" on
+ * "/tickets/new"), the most specific one — the longest href — wins, so at
+ * most one item is ever highlighted.
+ */
+export function getActiveNavHref(
+  pathname: string,
+  items: Pick<NavItem, "href">[]
+): string | null {
+  let activeHref: string | null = null;
+  for (const item of items) {
+    const href = item.href;
+    const normalized = href.endsWith("/") ? href.slice(0, -1) : href;
+    const matches =
+      pathname === href ||
+      (normalized.length > 0 && pathname.startsWith(normalized + "/"));
+    if (matches && (activeHref === null || href.length > activeHref.length)) {
+      activeHref = href;
+    }
+  }
+  return activeHref;
+}
