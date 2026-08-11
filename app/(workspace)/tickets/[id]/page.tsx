@@ -58,6 +58,7 @@ export default function TicketDetailPage({
   const [error, setError] = useState("");
   const [commentNotice, setCommentNotice] = useState("");
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"conversation" | "details">("conversation");
 
   const isAgent =
     currentUserProfile?.role === "admin" ||
@@ -334,10 +335,27 @@ export default function TicketDetailPage({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] z-20 grid grid-cols-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-1 shadow-[var(--shadow-sm)] lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileTab("conversation")}
+          className={cn("min-h-11 rounded-lg text-sm font-semibold transition", mobileTab === "conversation" ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]" : "text-[var(--muted)]")}
+        >
+          Conversation ({comments.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("details")}
+          className={cn("min-h-11 rounded-lg text-sm font-semibold transition", mobileTab === "details" ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]" : "text-[var(--muted)]")}
+        >
+          Details
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="space-y-8 lg:col-span-2">
           {/* Case path lifecycle */}
-          <section className="surface p-6">
+          <section className={cn("surface p-4 sm:p-6", mobileTab !== "details" && "hidden lg:block")}>
             <h2 className="font-display text-base font-bold">Case path</h2>
             <div className="case-path mt-5 space-y-0 pl-0">
               <ol className="relative ml-2 space-y-7 border-l-2 border-[var(--line-strong)] pl-6">
@@ -385,7 +403,7 @@ export default function TicketDetailPage({
           </section>
 
           {/* Description */}
-          <section className="surface p-6">
+          <section className={cn("surface p-4 sm:p-6", mobileTab !== "details" && "hidden lg:block")}>
             <h2 className="font-display text-base font-bold">
               Issue description
             </h2>
@@ -396,7 +414,7 @@ export default function TicketDetailPage({
           </section>
 
           {/* Subtasks */}
-          <section className="surface p-5">
+          <section className={cn("surface p-4 sm:p-5", mobileTab !== "details" && "hidden lg:block")}>
             <div className="flex items-center justify-between">
               <h2 className="font-display text-base font-bold">
                 Sub-tasks
@@ -472,7 +490,7 @@ export default function TicketDetailPage({
           </section>
 
           {/* Timeline */}
-          <section>
+          <section className={cn(mobileTab !== "conversation" && "hidden lg:block")}>
             <h2 className="font-display text-base font-bold">
               Timeline &amp; discussion ({comments.length})
             </h2>
@@ -481,13 +499,13 @@ export default function TicketDetailPage({
                 <div
                   key={comment.id}
                   className={cn(
-                    "rounded-2xl border p-5",
+                    "rounded-2xl border p-4 sm:p-5",
                     comment.is_internal_note
                       ? "border-[var(--warning)]/30 bg-[var(--warning-soft)]"
                       : "border-[var(--line)] bg-[var(--surface)]"
                   )}
                 >
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-[var(--ink)]">
                         {comment.author?.display_name || "System"}
@@ -498,7 +516,7 @@ export default function TicketDetailPage({
                         </StatusBadge>
                       )}
                     </div>
-                    <span className="font-mono text-[10px] font-medium text-[var(--faint)]">
+                    <span className="font-mono text-[10px] font-medium text-[var(--faint)] sm:text-right">
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
@@ -510,7 +528,7 @@ export default function TicketDetailPage({
 
               <form
                 onSubmit={handlePostComment}
-                className="surface space-y-4 p-5"
+                className="surface space-y-4 p-4 sm:p-5"
               >
                 {commentNotice && <Alert tone="success">{commentNotice}</Alert>}
                 <Textarea
@@ -526,7 +544,7 @@ export default function TicketDetailPage({
                   className="font-mono text-sm"
                 />
 
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                   {isAgent ? (
                     <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]">
                       <input
@@ -544,6 +562,7 @@ export default function TicketDetailPage({
                   <Button
                     type="submit"
                     disabled={isPostingComment || !newComment.trim()}
+                    className="w-full sm:w-auto"
                   >
                     <Send className="h-4 w-4" />
                     {isPostingComment ? "Submitting…" : "Submit reply"}
@@ -554,7 +573,7 @@ export default function TicketDetailPage({
           </section>
         </div>
 
-        <aside className="space-y-6">
+        <aside className={cn("space-y-6", mobileTab !== "details" && "hidden lg:block")}>
           <section className="surface space-y-5 p-5">
             <div>
               <FieldLabel>Status</FieldLabel>
@@ -611,7 +630,7 @@ export default function TicketDetailPage({
                 <span className="block text-sm font-semibold text-[var(--ink)]">
                   {ticket.author?.display_name}
                 </span>
-                <span className="block text-xs text-[var(--muted)]">
+                <span className="block break-all text-xs text-[var(--muted)]">
                   {ticket.author?.email}
                 </span>
               </div>

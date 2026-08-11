@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -161,6 +161,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [portalMode, setPortalModeState] = useState<PortalMode>("admin");
+  const drawerRef = useRef<HTMLElement>(null);
+  const drawerTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isAdminPortalPath(pathname)) {
@@ -192,12 +194,41 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    if (!drawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const drawerTrigger = drawerTriggerRef.current;
+    document.body.style.overflow = "hidden";
+    const drawer = drawerRef.current;
+    drawer?.querySelector<HTMLElement>("button, a[href]")?.focus();
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawerOpen(false);
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        return;
+      }
+      if (event.key !== "Tab" || !drawer) return;
+      const focusables = Array.from(
+        drawer.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+      drawerTrigger?.focus();
+    };
+  }, [drawerOpen]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -256,12 +287,18 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/45"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-[290px] border-r border-[var(--line)] bg-[var(--workspace)] shadow-[var(--shadow-lg)]">
+          <aside
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Workspace navigation"
+            className="absolute inset-y-0 left-0 w-[min(290px,calc(100vw-3rem))] border-r border-[var(--line)] bg-[var(--workspace)] shadow-[var(--shadow-lg)]"
+          >
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
               aria-label="Close navigation"
-              className="absolute right-3 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--surface-3)]"
+              className="safe-area-top absolute right-2 top-0 inline-flex h-14 w-11 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--surface-3)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -281,11 +318,13 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Top bar (mobile/tablet) */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-[var(--workspace)]/90 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="safe-area-top sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-[var(--workspace)]/90 px-4 pb-3 backdrop-blur lg:hidden">
         <button
+          ref={drawerTriggerRef}
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation"
+          aria-expanded={drawerOpen}
           className="topbar-action"
         >
           <Menu className="h-4 w-4" />
@@ -327,7 +366,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
       <main
         className={cn(
-          "min-h-screen px-4 pb-20 pt-6 sm:px-6 lg:pt-20",
+          "min-h-screen px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:pt-20",
           sidebarCollapsed ? "lg:pl-[100px]" : "lg:pl-[272px]"
         )}
       >

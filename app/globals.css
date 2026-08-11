@@ -86,8 +86,40 @@ body {
   color: var(--ink);
   font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   min-height: 100vh;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.safe-area-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-area-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .surface {
+    border-radius: 16px;
+  }
+
+  .skeleton-table__head,
+  .skeleton-table__row {
+    grid-template-columns: minmax(0, 1fr) 5rem;
+    min-width: 0;
+  }
+
+  .skeleton-table__head > :nth-child(n + 3),
+  .skeleton-table__row > :nth-child(n + 3) {
+    display: none;
+  }
 }
 
 ::selection {

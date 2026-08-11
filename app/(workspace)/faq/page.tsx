@@ -140,9 +140,9 @@ export default function FAQPage() {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           placeholder="Search VPN, models, GPUs, datasets..."
-          className="w-full bg-transparent text-sm text-[var(--ink)] outline-none placeholder:text-[var(--faint)]"
+          className="min-h-11 w-full bg-transparent text-base text-[var(--ink)] outline-none placeholder:text-[var(--faint)] sm:text-sm"
         />
-        <span className="font-mono text-[10px] text-[var(--faint)]">
+        <span className="hidden font-mono text-[10px] text-[var(--faint)] sm:inline">
           / SEARCH
         </span>
       </div>
@@ -150,7 +150,7 @@ export default function FAQPage() {
       {showAddForm && (
         <form
           onSubmit={handleAddFaq}
-          className="surface grid grid-cols-1 gap-4 p-6 md:grid-cols-2"
+          className="surface grid grid-cols-1 gap-4 p-4 sm:p-6 md:grid-cols-2"
         >
           <div className="md:col-span-2">
             <FieldLabel>Question</FieldLabel>
@@ -199,7 +199,7 @@ export default function FAQPage() {
               <button
                 onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
                 aria-expanded={isOpen}
-                className="grid w-full grid-cols-[3rem_1fr_auto] items-center gap-4 py-6 text-left transition hover:bg-[var(--surface-2)]"
+                className="grid min-h-[72px] w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 px-2 py-5 text-left transition hover:bg-[var(--surface-2)] sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-4 sm:px-0 sm:py-6"
               >
                 <span className="font-mono text-xs text-[var(--faint)]">
                   {String(index + 1).padStart(2, "0")}
@@ -225,7 +225,7 @@ export default function FAQPage() {
                 </span>
               </button>
               {isOpen && (
-                <div className="ml-16 max-w-2xl border-l-2 border-[var(--brand-soft)] pb-7 pl-5 text-sm leading-7 text-[var(--muted)]">
+                <div className="ml-8 max-w-2xl border-l-2 border-[var(--brand-soft)] pb-7 pl-4 pr-2 text-sm leading-7 text-[var(--muted)] sm:ml-16 sm:pl-5">
                   {faq.answer}
                 </div>
               )}

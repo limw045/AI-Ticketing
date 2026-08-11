@@ -22,7 +22,7 @@ export function AuthShell({
         <BrandLockup />
       </div>
 
-      <section className="surface w-full max-w-md p-8">
+      <section className="surface w-full max-w-md p-5 sm:p-8">
         {step && (
           <div className="mb-6 flex items-center justify-between border-b border-[var(--line)] pb-4">
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">

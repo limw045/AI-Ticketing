@@ -10,6 +10,7 @@ import {
   AdminTable,
   AdminTableSkeleton,
   AdminLoadError,
+  AdminMobileList,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -116,7 +117,30 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
       </AdminResourceToolbar>
 
       {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No staff match this view.</div> : (
-        <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} accounts</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}>
+        <AdminTable
+          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} accounts</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
+          mobile={
+            <AdminMobileList
+              items={admin.rows.map((row) => {
+                const canManage = canManageProfile(admin.viewerRole, row.role as WorkspaceRole, row.id === admin.viewerId);
+                return {
+                  id: String(row.id),
+                  title: `${row.display_name}${row.id === admin.viewerId ? " (You)" : ""}`,
+                  subtitle: row.email,
+                  badges: <><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{row.account_status}</StatusBadge><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{row.role.replace("_", " ")}</StatusBadge></>,
+                  fields: [
+                    { label: "Department", value: row.department },
+                    { label: "Staff type", value: row.user_type },
+                    { label: "Role", value: row.role.replace("_", " ") },
+                    { label: "Status", value: row.account_status },
+                    { label: "Joined", value: new Date(row.created_at).toLocaleDateString() },
+                  ],
+                  actions: (close) => canManage ? admin.deleted ? <RestoreButton onRestore={async () => { await admin.mutate({ action: "restore", id: row.id }); close(); }} /> : <><Button type="button" variant="secondary" onClick={() => { startEdit(row); close(); }}><Pencil className="h-4 w-4" /> Edit</Button><TwoStepDelete onConfirm={async () => { await admin.mutate({ action: "delete", id: row.id }); close(); }} /></> : <span className="py-2 text-center font-mono text-xs text-[var(--faint)]">Read only</span>,
+                };
+              })}
+            />
+          }
+        >
           <AdminThead><AdminTh>Name</AdminTh><AdminTh>Department</AdminTh><AdminTh>Type</AdminTh><AdminTh>Role</AdminTh><AdminTh>Status</AdminTh><AdminTh>Joined</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
           <tbody className="divide-y divide-[var(--line)]">
             {admin.rows.map((row) => {

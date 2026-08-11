@@ -165,12 +165,12 @@ export default function LoginPage() {
 
       {showPortalChoice && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-6 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-end justify-center overflow-y-auto bg-black/50 px-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="portal-choice-title"
         >
-          <section className="surface w-full max-w-xl p-7">
+          <section className="surface my-4 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto p-5 sm:p-7">
             <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
               Administrative access detected
             </div>

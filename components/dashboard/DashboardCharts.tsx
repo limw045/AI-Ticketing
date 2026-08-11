@@ -178,7 +178,7 @@ function ChartCardFooter({
 }) {
   const slug = reportLabel.replace(/\s+/g, "-").toLowerCase();
   return (
-    <div className="flex items-center justify-between border-t border-[var(--line)] pt-4 md:pt-5">
+    <div className="flex flex-col items-stretch justify-between gap-2 border-t border-[var(--line)] pt-4 sm:flex-row sm:items-center md:pt-5">
       <DateRangeMenu
         preset={preset}
         onChange={onChange}
@@ -187,7 +187,7 @@ function ChartCardFooter({
       />
       <Link
         href={reportHref}
-        className="inline-flex items-center rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--brand-ink)] transition hover:bg-[var(--surface-3)]"
+        className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--brand-ink)] transition hover:bg-[var(--surface-3)]"
       >
         {reportLabel}
         <ArrowRight className="ms-1.5 h-4 w-4" aria-hidden="true" />
@@ -282,7 +282,7 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 px-4 pt-4 md:px-6">
+        <div className="grid grid-cols-1 gap-2 px-4 pt-4 sm:grid-cols-2 sm:gap-4 md:px-6">
           <dl className="flex min-w-0 items-center gap-1.5">
             <dt className="text-sm text-[var(--muted)]">Top category:</dt>
             <dd
@@ -292,7 +292,7 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
               {topCategory || "—"}
             </dd>
           </dl>
-          <dl className="flex items-center justify-end gap-1.5">
+          <dl className="flex items-center gap-1.5 sm:justify-end">
             <dt className="text-sm text-[var(--muted)]">Resolution:</dt>
             <dd className="text-sm font-semibold text-[var(--ink)]">
               {resolutionRate}%
@@ -308,7 +308,7 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
               </p>
             </div>
           ) : (
-            <div className="h-64">
+            <div className="h-56 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={categoryData}
@@ -320,7 +320,9 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
                     fontSize={11}
                     tickLine={false}
                     axisLine={{ stroke: "var(--line)" }}
-                    interval={0}
+                    interval="preserveStartEnd"
+                    minTickGap={16}
+                    tickFormatter={(value) => String(value).slice(0, 8)}
                     tick={{ fill: "var(--muted)" }}
                   />
                   <YAxis
@@ -396,7 +398,7 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
                           : [...prev, dept]
                       )
                     }
-                    className="h-4 w-4 rounded border-[var(--line-strong)] bg-[var(--surface-2)] accent-[var(--brand)]"
+                  className="h-5 w-5 rounded border-[var(--line-strong)] bg-[var(--surface-2)] accent-[var(--brand)]"
                   />
                   {dept}
                 </label>
@@ -424,7 +426,7 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
               </p>
             </div>
           ) : (
-            <div className="h-64">
+            <div className="h-56 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

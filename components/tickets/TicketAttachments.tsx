@@ -57,7 +57,7 @@ export function TicketAttachments({
                   key={attachment.storagePath}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3"
                 >
-                  <span className="flex min-w-0 items-center gap-3">
+                  <span className="flex min-w-0 flex-1 items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                       <FileText className="h-4 w-4" />
                     </span>
@@ -65,18 +65,18 @@ export function TicketAttachments({
                       {attachment.name}
                     </span>
                   </span>
-                  <span className="flex items-center gap-2">
+                  <span className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
                     <a
                       href={attachment.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-bold text-[var(--ink)] hover:border-[var(--brand)]"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-bold text-[var(--ink)] hover:border-[var(--brand)]"
                     >
                       View log
                     </a>
                     <a
                       href={downloadUrl}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand)] px-3 py-1.5 text-[11px] font-bold text-[var(--brand-on)] hover:bg-[var(--brand-hover)]"
+                      className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-3 py-1.5 text-[11px] font-bold text-[var(--brand-on)] hover:bg-[var(--brand-hover)]"
                     >
                       <Download className="h-3 w-3" /> Download
                     </a>

@@ -156,7 +156,7 @@ export function NotificationsMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+        <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
               Notifications

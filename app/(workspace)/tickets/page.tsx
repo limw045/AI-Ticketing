@@ -22,10 +22,14 @@ import {
   TriangleAlert,
   ArrowUpDown,
   Plus,
+  SlidersHorizontal,
+  ListChecks,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { getHistoricalCategoryOptions } from "@/lib/ticket-categories";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
+import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 
 export default function TicketDashboard() {
   const router = useRouter();
@@ -40,6 +44,8 @@ export default function TicketDashboard() {
   const [onlyMine, setOnlyMine] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
   const isAgent =
     currentUser?.role === "admin" || currentUser?.role === "super_admin";
 
@@ -224,11 +230,27 @@ export default function TicketDashboard() {
         title="Tickets"
         description="Search, filter, and move requests through the desk. J / K navigate, M assigns yourself, C closes."
         actions={
-          <Link href="/tickets/new">
-            <Button>
-              <Plus className="h-4 w-4" /> New ticket
-            </Button>
-          </Link>
+          <>
+            {isAgent && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setSelectionMode((value) => !value);
+                  setSelectedIds([]);
+                }}
+                className="md:hidden"
+              >
+                {selectionMode ? <X className="h-4 w-4" /> : <ListChecks className="h-4 w-4" />}
+                {selectionMode ? "Done selecting" : "Select tickets"}
+              </Button>
+            )}
+            <Link href="/tickets/new">
+              <Button>
+                <Plus className="h-4 w-4" /> New ticket
+              </Button>
+            </Link>
+          </>
         }
       />
 
@@ -260,62 +282,65 @@ export default function TicketDashboard() {
         />
       </div>
 
-      <div className="surface flex flex-wrap items-center justify-between gap-4 p-4">
-        <div className="flex min-w-[280px] flex-1 items-center gap-3">
-          <div className="relative flex-1">
+      <div className="surface space-y-3 p-4">
+        <div className="flex w-full items-center gap-3">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3.5 top-3 h-4 w-4 text-[var(--faint)]" />
             <input
               type="text"
               placeholder="Search ticket #, title, or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] py-2.5 pl-10 pr-4 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)]"
+              className="min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] py-2.5 pl-10 pr-4 text-base text-[var(--ink)] outline-none placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm"
             />
           </div>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]"
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            className="relative inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--ink)] md:hidden"
           >
-            <option value="all">All Statuses</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]"
-          >
-            <option value="all">All Categories</option>
-            {categoryOptions.map((categoryOption) => (
-              <option key={categoryOption} value={categoryOption}>
-                {categoryOption}
-              </option>
-            ))}
-          </select>
+            <SlidersHorizontal className="h-4 w-4" />
+            <span className="sr-only sm:not-sr-only">Filters</span>
+            {(statusFilter !== "all" || categoryFilter !== "all" || onlyMine) && (
+              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[var(--surface)] bg-[var(--brand)]" />
+            )}
+          </button>
         </div>
-
-        <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--muted)]">
-          <input
-            type="checkbox"
-            checked={onlyMine}
-            onChange={(e) => setOnlyMine(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--line-strong)] text-[var(--brand)] focus:ring-[var(--brand-soft)]"
-          />
-          <span>Created by Me</span>
-        </label>
+        <div className="hidden flex-wrap items-center gap-3 md:flex">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-h-11 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]">
+            <option value="all">All Statuses</option><option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
+          </select>
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="min-h-11 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]">
+            <option value="all">All Categories</option>
+            {categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}
+          </select>
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 px-2 text-sm font-medium text-[var(--muted)]">
+            <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="h-5 w-5 rounded border-[var(--line-strong)] text-[var(--brand)] focus:ring-[var(--brand-soft)]" />
+            <span>Created by Me</span>
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2 md:hidden">
+          {statusFilter !== "all" && <span className="rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold capitalize text-[var(--brand-ink)]">{statusFilter.replace("_", " ")}</span>}
+          {categoryFilter !== "all" && <span className="max-w-full truncate rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">{categoryFilter}</span>}
+          {onlyMine && <span className="rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">Created by me</span>}
+        </div>
       </div>
+
+      <ResponsiveSheet open={filtersOpen} onOpenChange={setFiltersOpen} title="Filter tickets" description="Narrow the queue without losing your place." footer={<Button type="button" className="w-full" onClick={() => setFiltersOpen(false)}>Show {filteredTickets.length} tickets</Button>}>
+        <div className="space-y-5">
+          <label className="block"><span className="mb-2 block text-sm font-semibold">Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-base"><option value="all">All statuses</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label>
+          <label className="block"><span className="mb-2 block text-sm font-semibold">Category</span><select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-base"><option value="all">All categories</option>{categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}</select></label>
+          <label className="flex min-h-12 items-center justify-between gap-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4"><span className="text-sm font-semibold">Created by me</span><input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="h-6 w-6 rounded border-[var(--line-strong)] text-[var(--brand)]" /></label>
+          <button type="button" onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); setOnlyMine(false); }} className="min-h-11 w-full text-sm font-semibold text-[var(--muted)] underline underline-offset-4">Clear all filters</button>
+        </div>
+      </ResponsiveSheet>
 
       {isAgent && selectedIds.length > 0 && (
         <div className="surface flex flex-wrap items-center justify-between gap-3 p-3.5">
           <span className="text-sm font-semibold">
             {selectedIds.length} tickets selected
           </span>
-          <div className="flex items-center gap-2">
+          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:items-center">
             <button
               onClick={() => handleBulkStatusChange("in_progress")}
               className="rounded-full bg-[var(--brand)] px-3.5 py-1.5 text-xs font-bold text-[var(--brand-on)] hover:bg-[var(--brand-hover)]"
@@ -414,7 +439,7 @@ export default function TicketDashboard() {
                 key={ticket.id}
                 onClick={() => router.push(`/tickets/${ticket.id}`)}
                 className={cn(
-                  "surface flex cursor-pointer items-center justify-between gap-4 p-4 transition hover:border-[var(--line-strong)]",
+                  "surface flex cursor-pointer flex-col items-stretch justify-between gap-3 p-4 transition hover:border-[var(--line-strong)] sm:flex-row sm:items-center sm:gap-4",
                   isSelected &&
                     "border-[var(--brand)] ring-2 ring-[var(--brand-soft)]"
                 )}
@@ -428,7 +453,10 @@ export default function TicketDashboard() {
                         toggleSelectOne(ticket.id);
                       }}
                       aria-label={isChecked ? "Deselect ticket" : "Select ticket"}
-                      className="text-[var(--muted)] hover:text-[var(--brand-ink)]"
+                      className={cn(
+                        "-m-2 hidden h-11 w-11 shrink-0 items-center justify-center text-[var(--muted)] hover:text-[var(--brand-ink)] md:inline-flex",
+                        selectionMode && "inline-flex"
+                      )}
                     >
                       {isChecked ? (
                         <CheckSquare className="h-4 w-4 text-[var(--brand)]" />
@@ -438,7 +466,7 @@ export default function TicketDashboard() {
                     </button>
                   )}
 
-                  <span className="shrink-0 font-mono text-xs font-semibold text-[var(--faint)]">
+                  <span className="shrink-0 font-mono text-[11px] font-semibold text-[var(--faint)]">
                     #{ticket.ticket_number}
                   </span>
 
@@ -456,7 +484,7 @@ export default function TicketDashboard() {
                   )}
                 </div>
 
-                <div className="flex shrink-0 items-center gap-4 text-xs">
+                <div className="flex w-full shrink-0 items-center justify-between gap-3 border-t border-[var(--line)] pt-3 text-xs sm:w-auto sm:justify-end sm:border-0 sm:pt-0">
                   <span className="hidden rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)] md:inline-flex">
                     {ticket.category}
                   </span>
@@ -476,7 +504,10 @@ export default function TicketDashboard() {
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </span>
 
-                  <StatusBadge tone={statusTone(ticket.status)}>
+                  <span className="font-mono text-[10px] text-[var(--faint)] sm:hidden">
+                    {new Date(ticket.created_at).toLocaleDateString()}
+                  </span>
+                  <StatusBadge tone={statusTone(ticket.status)} className="shrink-0">
                     {ticket.status.replace("_", " ")}
                   </StatusBadge>
                 </div>

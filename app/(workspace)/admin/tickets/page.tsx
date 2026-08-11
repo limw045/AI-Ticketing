@@ -10,6 +10,7 @@ import {
   AdminTable,
   AdminTableSkeleton,
   AdminLoadError,
+  AdminMobileList,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -107,7 +108,7 @@ export default function AdminTicketsPage() {
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
       {editing && (
-        <form onSubmit={save} className="surface grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+        <form onSubmit={save} className="surface grid grid-cols-1 gap-4 p-4 sm:p-6 md:grid-cols-2">
           <div className="flex items-center justify-between md:col-span-2">
             <div><h2 className="font-display text-base font-bold">Edit ticket #{editing.ticket_number}</h2><p className="mt-1 text-xs text-[var(--muted)]">Identity, requester, source, and audit timestamps stay read-only.</p></div>
             <button type="button" onClick={() => setEditing(null)} className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-2)]"><X className="h-4 w-4" /></button>
@@ -132,7 +133,25 @@ export default function AdminTicketsPage() {
       </AdminResourceToolbar>
 
       {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={9} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No tickets match this view.</div> : (
-        <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} tickets</h2><StatusBadge tone="brand">{admin.total} total</StatusBadge></>}>
+        <AdminTable
+          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} tickets</h2><StatusBadge tone="brand">{admin.total} total</StatusBadge></>}
+          mobile={<AdminMobileList items={admin.rows.map((ticket) => ({
+            id: String(ticket.id),
+            title: `#${ticket.ticket_number} ${ticket.title}`,
+            subtitle: `${ticket.author?.display_name ?? ticket.reporter_email ?? "API"} · ${ticket.category}`,
+            badges: <><StatusBadge tone={priorityTone(ticket.priority)}>{ticket.priority}</StatusBadge><StatusBadge tone={statusTone(ticket.status)}>{ticket.status.replace("_", " ")}</StatusBadge></>,
+            fields: [
+              { label: "Requester", value: ticket.author?.display_name ?? ticket.reporter_email ?? "API" },
+              { label: "Source", value: ticket.source },
+              { label: "Category", value: ticket.category },
+              { label: "Priority", value: ticket.priority },
+              { label: "Status", value: ticket.status.replace("_", " ") },
+              { label: "Assignee", value: ticket.assignee?.display_name ?? "Unassigned" },
+              { label: "Created", value: new Date(ticket.created_at).toLocaleString() },
+            ],
+            actions: (close) => admin.deleted ? <RestoreButton onRestore={async () => { await admin.mutate({ action: "restore", id: ticket.id }); close(); }} /> : <><Link href={`/tickets/${ticket.id}`} onClick={close}><Button type="button" variant="secondary" className="w-full"><ExternalLink className="h-4 w-4" /> Open ticket</Button></Link><Button type="button" variant="secondary" onClick={() => { startEdit(ticket); close(); }}><Pencil className="h-4 w-4" /> Edit</Button><TwoStepDelete onConfirm={async () => { await admin.mutate({ action: "delete", id: ticket.id }); close(); }} /></>,
+          }))} />}
+        >
           <AdminThead><AdminTh>#</AdminTh><AdminTh>Title</AdminTh><AdminTh>Requester</AdminTh><AdminTh>Category</AdminTh><AdminTh>Priority</AdminTh><AdminTh>Status</AdminTh><AdminTh>Assignee</AdminTh><AdminTh>Created</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
           <tbody className="divide-y divide-[var(--line)]">
             {admin.rows.map((ticket) => (

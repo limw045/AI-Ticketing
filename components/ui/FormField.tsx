@@ -8,7 +8,7 @@ export function Input({
     <input
       {...props}
       className={cn(
-        "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)]",
+        "min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-base text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm",
         className
       )}
     />
@@ -23,7 +23,7 @@ export function Select({
     <select
       {...props}
       className={cn(
-        "w-full appearance-none rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--ink)] outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)]",
+        "min-h-11 w-full appearance-none rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-base font-medium text-[var(--ink)] outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm",
         className
       )}
     />
@@ -38,7 +38,7 @@ export function Textarea({
     <textarea
       {...props}
       className={cn(
-        "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-sm leading-relaxed text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)]",
+        "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-relaxed text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm",
         className
       )}
     />
@@ -85,7 +85,7 @@ export function Button({
     <button
       {...props}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
         variants[variant],
         className
       )}

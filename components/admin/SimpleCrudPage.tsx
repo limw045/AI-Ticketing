@@ -9,6 +9,7 @@ import {
   AdminTable,
   AdminTableSkeleton,
   AdminLoadError,
+  AdminMobileList,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -229,7 +230,30 @@ export function SimpleCrudPage({
       ) : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? (
         <div className="surface py-16 text-center text-sm text-[var(--muted)]">No records match this view.</div>
       ) : (
-        <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} {title.toLowerCase()}</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}>
+        <AdminTable
+          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} {title.toLowerCase()}</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
+          mobile={
+            <AdminMobileList
+              items={admin.rows.map((row) => ({
+                id: String(row.id),
+                title: displayValue(readPath(row, columns[0]?.key ?? "id"), columns[0]?.format),
+                subtitle: columns[1] ? `${columns[1].label}: ${displayValue(readPath(row, columns[1].key), columns[1].format)}` : undefined,
+                badges: columns.filter((column) => column.format === "status" || column.format === "visibility").slice(0, 2).map((column) => <StatusBadge key={column.key} tone={readPath(row, column.key) ? "success" : "neutral"}>{displayValue(readPath(row, column.key), column.format)}</StatusBadge>),
+                fields: columns.map((column) => ({ label: column.label, value: displayValue(readPath(row, column.key), column.format) })),
+                actions: (close) => isReadOnlyRow?.(row) ? (
+                  <span className="py-2 text-center font-mono text-xs text-[var(--faint)]">System managed</span>
+                ) : admin.deleted ? (
+                  <RestoreButton onRestore={async () => { await admin.mutate({ action: "restore", id: row.id }); close(); }} />
+                ) : (
+                  <>
+                    <Button type="button" variant="secondary" onClick={() => { startEdit(row); close(); }}><Pencil className="h-4 w-4" /> Edit</Button>
+                    <TwoStepDelete onConfirm={async () => { await admin.mutate({ action: "delete", id: row.id }); close(); }} />
+                  </>
+                ),
+              }))}
+            />
+          }
+        >
           <AdminThead>
             {columns.map((column) => <AdminTh key={column.key}>{column.label}</AdminTh>)}
             <AdminTh className="text-right">Actions</AdminTh>

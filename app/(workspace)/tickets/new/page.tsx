@@ -323,7 +323,7 @@ export default function NewTicketPage() {
       />
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <section className="surface p-6">
+        <section className="surface p-4 sm:p-6">
           <div className="mb-6 flex items-center gap-3">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-[11px] font-bold text-[var(--brand-ink)]">
               1
@@ -397,7 +397,7 @@ export default function NewTicketPage() {
         </section>
 
         <section className="surface overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+          <div className="flex flex-col gap-4 border-b border-[var(--line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex items-center gap-3">
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-[11px] font-bold text-[var(--brand-ink)]">
                 2
@@ -409,7 +409,7 @@ export default function NewTicketPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface-2)] p-1 text-xs font-semibold">
+            <div className="grid grid-cols-2 items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface-2)] p-1 text-xs font-semibold sm:flex">
               <button
                 type="button"
                 onClick={() => setPreviewTab("edit")}
@@ -435,7 +435,7 @@ export default function NewTicketPage() {
             </div>
           </div>
 
-          <div className="px-6 py-5">
+          <div className="px-4 py-5 sm:px-6">
             {previewTab === "edit" ? (
               <Textarea
                 rows={14}
@@ -444,10 +444,10 @@ export default function NewTicketPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 placeholder="Describe the request using the guidance for this category..."
-                className="min-h-[320px] font-mono text-sm"
+                className="min-h-[240px] font-mono sm:min-h-[320px]"
               />
             ) : (
-              <div className="min-h-[320px] whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-5 font-mono text-sm leading-relaxed text-[var(--ink-2)]">
+              <div className="min-h-[240px] whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-4 font-mono text-sm leading-relaxed text-[var(--ink-2)] sm:min-h-[320px] sm:p-5">
                 {parsedDescription.text}
               </div>
             )}
@@ -463,12 +463,12 @@ export default function NewTicketPage() {
           </div>
         </section>
 
-        <div className="sticky bottom-5 z-20 mx-auto flex w-full max-w-md items-center justify-between gap-4 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 shadow-[var(--shadow-lg)]">
+        <div className="safe-area-bottom sticky bottom-0 z-20 -mx-4 flex w-[calc(100%+2rem)] items-center justify-between gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 pt-3 shadow-[var(--shadow-lg)] sm:bottom-5 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-full sm:px-5 sm:py-3">
           <button
             type="button"
             onClick={() => void handleClearDraft()}
             disabled={attachmentsUploading}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--danger)]"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 px-2 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--danger)]"
             title="Discard draft"
           >
             <Trash2 className="h-3.5 w-3.5" /> Clear
@@ -477,7 +477,7 @@ export default function NewTicketPage() {
           <Button
             type="submit"
             disabled={loading || attachmentsUploading || categoriesLoading || !category}
-            className="min-w-[150px]"
+            className="min-w-0 flex-1 sm:min-w-[150px] sm:flex-none"
           >
             {loading ? "Submitting…" : "Submit to AI team"}
             {!loading && <ArrowRight className="h-4 w-4" />}

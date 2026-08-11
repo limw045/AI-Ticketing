@@ -6,14 +6,17 @@ import { cn } from "@/lib/cn";
 import { Input, Select } from "@/components/ui/FormField";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Alert } from "@/components/ui/Alert";
+import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 
 export function AdminTable({
   header,
   children,
+  mobile,
   className = "",
 }: {
   header?: React.ReactNode;
   children: React.ReactNode;
+  mobile?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -23,11 +26,17 @@ export function AdminTable({
           {header}
         </div>
       )}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-sm">
+      {mobile && <div className="md:hidden">{mobile}</div>}
+      <div className={cn("overflow-x-auto", mobile && "hidden md:block")}>
+        <table className="min-w-max w-full border-collapse text-left text-sm md:min-w-0">
           {children}
         </table>
       </div>
+      {!mobile && (
+        <p className="border-t border-[var(--line)] px-4 py-2 text-center font-mono text-[10px] text-[var(--faint)] md:hidden">
+          Swipe horizontally to view all columns
+        </p>
+      )}
     </section>
   );
 }
@@ -129,7 +138,7 @@ export function AdminToolbar({
   return (
     <div
       className={cn(
-        "surface flex flex-wrap items-center justify-between gap-4 p-4",
+        "surface flex flex-col items-stretch gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 [&>label]:w-full [&>select]:!w-full sm:[&>label]:w-auto sm:[&>select]:!w-auto",
         className
       )}
     >
@@ -159,49 +168,52 @@ export function AdminResourceToolbar({
   onDateToChange: (value: string) => void;
   children?: React.ReactNode;
 }) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const deletedToggle = (
+    <button
+      type="button"
+      onClick={() => onDeletedChange(!deleted)}
+      className={cn(
+        "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition sm:w-auto",
+        deleted
+          ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand-ink)]"
+          : "border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)]"
+      )}
+    >
+      <ArchiveRestore className="h-3.5 w-3.5" />
+      {deleted ? "Showing Deleted" : "Active records"}
+    </button>
+  );
+
   return (
-    <AdminToolbar className="items-end">
-      <label className="min-w-[240px] flex-1">
-        <span className="sr-only">Search records</span>
-        <span className="relative block">
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
-          <Input
-            value={q}
-            onChange={(event) => onQChange(event.target.value)}
-            placeholder="Search records..."
-            className="pl-10"
-          />
-        </span>
-      </label>
-      {children}
-      <Input
-        type="date"
-        value={dateFrom}
-        onChange={(event) => onDateFromChange(event.target.value)}
-        aria-label="Created from"
-        className="!w-auto !py-2.5"
-      />
-      <Input
-        type="date"
-        value={dateTo}
-        onChange={(event) => onDateToChange(event.target.value)}
-        aria-label="Created to"
-        className="!w-auto !py-2.5"
-      />
-      <button
-        type="button"
-        onClick={() => onDeletedChange(!deleted)}
-        className={cn(
-          "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition",
-          deleted
-            ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand-ink)]"
-            : "border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)]"
-        )}
-      >
-        <ArchiveRestore className="h-3.5 w-3.5" />
-        {deleted ? "Showing Deleted" : "Active records"}
-      </button>
-    </AdminToolbar>
+    <>
+      <AdminToolbar className="items-end">
+        <label className="min-w-0 flex-1 sm:min-w-[240px]">
+          <span className="sr-only">Search records</span>
+          <span className="relative block">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
+            <Input value={q} onChange={(event) => onQChange(event.target.value)} placeholder="Search records..." className="pl-10" />
+          </span>
+        </label>
+        <button type="button" onClick={() => setFiltersOpen(true)} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--ink)] md:hidden">
+          <Search className="h-4 w-4" /> Filters
+        </button>
+        <div className="hidden flex-wrap items-end gap-3 md:flex">
+          {children}
+          <Input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} aria-label="Created from" className="!w-auto !py-2.5" />
+          <Input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} aria-label="Created to" className="!w-auto !py-2.5" />
+          {deletedToggle}
+        </div>
+      </AdminToolbar>
+      <ResponsiveSheet open={filtersOpen} onOpenChange={setFiltersOpen} title="Filter records" description="Apply filters to this administrative view." footer={<button type="button" onClick={() => setFiltersOpen(false)} className="min-h-11 w-full rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-on)]">Apply filters</button>}>
+        <div className="space-y-4 [&>select]:!w-full">
+          {children}
+          <label className="block"><span className="mb-2 block text-sm font-semibold">Created from</span><Input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} /></label>
+          <label className="block"><span className="mb-2 block text-sm font-semibold">Created to</span><Input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} /></label>
+          {deletedToggle}
+        </div>
+      </ResponsiveSheet>
+    </>
   );
 }
 
@@ -222,11 +234,11 @@ export function AdminPagination({
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(total, page * pageSize);
   return (
-    <div className="surface flex flex-wrap items-center justify-between gap-4 px-4 py-3">
+    <div className="surface flex flex-col items-stretch justify-between gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
       <span className="font-mono text-[11px] text-[var(--faint)]">
         {first}–{last} of {total}
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
         <Select
           value={pageSize}
           onChange={(event) => onPageSizeChange(Number(event.target.value) as 25 | 50 | 100)}
@@ -241,7 +253,7 @@ export function AdminPagination({
           type="button"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] transition hover:text-[var(--ink)] disabled:opacity-40"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] transition hover:text-[var(--ink)] disabled:opacity-40"
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -253,7 +265,7 @@ export function AdminPagination({
           type="button"
           disabled={page >= pages}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] transition hover:text-[var(--ink)] disabled:opacity-40"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)] transition hover:text-[var(--ink)] disabled:opacity-40"
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />
@@ -288,5 +300,62 @@ export function RestoreButton({ onRestore }: { onRestore: () => unknown | Promis
     >
       <ArchiveRestore className="h-3.5 w-3.5" /> Restore
     </button>
+  );
+}
+
+export interface AdminMobileField {
+  label: string;
+  value: React.ReactNode;
+}
+
+export interface AdminMobileItem {
+  id: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  badges?: React.ReactNode;
+  fields: AdminMobileField[];
+  actions?: (close: () => void) => React.ReactNode;
+}
+
+export function AdminMobileList({ items }: { items: AdminMobileItem[] }) {
+  const [selected, setSelected] = useState<AdminMobileItem | null>(null);
+
+  return (
+    <>
+      <div className="divide-y divide-[var(--line)]">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setSelected(item)}
+            className="flex min-h-[72px] w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-[var(--surface-2)]"
+            aria-label={`View details for ${typeof item.title === "string" ? item.title : "record"}`}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-[var(--ink)]">{item.title}</span>
+              {item.subtitle && <span className="mt-1 block truncate text-xs text-[var(--muted)]">{item.subtitle}</span>}
+              {item.badges && <span className="mt-2 flex flex-wrap gap-1.5">{item.badges}</span>}
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-[var(--brand-ink)]" />
+          </button>
+        ))}
+      </div>
+      <ResponsiveSheet
+        open={Boolean(selected)}
+        onOpenChange={(open) => { if (!open) setSelected(null); }}
+        title={typeof selected?.title === "string" ? selected.title : "Record details"}
+        description={typeof selected?.subtitle === "string" ? selected.subtitle : undefined}
+        footer={selected?.actions ? <div className="flex flex-col gap-2 [&>button]:w-full">{selected.actions(() => setSelected(null))}</div> : undefined}
+      >
+        <dl className="divide-y divide-[var(--line)]">
+          {selected?.fields.map((field, index) => (
+            <div key={`${field.label}-${index}`} className="grid gap-1 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
+              <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--faint)]">{field.label}</dt>
+              <dd className="break-words text-sm text-[var(--ink)] sm:text-right">{field.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </ResponsiveSheet>
+    </>
   );
 }

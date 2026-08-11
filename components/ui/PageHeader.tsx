@@ -25,7 +25,7 @@ export function PageHeader({
         className
       )}
     >
-      <div>
+      <div className="min-w-0">
         {backHref && <BackButton href={backHref} label={backLabel} className="mb-4" />}
         {eyebrow && (
           <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
@@ -40,7 +40,11 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
+      {actions && (
+        <div className="flex w-full shrink-0 flex-col items-stretch gap-3 [&_a]:w-full [&_button]:w-full sm:w-auto sm:flex-row sm:items-center sm:[&_a]:w-auto sm:[&_button]:w-auto">
+          {actions}
+        </div>
+      )}
     </header>
   );
 }

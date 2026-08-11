@@ -102,7 +102,7 @@ export function TicketAttachmentPicker({
                 disabled={uploading}
                 aria-label={`Remove ${attachment.name}`}
                 title="Remove"
-                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] transition hover:border-[var(--danger)] hover:text-[var(--danger)] disabled:opacity-50"
+                className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] transition hover:border-[var(--danger)] hover:text-[var(--danger)] disabled:opacity-50"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
