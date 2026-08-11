@@ -159,7 +159,7 @@ try {
         .insert({
           title: `[E2E ${runId}] Admin notification`,
           description: "Admin-authored Realtime verification ticket",
-          category: "System Bug",
+          category: "Risk Screen",
           priority: "medium",
           author_id: adminUser.id,
           source: "portal",
@@ -241,6 +241,33 @@ try {
     .limit(1);
   assert(!categoryDetailsError, `Category rule view failed: ${categoryDetailsError?.message}`);
   pass("Comment persistence and internal-note isolation work");
+
+  const { error: ticketDeleteError } = await admin.rpc("set_admin_record_deleted", {
+    p_resource: "tickets",
+    p_record_id: ticket.id,
+    p_restore: false,
+  });
+  assert(!ticketDeleteError, `Ticket soft delete failed: ${ticketDeleteError?.message}`);
+  const { data: deletedComments, error: deletedCommentsError } = await admin
+    .from("comments")
+    .select("id, deleted_at")
+    .eq("ticket_id", ticket.id);
+  assert(!deletedCommentsError, `Deleted comment verification failed: ${deletedCommentsError?.message}`);
+  assert(deletedComments?.length >= 2 && deletedComments.every((item) => item.deleted_at), "Ticket soft delete left active comments behind");
+
+  const { error: ticketRestoreError } = await admin.rpc("set_admin_record_deleted", {
+    p_resource: "tickets",
+    p_record_id: ticket.id,
+    p_restore: true,
+  });
+  assert(!ticketRestoreError, `Ticket restore failed: ${ticketRestoreError?.message}`);
+  const { data: restoredComments, error: restoredCommentsError } = await admin
+    .from("comments")
+    .select("id, deleted_at")
+    .eq("ticket_id", ticket.id);
+  assert(!restoredCommentsError, `Restored comment verification failed: ${restoredCommentsError?.message}`);
+  assert(restoredComments?.every((item) => item.deleted_at === null), "Ticket restore did not restore its cascaded comments");
+  pass("Ticket soft-delete and restore keep comment lifecycle aligned");
 
   const { data: updatedTicket, error: adminUpdateError } = await admin
     .from("tickets")

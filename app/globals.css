@@ -174,11 +174,59 @@ body {
   line-height: 1.12;
 }
 
+/* ---- Global incident transmission rail ---- */
+
+.incident-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+}
+
+.incident-marquee-track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  align-items: center;
+  animation: incident-marquee 28s linear infinite;
+  will-change: transform;
+}
+
+.incident-marquee-group {
+  display: flex;
+  min-width: max-content;
+  flex-shrink: 0;
+  align-items: center;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.incident-marquee:hover .incident-marquee-track,
+.incident-marquee:focus-within .incident-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes incident-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .incident-marquee-track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .incident-marquee-track > [aria-hidden="true"] {
+    display: none;
   }
 }

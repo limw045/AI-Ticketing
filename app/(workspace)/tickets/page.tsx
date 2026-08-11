@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { IncidentBanner } from "@/components/IncidentBanner";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
 import {
@@ -213,7 +212,6 @@ export default function TicketDashboard() {
 
   return (
     <div className="space-y-10">
-      <IncidentBanner />
       {error && (
         <Alert tone="error" role="alert">
           {error}

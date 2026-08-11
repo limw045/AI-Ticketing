@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { IncidentBanner } from "@/components/IncidentBanner";
 import { TicketAttachmentPicker } from "@/components/tickets/TicketAttachmentPicker";
 import { scanSensitiveData } from "@/lib/security-scanner";
 import {
@@ -288,7 +287,6 @@ export default function NewTicketPage() {
 
   return (
     <div className="space-y-10">
-      <IncidentBanner />
       {formError && (
         <Alert tone="error" role="alert">
           {formError}

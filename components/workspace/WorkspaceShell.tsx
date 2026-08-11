@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { BrandLockup, BrandMark } from "@/components/ui/BrandLockup";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NotificationsMenu } from "@/components/workspace/NotificationsMenu";
+import { IncidentBanner } from "@/components/IncidentBanner";
 import {
   getNavItems,
   ADMIN_CONSOLE_ITEMS,
@@ -303,7 +304,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           sidebarCollapsed ? "lg:pl-[100px]" : "lg:pl-[272px]"
         )}
       >
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <div className="mx-auto w-full max-w-6xl">
+          <IncidentBanner canManage={isAdmin} />
+          {children}
+        </div>
       </main>
     </div>
   );

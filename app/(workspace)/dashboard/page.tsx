@@ -24,7 +24,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [tickets, setTickets] = useState<any[]>([]);
-  const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accessNotice, setAccessNotice] = useState("");
@@ -70,13 +69,6 @@ export default function DashboardPage() {
       if (ticketError) setError(`Could not load tickets: ${ticketError.message}`);
       else setTickets(ticketData ?? []);
 
-      const { data: incidentData, error: incidentError } = await supabase
-        .from("incidents")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      if (incidentError) setError(`Could not load incidents: ${incidentError.message}`);
-      else setIncidents(incidentData ?? []);
       setLoading(false);
     };
     load();
@@ -128,15 +120,6 @@ export default function DashboardPage() {
       />
 
       {accessNotice && <Alert tone="warning" role="alert">{accessNotice}</Alert>}
-
-      {incidents.length > 0 && (
-        <Alert tone="warning" role="alert">
-          <strong className="block">{incidents[0].title}</strong>
-          <span className="mt-0.5 block text-[var(--warning)]/85">
-            {incidents[0].message}
-          </span>
-        </Alert>
-      )}
 
       {isAdministrator && portalMode === "user" && (
         <Alert tone="info">
