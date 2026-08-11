@@ -10,17 +10,7 @@ import { StatusBadge, severityTone } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/FormField";
 import { setPortalMode } from "@/lib/portal-mode";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import {
   Download,
   Radio,
@@ -34,8 +24,6 @@ import {
   ArchiveRestore,
   ScrollText,
 } from "lucide-react";
-
-const COLORS = ["#5c2d91", "#8b64b8", "#b996d2", "#3d6f9d", "#2e7d5b"];
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -132,34 +120,6 @@ export default function AdminDashboard() {
         return sum + Math.max(0, elapsedMs / 3_600_000);
       }, 0) / respondedTickets.length
     : null;
-
-  const categoryCounts: Record<string, number> = {};
-  tickets.forEach((t) => {
-    categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
-  });
-  const categoryData = Object.keys(categoryCounts).map((cat) => ({
-    name: cat,
-    count: categoryCounts[cat],
-  }));
-
-  const deptCounts: Record<string, number> = {};
-  tickets.forEach((t) => {
-    const dept = t.author?.department || "General";
-    deptCounts[dept] = (deptCounts[dept] || 0) + 1;
-  });
-  const deptData = Object.keys(deptCounts).map((dept) => ({
-    name: dept,
-    value: deptCounts[dept],
-  }));
-
-  const chartTooltipStyle = {
-    backgroundColor: "var(--surface)",
-    borderColor: "var(--line-strong)",
-    borderRadius: 12,
-    color: "var(--ink)",
-    fontSize: 12,
-  };
-  const axisColor = "var(--faint)";
 
   const quickLinks = [
     {
@@ -326,85 +286,8 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="surface">
-          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
-            <div>
-              <h2 className="font-display text-base font-bold">
-                Ticket volume by category
-              </h2>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">
-                Where the queue is coming from
-              </p>
-            </div>
-            <span className="rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)]">
-              {categoryData.length} categories
-            </span>
-          </header>
-          <div className="mt-4 h-64 px-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData}>
-                <XAxis dataKey="name" stroke={axisColor} fontSize={11} />
-                <YAxis stroke={axisColor} fontSize={11} />
-                <Tooltip contentStyle={chartTooltipStyle} />
-                <Bar
-                  dataKey="count"
-                  fill="var(--brand)"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          {categoryData.length === 0 && (
-            <p className="px-6 pb-6 text-center text-xs text-[var(--faint)]">
-              No tickets yet — data will appear here as requests come in.
-            </p>
-          )}
-        </section>
-
-        <section className="surface">
-          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
-            <div>
-              <h2 className="font-display text-base font-bold">
-                Department ticket ratio
-              </h2>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">
-                Share of requests by department
-              </p>
-            </div>
-            <span className="rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)]">
-              {deptData.length} departments
-            </span>
-          </header>
-          <div className="mt-4 flex h-64 items-center justify-center px-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={deptData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {deptData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={chartTooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          {deptData.length === 0 && (
-            <p className="px-6 pb-6 text-center text-xs text-[var(--faint)]">
-              No tickets yet — department mix will appear here.
-            </p>
-          )}
-        </section>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <DashboardCharts tickets={tickets} />
       </div>
 
       <section className="surface">
