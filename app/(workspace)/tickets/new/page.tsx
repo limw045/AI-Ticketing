@@ -4,14 +4,27 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { IncidentBanner } from "@/components/IncidentBanner";
+import { TicketAttachmentPicker } from "@/components/tickets/TicketAttachmentPicker";
 import { scanSensitiveData } from "@/lib/security-scanner";
-import { compressAndUploadImage } from "@/lib/image-upload";
+import {
+  removeTicketAttachment,
+  uploadTicketAttachment,
+} from "@/lib/image-upload";
+import {
+  appendAttachmentReference,
+  parseTicketDescription,
+  removeAttachmentReference,
+  type TicketAttachment,
+} from "@/lib/ticket-attachments";
+import {
+  resolveDefaultCategory,
+  sortCategoryRules,
+  type CategoryRule,
+} from "@/lib/ticket-categories";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Alert } from "@/components/ui/Alert";
 import { Button, FieldLabel, Input, Select, Textarea } from "@/components/ui/FormField";
 import {
-  Image as ImageIcon,
-  Sparkles,
   ShieldCheck,
   Layers,
   Trash2,
@@ -21,114 +34,183 @@ import {
   Check,
 } from "lucide-react";
 
-const CATEGORY_TEMPLATES: Record<string, string> = {
-  "System Bug": `## Bug Overview
-- **App / Page URL**: https://
-- **Expected Result**: 
-- **Actual Behavior**: 
-
-### Steps to Reproduce
-1. Go to page...
-2. Click on...
-3. See error...
-`,
-  Hardware: `## Hardware & GPU Access Request
-- **Device / GPU Type**: RTX 4090 / A100 / Display / Mac
-- **Asset S/N**: 
-- **Location / Desk**: 
-
-### Request Details
-`,
-  "VPN & Network": `## AI Pipeline & Network Issue
-- **Environment**: Office Wi-Fi / Remote VPN / Server Cluster
-- **Error Code / Log**: 
-- **Connection Type**: GlobalProtect / SSH / HTTPS
-`,
-  Permissions: `## Model & Dataset Access Request
-- **Target AI Model / Dataset**: 
-- **Permission Level**: Read / Fine-Tune / Admin
-- **Supervisor Approval**: Approved
-`,
-};
-
 export default function NewTicketPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("System Bug");
+  const [category, setCategory] = useState("");
+  const [categoryRules, setCategoryRules] = useState<CategoryRule[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [priority, setPriority] = useState("medium");
-  const [description, setDescription] = useState(
-    CATEGORY_TEMPLATES["System Bug"]
-  );
+  const [description, setDescription] = useState("");
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [attachmentsUploading, setAttachmentsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadLabel, setUploadLabel] = useState("");
   const [loading, setLoading] = useState(false);
   const [savedDraftAlert, setSavedDraftAlert] = useState(false);
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [formError, setFormError] = useState("");
+  const [initialized, setInitialized] = useState(false);
+  const parsedDescription = parseTicketDescription(description);
+  const attachments = parsedDescription.attachments;
 
   useEffect(() => {
-    const saved = localStorage.getItem("ticketing_draft");
-    if (saved) {
+    let cancelled = false;
+    const initializeForm = async () => {
+      let draft: Record<string, string> = {};
+      const saved = localStorage.getItem("ticketing_draft");
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed.title) setTitle(parsed.title);
-        if (parsed.description) setDescription(parsed.description);
-        if (parsed.category) setCategory(parsed.category);
-        if (parsed.priority) setPriority(parsed.priority);
-        setSavedDraftAlert(true);
-        setTimeout(() => setSavedDraftAlert(false), 3000);
+        draft = saved ? JSON.parse(saved) : {};
       } catch (e) {
         console.error("Draft restore error:", e);
       }
-    }
+
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("category_rules")
+        .select("id, category_name, template_markdown, default_assignee_id")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true });
+      if (cancelled) return;
+
+      if (error || !data?.length) {
+        setFormError(
+          error
+            ? `Could not load ticket categories: ${error.message}`
+            : "No active ticket categories are available. Please contact an administrator."
+        );
+        setCategoriesLoading(false);
+        setInitialized(true);
+        return;
+      }
+
+      const rules = sortCategoryRules(data as CategoryRule[]);
+      const draftCategory = typeof draft.category === "string" ? draft.category : "";
+      const selectedCategory = rules.some((rule) => rule.category_name === draftCategory)
+        ? draftCategory
+        : resolveDefaultCategory(rules) ?? "";
+      const selectedRule = rules.find((rule) => rule.category_name === selectedCategory);
+
+      setCategoryRules(rules);
+      setTitle(typeof draft.title === "string" ? draft.title : "");
+      setCategory(selectedCategory);
+      setPriority(typeof draft.priority === "string" ? draft.priority : "medium");
+      setDescription(
+        typeof draft.description === "string" && draft.description.trim()
+          ? draft.description
+          : selectedRule?.template_markdown ?? ""
+      );
+      if (saved) {
+        setSavedDraftAlert(true);
+        setTimeout(() => setSavedDraftAlert(false), 3000);
+      }
+      setCategoriesLoading(false);
+      setInitialized(true);
+    };
+
+    initializeForm();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (title || description) {
+    if (initialized && (title || description)) {
       localStorage.setItem(
         "ticketing_draft",
         JSON.stringify({ title, description, category, priority })
       );
     }
-  }, [title, description, category, priority]);
+  }, [title, description, category, priority, initialized]);
 
   const handleCategoryChange = (cat: string) => {
+    const currentTemplate = categoryRules.find(
+      (rule) => rule.category_name === category
+    )?.template_markdown;
+    const nextTemplate = categoryRules.find(
+      (rule) => rule.category_name === cat
+    )?.template_markdown;
     setCategory(cat);
-    if (CATEGORY_TEMPLATES[cat] && !description.trim()) {
-      setDescription(CATEGORY_TEMPLATES[cat]);
+    if (!description.trim() || description === currentTemplate) {
+      setDescription(nextTemplate ?? "");
     }
   };
 
-  const handlePaste = async (e: React.ClipboardEvent) => {
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf("image") !== -1) {
-        const file = items[i].getAsFile();
-        if (file) {
-          setUploadingImage(true);
-          setUploadProgress(10);
-          try {
-            setFormError("");
-            const url = await compressAndUploadImage(file, (pct) =>
-              setUploadProgress(pct)
-            );
-            setDescription((prev) => prev + `\n\n![Screenshot](${url})\n`);
-          } catch (err) {
-            setFormError(
-              err instanceof Error ? err.message : "Attachment upload failed."
-            );
-          } finally {
-            setUploadingImage(false);
-          }
-        }
+  const handleAttachmentFiles = async (files: File[]) => {
+    if (!files.length || attachmentsUploading) return;
+    setAttachmentsUploading(true);
+    setFormError("");
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+      setUploadProgress(0);
+      setUploadLabel(`Uploading ${index + 1}/${files.length}: ${file.name}`);
+      try {
+        const attachment = await uploadTicketAttachment(file, setUploadProgress);
+        setDescription((current) => appendAttachmentReference(current, attachment));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Attachment upload failed.";
+        setFormError(`${file.name}: ${message}`);
       }
     }
+    setAttachmentsUploading(false);
+    setUploadProgress(0);
+    setUploadLabel("");
   };
 
-  const handleClearDraft = () => {
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const images = Array.from(event.clipboardData.items)
+      .filter((item) => item.type.startsWith("image/"))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => Boolean(file));
+    if (images.length) {
+      event.preventDefault();
+      void handleAttachmentFiles(images);
+    }
+  };
+
+  const handleRemoveAttachment = async (attachment: TicketAttachment) => {
+    if (attachmentsUploading) return;
+    setFormError("");
+    try {
+      await removeTicketAttachment(attachment.storagePath);
+      setDescription((current) => removeAttachmentReference(current, attachment));
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Attachment could not be removed."
+      );
+    }
+  };
+
+  const handleClearDraft = async () => {
+    setFormError("");
+    const cleanupResults = await Promise.allSettled(
+      attachments.map((attachment) => removeTicketAttachment(attachment.storagePath))
+    );
+    const removedAttachments = attachments.filter(
+      (_attachment, index) => cleanupResults[index].status === "fulfilled"
+    );
+    const failedCleanup = cleanupResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    );
+    if (failedCleanup) {
+      setDescription((current) =>
+        removedAttachments.reduce(
+          (next, attachment) => removeAttachmentReference(next, attachment),
+          current
+        )
+      );
+      setFormError(
+        failedCleanup.reason instanceof Error
+          ? failedCleanup.reason.message
+          : "Draft attachments could not be removed. The draft was not cleared."
+      );
+      return;
+    }
     setTitle("");
-    setDescription(CATEGORY_TEMPLATES[category]);
+    setDescription(
+      categoryRules.find((rule) => rule.category_name === category)
+        ?.template_markdown ?? ""
+    );
     localStorage.removeItem("ticketing_draft");
   };
 
@@ -238,7 +320,7 @@ export default function NewTicketPage() {
       <PageHeader
         eyebrow="Create request"
         title="Describe what is blocked."
-        description="Pick a category to load a structured template. Screenshots can be pasted directly into the description."
+        description="Pick a category for guided details, then attach screenshots or sanitized TXT logs when useful."
       />
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -277,10 +359,11 @@ export default function NewTicketPage() {
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     className="pl-10"
                   >
-                    <option value="System Bug">System Bug</option>
-                    <option value="Hardware">Hardware & GPU</option>
-                    <option value="VPN & Network">Network & Pipeline</option>
-                    <option value="Permissions">Model & Access</option>
+                    {categoryRules.map((rule) => (
+                      <option key={rule.id} value={rule.category_name}>
+                        {rule.category_name}
+                      </option>
+                    ))}
                   </Select>
                 </span>
               </label>
@@ -323,7 +406,7 @@ export default function NewTicketPage() {
               <div>
                 <h2 className="font-display text-base font-bold">Description</h2>
                 <p className="text-xs text-[var(--muted)]">
-                  Markdown supported; paste a screenshot to attach it.
+                  Follow the guidance and avoid credentials or sensitive data.
                 </p>
               </div>
             </div>
@@ -361,35 +444,31 @@ export default function NewTicketPage() {
                 onPaste={handlePaste}
                 onChange={(e) => setDescription(e.target.value)}
                 required
-                placeholder="Describe your issue or request in Markdown format..."
+                placeholder="Describe the request using the guidance for this category..."
                 className="min-h-[320px] font-mono text-sm"
               />
             ) : (
               <div className="min-h-[320px] whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-5 font-mono text-sm leading-relaxed text-[var(--ink-2)]">
-                {description}
+                {parsedDescription.text}
               </div>
             )}
 
-            {uploadingImage && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl bg-[var(--brand-soft)] px-4 py-3 text-xs font-semibold text-[var(--brand-ink)]">
-                <Sparkles className="h-4 w-4 animate-spin" />
-                <span>
-                  Compressing & uploading screenshot… {uploadProgress}%
-                </span>
-              </div>
-            )}
-
-            <p className="mt-3 flex items-center gap-1.5 text-[11px] text-[var(--faint)]">
-              <ImageIcon className="h-3.5 w-3.5" />
-              Press Ctrl + V anywhere in the editor to paste a screenshot.
-            </p>
+            <TicketAttachmentPicker
+              attachments={attachments}
+              uploading={attachmentsUploading}
+              progress={uploadProgress}
+              uploadLabel={uploadLabel}
+              onFilesSelected={(files) => void handleAttachmentFiles(files)}
+              onRemove={(attachment) => void handleRemoveAttachment(attachment)}
+            />
           </div>
         </section>
 
         <div className="sticky bottom-5 z-20 mx-auto flex w-full max-w-md items-center justify-between gap-4 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 shadow-[var(--shadow-lg)]">
           <button
             type="button"
-            onClick={handleClearDraft}
+            onClick={() => void handleClearDraft()}
+            disabled={attachmentsUploading}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--danger)]"
             title="Discard draft"
           >
@@ -398,7 +477,7 @@ export default function NewTicketPage() {
 
           <Button
             type="submit"
-            disabled={loading || uploadingImage}
+            disabled={loading || attachmentsUploading || categoriesLoading || !category}
             className="min-w-[150px]"
           >
             {loading ? "Submitting…" : "Submit to AI team"}
