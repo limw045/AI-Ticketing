@@ -15,12 +15,11 @@ export function BrandMark({
       style={{ width: size, height: size }}
     >
       <Image
-        src="/brand/gt-logo.png"
+        src="/brand/gt-automation-mark.png"
         alt=""
-        width={244}
-        height={72}
-        className="absolute -left-[34%] top-1/2 h-[150%] w-auto -translate-y-1/2 object-contain"
-        style={{ filter: "drop-shadow(0 0 0 transparent)" }}
+        width={447}
+        height={447}
+        className="h-full w-full object-contain"
         priority
       />
     </span>
