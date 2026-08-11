@@ -40,6 +40,54 @@ async function signIn(client, email, password) {
   return data.user;
 }
 
+async function captureNotification(client, recipientId, predicate, action) {
+  let channel;
+  let timeout;
+  let settled = false;
+
+  return new Promise((resolve, reject) => {
+    const finish = async (error, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if (channel) await client.removeChannel(channel);
+      if (error) reject(error);
+      else resolve(value);
+    };
+
+    channel = client
+      .channel(`backend-verification-${runId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${recipientId}`,
+        },
+        (payload) => {
+          if (predicate(payload.new)) void finish(null, payload.new);
+        }
+      )
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          try {
+            await action();
+          } catch (error) {
+            void finish(error);
+          }
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          void finish(new Error(`Realtime subscription failed: ${status}`));
+        }
+      });
+
+    timeout = setTimeout(
+      () => void finish(new Error("Timed out waiting for a Realtime notification")),
+      10000
+    );
+  });
+}
+
 async function cleanup() {
   if (createdTicketIds.length) {
     await admin.from("tickets").update({ deleted_at: new Date().toISOString() }).in("id", createdTicketIds);
@@ -100,6 +148,32 @@ try {
   assert(ticket.author_id === employeeUser.id && ticket.source === "portal", "Portal ticket identity/source is incorrect");
   pass("Employee created a persisted portal ticket");
 
+  let adminAuthoredTicket;
+  const liveNotification = await captureNotification(
+    admin,
+    adminUser.id,
+    (item) => item.kind === "new_ticket" && item.body === `[E2E ${runId}] Admin notification`,
+    async () => {
+      const { data, error } = await admin
+        .from("tickets")
+        .insert({
+          title: `[E2E ${runId}] Admin notification`,
+          description: "Admin-authored Realtime verification ticket",
+          category: "System Bug",
+          priority: "medium",
+          author_id: adminUser.id,
+          source: "portal",
+        })
+        .select("id")
+        .single();
+      if (error || !data?.id) throw new Error(`Admin ticket insert failed: ${error?.message}`);
+      adminAuthoredTicket = data;
+      createdTicketIds.push(data.id);
+    }
+  );
+  assert(adminAuthoredTicket?.id && liveNotification.ticket_id === adminAuthoredTicket.id, "Admin did not receive their own new-ticket event");
+  pass("New-ticket notifications persist for their creator and arrive through Realtime");
+
   const { data: forbiddenUpdate, error: forbiddenUpdateError } = await employee
     .from("tickets")
     .update({ status: "closed", assignee_id: employeeUser.id })
@@ -145,6 +219,27 @@ try {
     .eq("ticket_id", ticket.id);
   assert(!employeeCommentsError && employeeComments?.some((item) => item.id === comment.id), "Employee cannot read their normal comment");
   assert(!employeeComments.some((item) => item.is_internal_note), "Employee can read an internal note");
+
+  const { data: employeeCommentDetails, error: employeeCommentDetailsError } = await employee
+    .from("comment_details")
+    .select("id, is_internal_note, author")
+    .eq("ticket_id", ticket.id);
+  assert(!employeeCommentDetailsError, `Employee comment view failed: ${employeeCommentDetailsError?.message}`);
+  assert(employeeCommentDetails?.some((item) => item.id === comment.id && item.author?.id === employeeUser.id), "Comment view did not return the employee author");
+  assert(!employeeCommentDetails.some((item) => item.is_internal_note), "Comment view exposed an internal note to the employee");
+
+  const { data: adminCommentDetails, error: adminCommentDetailsError } = await admin
+    .from("comment_details")
+    .select("id, is_internal_note, ticket")
+    .eq("ticket_id", ticket.id);
+  assert(!adminCommentDetailsError, `Admin comment view failed: ${adminCommentDetailsError?.message}`);
+  assert(adminCommentDetails?.some((item) => item.id === internalNote.id && item.ticket?.id === ticket.id), "Admin comment view omitted the internal note or ticket identity");
+
+  const { error: categoryDetailsError } = await admin
+    .from("category_rule_details")
+    .select("id, category_name, default_assignee")
+    .limit(1);
+  assert(!categoryDetailsError, `Category rule view failed: ${categoryDetailsError?.message}`);
   pass("Comment persistence and internal-note isolation work");
 
   const { data: updatedTicket, error: adminUpdateError } = await admin
@@ -169,6 +264,9 @@ try {
     .select("kind")
     .eq("ticket_id", ticket.id);
   assert(!adminNotificationsError && adminNotifications?.some((item) => item.kind === "new_ticket"), "Admin did not receive a new-ticket notification");
+  assert(adminNotifications.some((item) => item.kind === "comment"), "Unassigned employee comment did not notify the Admin queue");
+  assert(adminNotifications.some((item) => item.kind === "assignment"), "Self-assignment did not notify the assigned Admin");
+  assert(!adminNotifications.some((item) => item.kind === "status"), "Status change incorrectly notified the Admin who performed it");
 
   const { data: employeeNotifications, error: employeeNotificationsError } = await employee
     .from("notifications")

@@ -54,10 +54,27 @@ export default function TicketDetailPage({
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [commentNotice, setCommentNotice] = useState("");
+  const [isPostingComment, setIsPostingComment] = useState(false);
 
   const isAgent =
     currentUserProfile?.role === "admin" ||
     currentUserProfile?.role === "super_admin";
+
+  const loadComments = useCallback(async () => {
+    const supabase = createClient();
+    const { data, error: commentError } = await supabase
+      .from("comment_details")
+      .select(
+        "id, ticket_id, author_id, content, is_internal_note, type, created_at, updated_at, deleted_at, author"
+      )
+      .eq("ticket_id", ticketId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true });
+
+    if (!commentError) setComments(data ?? []);
+    return commentError;
+  }, [ticketId]);
 
   const fetchTicketDetails = useCallback(async () => {
     setError("");
@@ -97,14 +114,8 @@ export default function TicketDetailPage({
     if (ticketError) setError(`Could not load ticket: ${ticketError.message}`);
     else setTicket(ticketData);
 
-    const { data: commentData, error: commentError } = await supabase
-      .from("comments")
-      .select("*, author:profiles(*)")
-      .eq("ticket_id", ticketId)
-      .order("created_at", { ascending: true });
-
+    const commentError = await loadComments();
     if (commentError) setError(`Could not load discussion: ${commentError.message}`);
-    else setComments(commentData ?? []);
 
     if (profileIsAgent) {
       const { data: agentData, error: agentError } = await supabase
@@ -116,7 +127,7 @@ export default function TicketDetailPage({
       else setAgents(agentData ?? []);
     }
     setLoading(false);
-  }, [router, ticketId]);
+  }, [loadComments, router, ticketId]);
 
   useEffect(() => {
     fetchTicketDetails();
@@ -124,27 +135,41 @@ export default function TicketDetailPage({
 
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !currentUserProfile) return;
+    const content = newComment.trim();
+    if (!content || !currentUserProfile || isPostingComment) return;
     if (isInternalNote && !isAgent) {
       setError("Only support agents can post internal notes.");
       return;
     }
 
+    setError("");
+    setCommentNotice("");
+    setIsPostingComment(true);
     const supabase = createClient();
-    const { error } = await supabase.from("comments").insert({
-      ticket_id: ticketId,
-      author_id: currentUserProfile.id,
-      content: newComment,
-      is_internal_note: isInternalNote,
-    });
+    const { error: insertError } = await supabase
+      .from("comments")
+      .insert({
+        ticket_id: ticketId,
+        author_id: currentUserProfile.id,
+        content,
+        is_internal_note: isInternalNote,
+      });
 
-    if (!error) {
+    if (!insertError) {
       setNewComment("");
       setIsInternalNote(false);
-      fetchTicketDetails();
+      const refreshError = await loadComments();
+      if (refreshError) {
+        setError(
+          `Reply saved, but the discussion could not refresh: ${refreshError.message}`
+        );
+      } else {
+        setCommentNotice("Reply posted.");
+      }
     } else {
-      setError(`Reply failed: ${error.message}`);
+      setError(`Reply failed: ${insertError.message}`);
     }
+    setIsPostingComment(false);
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
@@ -364,61 +389,75 @@ export default function TicketDetailPage({
           </section>
 
           {/* Subtasks */}
-          <section className="surface p-6">
+          <section className="surface p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-base font-bold">
-                Sub-task checklist ({completedSubtasks}/{subtasks.length})
+                Sub-tasks
               </h2>
-              <span className="font-mono text-xs font-bold text-[var(--brand-ink)]">
-                {subtaskProgressPct}% complete
+              <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-mono text-[10px] font-bold text-[var(--brand-ink)]">
+                {completedSubtasks} / {subtasks.length}
               </span>
             </div>
 
-            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
               <div
                 className="h-full rounded-full bg-[var(--brand)] transition-all duration-300"
                 style={{ width: `${subtaskProgressPct}%` }}
               />
             </div>
 
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-3 divide-y divide-[var(--line)]">
               {subtasks.map((st: any) => (
-                <li
-                  key={st.id}
-                  onClick={() => isAgent && handleToggleSubtask(st.id)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3 transition",
-                    isAgent && "cursor-pointer hover:border-[var(--line-strong)]"
-                  )}
-                >
-                  {st.completed ? (
-                    <CheckSquare className="h-4 w-4 shrink-0 text-[var(--brand)]" />
-                  ) : (
-                    <Square className="h-4 w-4 shrink-0 text-[var(--faint)]" />
-                  )}
-                  <span
+                <li key={st.id}>
+                  <button
+                    type="button"
+                    disabled={!isAgent}
+                    onClick={() => handleToggleSubtask(st.id)}
                     className={cn(
-                      "text-sm",
-                      st.completed
-                        ? "text-[var(--faint)] line-through"
-                        : "text-[var(--ink)]"
+                      "flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-soft)]",
+                      isAgent && "hover:bg-[var(--surface-2)]"
                     )}
                   >
-                    {st.title}
-                  </span>
+                    {st.completed ? (
+                      <CheckSquare className="h-4 w-4 shrink-0 text-[var(--brand)]" />
+                    ) : (
+                      <Square className="h-4 w-4 shrink-0 text-[var(--faint)]" />
+                    )}
+                    <span
+                      className={cn(
+                        "text-sm",
+                        st.completed
+                          ? "text-[var(--faint)] line-through"
+                          : "text-[var(--ink)]"
+                      )}
+                    >
+                      {st.title}
+                    </span>
+                  </button>
                 </li>
               ))}
+              {subtasks.length === 0 && (
+                <li className="py-4 text-sm text-[var(--faint)]">
+                  No sub-tasks yet.
+                </li>
+              )}
             </ul>
 
             {isAgent && (
-              <form onSubmit={handleAddSubtask} className="mt-4 flex gap-2">
+              <form onSubmit={handleAddSubtask} className="mt-3 flex gap-2">
                 <Input
                   type="text"
-                  placeholder="Add new subtask step..."
+                  placeholder="Add a sub-task…"
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  className="!rounded-lg !px-3 !py-2.5"
                 />
-                <Button type="submit" variant="secondary" className="shrink-0 !px-4">
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  aria-label="Add sub-task"
+                  className="!h-10 !w-10 shrink-0 !rounded-lg !p-0"
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </form>
@@ -466,12 +505,17 @@ export default function TicketDetailPage({
                 onSubmit={handlePostComment}
                 className="surface space-y-4 p-5"
               >
+                {commentNotice && <Alert tone="success">{commentNotice}</Alert>}
                 <Textarea
                   rows={4}
                   placeholder="Leave a comment or reply..."
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  onChange={(e) => {
+                    setNewComment(e.target.value);
+                    setCommentNotice("");
+                  }}
                   required
+                  disabled={isPostingComment}
                   className="font-mono text-sm"
                 />
 
@@ -482,6 +526,7 @@ export default function TicketDetailPage({
                         type="checkbox"
                         checked={isInternalNote}
                         onChange={(e) => setIsInternalNote(e.target.checked)}
+                        disabled={isPostingComment}
                         className="h-4 w-4 rounded border-[var(--line-strong)] text-[var(--warning)] focus:ring-[var(--warning-soft)]"
                       />
                       Post as internal note (hidden from employee)
@@ -489,8 +534,12 @@ export default function TicketDetailPage({
                   ) : (
                     <div />
                   )}
-                  <Button type="submit">
-                    <Send className="h-4 w-4" /> Submit reply
+                  <Button
+                    type="submit"
+                    disabled={isPostingComment || !newComment.trim()}
+                  >
+                    <Send className="h-4 w-4" />
+                    {isPostingComment ? "Submitting…" : "Submit reply"}
                   </Button>
                 </div>
               </form>

@@ -1,29 +1,91 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
+import {
+  mergeNotification,
+  type WorkspaceNotification,
+} from "@/lib/notifications";
 
 export function NotificationsMenu() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const supabase = useMemo(() => createClient(), []);
+  const [notifications, setNotifications] = useState<WorkspaceNotification[]>([]);
+  const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const getNotifications = useCallback(async () => {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      setError("Could not load notifications for the current account.");
+      return;
+    }
+    const { data, error: loadError } = await supabase
+      .from("notifications")
+      .select("id, ticket_id, kind, title, body, read_at, created_at")
+      .eq("recipient_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (loadError) {
+      setError(`Could not load notifications: ${loadError.message}`);
+      return;
+    }
+    setNotifications((data ?? []) as WorkspaceNotification[]);
+    setError("");
+  }, [supabase]);
+
   useEffect(() => {
-    const getNotifications = async () => {
-      const supabase = createClient();
-      const { data: notificationData } = await supabase
-        .from("notifications")
-        .select("id, ticket_id, kind, title, body, read_at, created_at")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      setNotifications(notificationData ?? []);
+    let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void getNotifications();
+    const subscribe = async () => {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (!active) return;
+      if (authError || !user) {
+        setError("Could not start live notifications.");
+        return;
+      }
+
+      channel = supabase
+        .channel(`notifications:${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `recipient_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const incoming = payload.new as WorkspaceNotification;
+            setNotifications((items) => mergeNotification(items, incoming));
+          }
+        )
+        .subscribe((status) => {
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            setError("Live notifications are unavailable. Reopen this menu to refresh.");
+          }
+        });
     };
-    getNotifications();
-  }, []);
+    void subscribe();
+
+    return () => {
+      active = false;
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [getNotifications, supabase]);
+
+  useEffect(() => {
+    const onFocus = () => void getNotifications();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [getNotifications]);
 
   useEffect(() => {
     const onDocClick = (event: MouseEvent) => {
@@ -44,13 +106,16 @@ export function NotificationsMenu() {
 
   const unreadCount = notifications.filter((n) => !n.read_at).length;
 
-  const openNotification = async (notification: any) => {
-    const supabase = createClient();
+  const openNotification = async (notification: WorkspaceNotification) => {
     if (!notification.read_at) {
-      await supabase
+      const { error: updateError } = await supabase
         .from("notifications")
         .update({ read_at: new Date().toISOString() })
         .eq("id", notification.id);
+      if (updateError) {
+        setError(`Could not mark notification as read: ${updateError.message}`);
+        return;
+      }
       setNotifications((items) =>
         items.map((item) =>
           item.id === notification.id
@@ -67,7 +132,11 @@ export function NotificationsMenu() {
     <div ref={menuRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          const nextOpen = !open;
+          setOpen(nextOpen);
+          if (nextOpen) void getNotifications();
+        }}
         aria-label={`Notifications, ${unreadCount} unread`}
         aria-expanded={open}
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] transition hover:text-[var(--ink)]"
@@ -91,6 +160,18 @@ export function NotificationsMenu() {
             </span>
           </div>
           <div className="max-h-96 overflow-y-auto">
+            {error && (
+              <div role="alert" className="border-b border-[var(--line)] bg-[var(--danger-soft)] px-4 py-3 text-xs text-[var(--danger)]">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  onClick={() => void getNotifications()}
+                  className="mt-2 font-semibold underline underline-offset-2"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {notifications.map((notification) => (
               <button
                 key={notification.id}
@@ -122,7 +203,7 @@ export function NotificationsMenu() {
                 )}
               </button>
             ))}
-            {notifications.length === 0 && (
+            {notifications.length === 0 && !error && (
               <p className="px-4 py-8 text-center text-xs text-[var(--muted)]">
                 No notifications yet.
               </p>

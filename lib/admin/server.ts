@@ -36,14 +36,20 @@ const TABLES: Partial<Record<AdminResource, string>> = {
   notifications: "notifications",
 };
 
+const READ_SOURCES: Partial<Record<AdminResource, string>> = {
+  ...TABLES,
+  comments: "comment_details",
+  "category-rules": "category_rule_details",
+};
+
 const SELECTS: Partial<Record<AdminResource, string>> = {
   tickets:
     "id, ticket_number, title, description, status, priority, category, author_id, assignee_id, source, reporter_email, subtasks, is_pinned, pin_order, created_at, updated_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)",
   comments:
-    "id, ticket_id, author_id, content, is_internal_note, type, created_at, updated_at, deleted_at, ticket:tickets(id, ticket_number, title), author:profiles(id, display_name, department)",
+    "id, ticket_id, author_id, content, is_internal_note, type, created_at, updated_at, deleted_at, ticket, author",
   faqs: "id, question, answer, category, is_pinned, created_by, created_at, updated_at, deleted_at",
   "category-rules":
-    "id, category_name, template_markdown, default_assignee_id, created_at, updated_at, deleted_at, default_assignee:profiles(id, display_name)",
+    "id, category_name, template_markdown, default_assignee_id, created_at, updated_at, deleted_at, default_assignee",
   incidents: "id, title, message, severity, is_active, created_at, updated_at, deleted_at",
   "api-clients":
     "id, name, is_active, created_by, created_at, updated_at, last_used_at, deleted_at, creator:profiles!api_clients_created_by_fkey(id, display_name)",
@@ -175,7 +181,7 @@ export async function listAdminResource(
     return { rows: allRows.slice(start, start + query.pageSize), total: allRows.length, page: query.page, pageSize: query.pageSize, viewerRole: role, viewerId: user.id };
   }
 
-  const table = TABLES[resource];
+  const table = READ_SOURCES[resource];
   const select = SELECTS[resource];
   if (!table || !select) throw new AdminAccessError("Unsupported administrative resource");
   let databaseQuery: any = supabase.from(table).select(select, { count: "exact" });
