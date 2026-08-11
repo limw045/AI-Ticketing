@@ -74,4 +74,15 @@ describe("global incident marquee", () => {
     expect(globalCss).toContain("animation-play-state: paused");
     expect(globalCss).toContain("animation: none !important");
   });
+
+  it("centers all incident rail regions without changing marquee behavior", () => {
+    expect(incidentBanner).toContain(
+      'className="incident-marquee flex min-w-0 flex-1 items-center"'
+    );
+    expect(incidentBanner).toContain(
+      "flex shrink-0 items-center gap-1.5"
+    );
+    expect(globalCss).toContain("height: 100%");
+    expect(globalCss).toContain("animation: incident-marquee 28s linear infinite");
+  });
 });

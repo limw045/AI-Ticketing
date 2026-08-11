@@ -124,7 +124,10 @@ export function IncidentBanner({ canManage = false }: { canManage?: boolean }) {
         </strong>
       </div>
 
-      <div className="incident-marquee min-w-0 flex-1" aria-hidden="true">
+      <div
+        className="incident-marquee flex min-w-0 flex-1 items-center"
+        aria-hidden="true"
+      >
         <div className="incident-marquee-track text-xs">
           <MarqueeItems incidents={incidents} />
           <div aria-hidden="true">
