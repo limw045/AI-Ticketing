@@ -10,6 +10,8 @@ import {
   priorityTone,
 } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
+import { TicketAttachments } from "@/components/tickets/TicketAttachments";
+import { parseTicketDescription } from "@/lib/ticket-attachments";
 import {
   Button,
   FieldLabel,
@@ -254,6 +256,7 @@ export default function TicketDetailPage({
       ? Math.round((completedSubtasks / subtasks.length) * 100)
       : 0;
   const statusIndex = STATUS_STEPS.indexOf(ticket.status);
+  const parsedDescription = parseTicketDescription(ticket.description);
 
   return (
     <div className="space-y-8">
@@ -355,8 +358,9 @@ export default function TicketDetailPage({
               Issue description
             </h2>
             <div className="mt-4 whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-5 font-mono text-sm leading-relaxed text-[var(--ink-2)]">
-              {ticket.description}
+              {parsedDescription.text}
             </div>
+            <TicketAttachments attachments={parsedDescription.attachments} />
           </section>
 
           {/* Subtasks */}

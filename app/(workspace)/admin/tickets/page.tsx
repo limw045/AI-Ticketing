@@ -26,6 +26,7 @@ const PRIORITIES = ["low", "medium", "high", "urgent"];
 export default function AdminTicketsPage() {
   const admin = useAdminResource("tickets");
   const [agents, setAgents] = useState<any[]>([]);
+  const [activeCategories, setActiveCategories] = useState<string[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
@@ -35,7 +36,16 @@ export default function AdminTicketsPage() {
       .then((response) => response.json())
       .then((payload) => setAgents((payload.rows ?? []).filter((profile: any) => ["admin", "super_admin"].includes(profile.role) && profile.account_status === "active")))
       .catch(() => setAgents([]));
+    fetch("/api/admin/category-rules?pageSize=100&sort=category_name&direction=asc")
+      .then((response) => response.json())
+      .then((payload) => setActiveCategories(
+        (payload.rows ?? []).map((rule: any) => rule.category_name)
+      ))
+      .catch(() => setActiveCategories([]));
   }, []);
+
+  const categoryOptions = [...new Set([form.category, ...activeCategories])]
+    .filter((value): value is string => Boolean(value));
 
   const startEdit = (ticket: any) => {
     setEditing(ticket);
@@ -103,7 +113,7 @@ export default function AdminTicketsPage() {
           </div>
           <label className="md:col-span-2"><FieldLabel>Title</FieldLabel><Input value={form.title ?? ""} onChange={(event) => setForm((value) => ({ ...value, title: event.target.value }))} required /></label>
           <label className="md:col-span-2"><FieldLabel>Description</FieldLabel><Textarea rows={5} value={form.description ?? ""} onChange={(event) => setForm((value) => ({ ...value, description: event.target.value }))} required /></label>
-          <label><FieldLabel>Category</FieldLabel><Input value={form.category ?? ""} onChange={(event) => setForm((value) => ({ ...value, category: event.target.value }))} required /></label>
+          <label><FieldLabel>Category</FieldLabel><Select value={form.category ?? ""} onChange={(event) => setForm((value) => ({ ...value, category: event.target.value }))} required>{categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}</Select></label>
           <label><FieldLabel>Assignee</FieldLabel><Select value={form.assignee_id ?? ""} onChange={(event) => setForm((value) => ({ ...value, assignee_id: event.target.value }))}><option value="">Unassigned</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.display_name}</option>)}</Select></label>
           <label><FieldLabel>Priority</FieldLabel><Select value={form.priority ?? "medium"} onChange={(event) => setForm((value) => ({ ...value, priority: event.target.value }))}>{PRIORITIES.map((priority) => <option key={priority} value={priority}>{priority}</option>)}</Select></label>
           <label><FieldLabel>Status</FieldLabel><Select value={form.status ?? "open"} onChange={(event) => setForm((value) => ({ ...value, status: event.target.value }))}>{STATUSES.map((status) => <option key={status} value={status}>{status.replace("_", " ")}</option>)}</Select></label>

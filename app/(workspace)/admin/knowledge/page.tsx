@@ -75,7 +75,12 @@ export default function AdminKnowledgePage() {
           fields={[
             { key: "category_name", label: "Category name", required: true },
             { key: "default_assignee_id", label: "Default assignee ID", placeholder: "Optional Admin UUID" },
-            { key: "template_markdown", label: "Request template", type: "textarea", placeholder: "Markdown template shown to requesters" },
+            {
+              key: "template_markdown",
+              label: "Request guidance",
+              type: "textarea",
+              placeholder: "Tell staff what information to provide. Do not include code, credentials, or sensitive data.",
+            },
           ]}
         />
       )}

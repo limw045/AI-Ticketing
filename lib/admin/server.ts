@@ -331,6 +331,7 @@ export async function mutateAdminResource(input: AdminMutationInput): Promise<Ad
       "Administrators may not modify other administrators",
       "System comments are immutable",
       "Record not found or already in the requested lifecycle state",
+      "The final active ticket category cannot be deleted",
     ];
     const publicMessage = safeMessages.find((candidate) => message.includes(candidate)) ?? "The database rejected this operation. Check the values and your permissions, then try again.";
     return { ok: false, code: message.toLowerCase().includes("not found") ? "NOT_FOUND" : "DATABASE", message: publicMessage };

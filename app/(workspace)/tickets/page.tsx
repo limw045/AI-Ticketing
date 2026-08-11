@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +25,7 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { getHistoricalCategoryOptions } from "@/lib/ticket-categories";
 
 export default function TicketDashboard() {
   const router = useRouter();
@@ -205,6 +206,10 @@ export default function TicketDashboard() {
   const urgentCount = tickets.filter(
     (t) => t.priority === "urgent" && t.status !== "closed"
   ).length;
+  const categoryOptions = useMemo(
+    () => getHistoricalCategoryOptions(tickets),
+    [tickets]
+  );
 
   return (
     <div className="space-y-10">
@@ -287,10 +292,11 @@ export default function TicketDashboard() {
             className="rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]"
           >
             <option value="all">All Categories</option>
-            <option value="System Bug">System Bug</option>
-            <option value="Hardware">Hardware</option>
-            <option value="VPN & Network">VPN & Network</option>
-            <option value="Permissions">Permissions</option>
+            {categoryOptions.map((categoryOption) => (
+              <option key={categoryOption} value={categoryOption}>
+                {categoryOption}
+              </option>
+            ))}
           </select>
         </div>
 

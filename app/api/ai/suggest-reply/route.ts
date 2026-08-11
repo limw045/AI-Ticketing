@@ -7,14 +7,12 @@ export async function POST(req: NextRequest) {
     if ("error" in access) return access.error;
     const { category } = await req.json();
 
-    let draftReply = "Hi! Thank you for reporting this issue. Our IT support team is investigating.";
+    let draftReply = "Hi! Thank you for reporting this automation request. Our internal support team is reviewing it.";
 
-    if (category === "VPN & Network") {
-      draftReply = "Hi! Please try clearing your browser DNS cache and re-authenticating with your GlobalProtect VPN credentials. Let us know if the issue persists.";
-    } else if (category === "Hardware") {
-      draftReply = "Hi! Please bring your device to IT Support Office (Level 3) for diagnostic check or hardware replacement.";
-    } else if (category === "Permissions") {
-      draftReply = "Hi! Your access permission request has been submitted for Manager approval. Once approved, access will be provisioned automatically.";
+    if (category === "Risk Screen") {
+      draftReply = "Hi! Your automation risk screen has been received. We are reviewing the business context, systems, data types, and approval requirements provided in the ticket.";
+    } else if (category === "Common Problem") {
+      draftReply = "Hi! We are investigating the reported automation problem. We will use the reproduction details, screenshot, or sanitized TXT log attached to trace the issue.";
     }
 
     return NextResponse.json({ draftReply });
