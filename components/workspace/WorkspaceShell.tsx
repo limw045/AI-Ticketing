@@ -15,6 +15,7 @@ import {
 } from "@/components/workspace/nav-config";
 import {
   getPortalMode,
+  isAdminPortalPath,
   setPortalMode,
   type PortalMode,
 } from "@/lib/portal-mode";
@@ -30,6 +31,7 @@ function SidebarContent({
   isMobile = false,
   onSignOut,
   onClose,
+  onNavigate,
   showPortalSwitch = false,
   onSwitchToUserPortal,
 }: {
@@ -40,6 +42,7 @@ function SidebarContent({
   isMobile?: boolean;
   onSignOut: () => void;
   onClose?: () => void;
+  onNavigate?: (href: string) => void;
   showPortalSwitch?: boolean;
   onSwitchToUserPortal?: () => void;
 }) {
@@ -69,7 +72,10 @@ function SidebarContent({
             <Link
               key={item.label}
               href={item.href}
-              onClick={onClose}
+              onClick={() => {
+                onNavigate?.(item.href);
+                onClose?.();
+              }}
               className={cn(
                 "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
                 sidebarCollapsed && !isMobile && "justify-center px-2",
@@ -155,6 +161,11 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [portalMode, setPortalModeState] = useState<PortalMode>("admin");
 
   useEffect(() => {
+    if (isAdminPortalPath(pathname)) {
+      setPortalMode("admin");
+      setPortalModeState("admin");
+      return;
+    }
     setPortalModeState(getPortalMode());
   }, [pathname]);
 
@@ -200,6 +211,13 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       ? ADMIN_CONSOLE_ITEMS
       : getNavItems(role);
 
+  const handleNavigate = (href: string) => {
+    if (isAdminPortalPath(href)) {
+      setPortalMode("admin");
+      setPortalModeState("admin");
+    }
+  };
+
   const switchToUserPortal = () => {
     setPortalMode("user");
     setPortalModeState("user");
@@ -221,6 +239,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           pathname={pathname}
           sidebarCollapsed={sidebarCollapsed}
           onSignOut={handleSignOut}
+          onNavigate={handleNavigate}
           showPortalSwitch={isAdmin && portalMode === "admin"}
           onSwitchToUserPortal={switchToUserPortal}
         />
@@ -251,6 +270,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               isMobile
               onSignOut={handleSignOut}
               onClose={() => setDrawerOpen(false)}
+              onNavigate={handleNavigate}
               showPortalSwitch={isAdmin && portalMode === "admin"}
               onSwitchToUserPortal={switchToUserPortal}
             />

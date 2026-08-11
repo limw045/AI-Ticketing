@@ -18,3 +18,7 @@ export function setPortalMode(mode: PortalMode) {
     // Storage can be unavailable; portal choice still navigates for this visit.
   }
 }
+
+export function isAdminPortalPath(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
