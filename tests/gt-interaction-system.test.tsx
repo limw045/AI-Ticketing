@@ -34,7 +34,7 @@ describe("GT route loader", () => {
   });
 
   it("provides a static reduced-motion fallback", () => {
-    expect(globalCss).toContain(".gt-loader__route,\n  .gt-loader__dot");
+    expect(globalCss).toMatch(/\.gt-loader__route,\r?\n\s+\.gt-loader__dot/);
     expect(globalCss).toContain(".gt-loader__track {");
     expect(globalCss).toContain("stroke: var(--brand)");
   });
