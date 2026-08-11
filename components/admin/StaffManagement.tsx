@@ -9,6 +9,7 @@ import {
   AdminResourceToolbar,
   AdminTable,
   AdminTableSkeleton,
+  AdminLoadError,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -71,7 +72,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         }
       />
 
-      {admin.error && <Alert tone="error" role="alert">{admin.error}</Alert>}
+      <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
       {!administratorsOnly && (
@@ -114,7 +115,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         <Select value={admin.filters.user_type ?? "all"} onChange={(event) => admin.setFilter("user_type", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Staff type"><option value="all">All staff types</option><option value="full_time">Full-time</option><option value="intern">Intern</option><option value="contractor">Contractor</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading ? <AdminTableSkeleton columns={7} /> : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No staff match this view.</div> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No staff match this view.</div> : (
         <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} accounts</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}>
           <AdminThead><AdminTh>Name</AdminTh><AdminTh>Department</AdminTh><AdminTh>Type</AdminTh><AdminTh>Role</AdminTh><AdminTh>Status</AdminTh><AdminTh>Joined</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
           <tbody className="divide-y divide-[var(--line)]">

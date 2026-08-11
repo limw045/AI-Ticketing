@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <AuthShell step="Recovery / 01">
+    <AuthShell step="Recovery / 01" backHref="/login">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
         Recover your access.
       </h1>

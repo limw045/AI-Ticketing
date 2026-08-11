@@ -85,7 +85,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthShell step="02 / Register">
+    <AuthShell step="02 / Register" backHref="/login">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
         Create your access.
       </h1>

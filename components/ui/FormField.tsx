@@ -73,13 +73,13 @@ export function Button({
 }) {
   const variants = {
     primary:
-      "bg-[var(--brand)] text-[var(--brand-on)] hover:bg-[var(--brand-hover)] shadow-[var(--shadow-sm)]",
+      "button-action button-action--primary bg-[var(--brand)] text-[var(--brand-on)] shadow-[var(--shadow-sm)]",
     secondary:
-      "bg-[var(--surface)] border border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--brand)] hover:text-[var(--brand-ink)]",
+      "button-action button-action--secondary bg-[var(--surface)] border border-[var(--line-strong)] text-[var(--ink)]",
     ghost:
-      "bg-transparent text-[var(--muted)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]",
+      "button-action button-action--ghost bg-transparent text-[var(--muted)]",
     danger:
-      "bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white",
+      "button-action button-action--danger bg-[var(--danger-soft)] text-[var(--danger)]",
   };
   return (
     <button

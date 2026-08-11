@@ -9,6 +9,7 @@ import { MetricCard } from "@/components/ui/MetricCard";
 import { StatusBadge, statusTone } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/FormField";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { getRoleHomeMetrics } from "@/lib/dashboard-metrics";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
 import {
@@ -75,18 +76,15 @@ export default function DashboardPage() {
   }, [router]);
 
   if (loading) {
-    return (
-      <div className="py-24 text-center font-mono text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
-        Loading your overview…
-      </div>
-    );
+    return <PageSkeleton variant="dashboard" />;
   }
 
   if (error) {
     return (
       <div className="py-10">
         <Alert tone="error" role="alert">
-          {error}
+          <span>{error}</span>
+          <Button type="button" variant="secondary" onClick={() => window.location.reload()} className="ml-3 !px-3 !py-1.5 !text-xs">Retry</Button>
         </Alert>
       </div>
     );
@@ -164,7 +162,7 @@ export default function DashboardPage() {
               <h2 className="font-display text-lg font-bold">Your recent requests</h2>
               <Link
                 href="/tickets?mine=1"
-                className="text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]"
+                className="arrow-action"
               >
                 View all
               </Link>
@@ -204,8 +202,8 @@ export default function DashboardPage() {
                 Common requests like VPN access, model permissions, and GPU
                 access already have step-by-step answers in Knowledge.
               </p>
-              <Link href="/faq" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]">
-                Browse Knowledge <ArrowRight className="h-4 w-4" />
+              <Link href="/faq" className="arrow-action mt-5">
+                <span className="arrow-action__label">Browse Knowledge</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
               </Link>
             </div>
             <div className="surface p-6">
@@ -214,8 +212,8 @@ export default function DashboardPage() {
                 Every request is routed by category, assigned to a specialist,
                 and tracked with a visible case path until it is resolved.
               </p>
-              <Link href="/tickets" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]">
-                See the queue <ArrowRight className="h-4 w-4" />
+              <Link href="/tickets" className="arrow-action mt-5">
+                <span className="arrow-action__label">See the queue</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
               </Link>
             </div>
           </section>
@@ -257,8 +255,8 @@ export default function DashboardPage() {
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 Volume by category, department ratios, and CSV export.
               </p>
-              <Link href="/admin/dashboard" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]">
-                Open analytics <ArrowRight className="h-4 w-4" />
+              <Link href="/admin/dashboard" className="arrow-action mt-5">
+                <span className="arrow-action__label">Open analytics</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
               </Link>
             </div>
             <div className="surface p-6">
@@ -266,8 +264,8 @@ export default function DashboardPage() {
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 Incidents, API clients, and staff roles in one place.
               </p>
-              <Link href="/admin/dashboard#admin" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]">
-                Manage workspace <ArrowRight className="h-4 w-4" />
+              <Link href="/admin/dashboard#admin" className="arrow-action mt-5">
+                <span className="arrow-action__label">Manage workspace</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
               </Link>
             </div>
           </section>
@@ -277,7 +275,7 @@ export default function DashboardPage() {
               <h2 className="font-display text-lg font-bold">Latest requests</h2>
               <Link
                 href="/tickets"
-                className="text-sm font-semibold text-[var(--brand-ink)] hover:text-[var(--brand)]"
+                className="arrow-action"
               >
                 Open queue
               </Link>

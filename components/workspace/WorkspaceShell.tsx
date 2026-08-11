@@ -20,6 +20,7 @@ import {
 } from "@/lib/portal-mode";
 import { LogOut, Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 
 function SidebarContent({
   profile,
@@ -105,26 +106,30 @@ function SidebarContent({
             sidebarCollapsed && !isMobile && "justify-center"
           )}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] font-display text-xs font-bold text-[var(--brand-ink)]">
-            {profile?.display_name?.slice(0, 1) || "U"}
-          </span>
-          {(!sidebarCollapsed || isMobile) && (
-            <span className="min-w-0 flex-1 leading-tight">
+          {profile ? (
+            <>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] font-display text-xs font-bold text-[var(--brand-ink)]">
+                {profile.display_name?.slice(0, 1) || "U"}
+              </span>
+              {(!sidebarCollapsed || isMobile) && <span className="min-w-0 flex-1 leading-tight">
               <span className="block truncate text-xs font-semibold text-[var(--ink)]">
-                {profile?.display_name || "AI Department"}
+                {profile.display_name || "AI Department"}
               </span>
               <span className="block truncate font-mono text-[10px] text-[var(--muted)]">
-                {profile
-                  ? profile.role === "super_admin"
+                {profile.role === "super_admin"
                     ? "Super Admin"
                     : profile.role === "admin"
                     ? "Admin"
                     : profile.user_type === "intern"
                     ? "Intern"
-                    : "Staff"
-                  : "Loading profile…"}
+                    : "Staff"}
               </span>
-            </span>
+              </span>}
+            </>
+          ) : (!sidebarCollapsed || isMobile) ? (
+            <PageSkeleton variant="profile" />
+          ) : (
+            <span className="skeleton-block h-8 w-8 shrink-0" aria-label="Loading profile" role="status" />
           )}
           <button
             type="button"
@@ -259,7 +264,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label="Open navigation"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
+          className="topbar-action"
         >
           <Menu className="h-4 w-4" />
         </button>

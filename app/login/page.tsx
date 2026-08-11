@@ -89,7 +89,7 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell step="01 / Sign in">
+    <AuthShell step="01 / Sign in" backHref="/">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
         Welcome back.
       </h1>

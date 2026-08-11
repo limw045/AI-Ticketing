@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import {
   mergeNotification,
   type WorkspaceNotification,
@@ -16,12 +17,15 @@ export function NotificationsMenu() {
   const [notifications, setNotifications] = useState<WorkspaceNotification[]>([]);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const getNotifications = useCallback(async () => {
+    setLoading(true);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       setError("Could not load notifications for the current account.");
+      setLoading(false);
       return;
     }
     const { data, error: loadError } = await supabase
@@ -33,10 +37,12 @@ export function NotificationsMenu() {
 
     if (loadError) {
       setError(`Could not load notifications: ${loadError.message}`);
+      setLoading(false);
       return;
     }
     setNotifications((data ?? []) as WorkspaceNotification[]);
     setError("");
+    setLoading(false);
   }, [supabase]);
 
   useEffect(() => {
@@ -139,7 +145,7 @@ export function NotificationsMenu() {
         }}
         aria-label={`Notifications, ${unreadCount} unread`}
         aria-expanded={open}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] transition hover:text-[var(--ink)]"
+        className="topbar-action relative"
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadCount > 0 && (
@@ -160,6 +166,9 @@ export function NotificationsMenu() {
             </span>
           </div>
           <div className="max-h-96 overflow-y-auto">
+            {loading && notifications.length === 0 && (
+              <PageSkeleton variant="notifications" />
+            )}
             {error && (
               <div role="alert" className="border-b border-[var(--line)] bg-[var(--danger-soft)] px-4 py-3 text-xs text-[var(--danger)]">
                 <p>{error}</p>
@@ -203,7 +212,7 @@ export function NotificationsMenu() {
                 )}
               </button>
             ))}
-            {notifications.length === 0 && !error && (
+            {notifications.length === 0 && !error && !loading && (
               <p className="px-4 py-8 text-center text-xs text-[var(--muted)]">
                 No notifications yet.
               </p>

@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthShell step="Recovery / 02">
+    <AuthShell step="Recovery / 02" backHref="/login">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
         Set a new password.
       </h1>

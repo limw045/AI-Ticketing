@@ -1,15 +1,19 @@
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { BackButton } from "@/components/ui/BackButton";
 
 export function AuthShell({
   step,
   children,
+  backHref,
 }: {
   step?: string;
   children: React.ReactNode;
+  backHref?: string;
 }) {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center bg-[var(--canvas)] px-4 py-12">
+      {backHref && <BackButton href={backHref} className="absolute left-5 top-5" />}
       <div className="absolute right-5 top-5">
         <ThemeToggle />
       </div>

@@ -1,16 +1,21 @@
 import { cn } from "@/lib/cn";
+import { BackButton } from "@/components/ui/BackButton";
 
 export function PageHeader({
   eyebrow,
   title,
   description,
   actions,
+  backHref,
+  backLabel = "Back",
   className = "",
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: React.ReactNode;
+  backHref?: string;
+  backLabel?: string;
   className?: string;
 }) {
   return (
@@ -21,6 +26,7 @@ export function PageHeader({
       )}
     >
       <div>
+        {backHref && <BackButton href={backHref} label={backLabel} className="mb-4" />}
         {eyebrow && (
           <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />

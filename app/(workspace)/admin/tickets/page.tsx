@@ -9,6 +9,7 @@ import {
   AdminResourceToolbar,
   AdminTable,
   AdminTableSkeleton,
+  AdminLoadError,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -102,7 +103,7 @@ export default function AdminTicketsPage() {
         description="Every request across the desk. Edit safe business fields, archive records, and restore deleted tickets."
         actions={<Link href="/tickets/new"><Button><Plus className="h-4 w-4" /> New ticket</Button></Link>}
       />
-      {admin.error && <Alert tone="error" role="alert">{admin.error}</Alert>}
+      <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
       {editing && (
@@ -130,7 +131,7 @@ export default function AdminTicketsPage() {
         <Select value={admin.filters.source ?? "all"} onChange={(event) => admin.setFilter("source", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Source"><option value="all">All sources</option><option value="portal">Portal</option><option value="api">API</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading ? <AdminTableSkeleton columns={9} /> : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No tickets match this view.</div> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={9} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No tickets match this view.</div> : (
         <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} tickets</h2><StatusBadge tone="brand">{admin.total} total</StatusBadge></>}>
           <AdminThead><AdminTh>#</AdminTh><AdminTh>Title</AdminTh><AdminTh>Requester</AdminTh><AdminTh>Category</AdminTh><AdminTh>Priority</AdminTh><AdminTh>Status</AdminTh><AdminTh>Assignee</AdminTh><AdminTh>Created</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
           <tbody className="divide-y divide-[var(--line)]">

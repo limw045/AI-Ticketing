@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { getHistoricalCategoryOptions } from "@/lib/ticket-categories";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 
 export default function TicketDashboard() {
   const router = useRouter();
@@ -212,7 +213,7 @@ export default function TicketDashboard() {
 
   return (
     <div className="space-y-10">
-      {error && (
+      {error && tickets.length > 0 && (
         <Alert tone="error" role="alert">
           {error}
         </Alert>
@@ -338,9 +339,22 @@ export default function TicketDashboard() {
       )}
 
       {loading ? (
-        <div className="py-16 text-center font-mono text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
-          Loading request queue…
-        </div>
+        <PageSkeleton variant="table" />
+      ) : error && tickets.length === 0 ? (
+        <Alert tone="error" role="alert">
+          <span>{error}</span>
+          <Button
+            type="button"
+            variant="secondary"
+            className="ml-3 !px-3 !py-1.5 !text-xs"
+            onClick={() => {
+              setLoading(true);
+              void fetchTickets();
+            }}
+          >
+            Retry
+          </Button>
+        </Alert>
       ) : filteredTickets.length === 0 ? (
         <section className="surface p-6 md:p-8">
           <div className="mx-auto max-w-2xl text-center">

@@ -8,6 +8,7 @@ import {
   AdminResourceToolbar,
   AdminTable,
   AdminTableSkeleton,
+  AdminLoadError,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -135,7 +136,7 @@ export function SimpleCrudPage({
         </div>
       )}
 
-      {admin.error && <Alert tone="error" role="alert">{admin.error}</Alert>}
+      <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
       {showForm && (
@@ -223,9 +224,9 @@ export function SimpleCrudPage({
         ))}
       </AdminResourceToolbar>
 
-      {admin.loading ? (
+      {admin.loading && admin.rows.length === 0 ? (
         <AdminTableSkeleton columns={columns.length + 1} />
-      ) : admin.rows.length === 0 ? (
+      ) : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? (
         <div className="surface py-16 text-center text-sm text-[var(--muted)]">No records match this view.</div>
       ) : (
         <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} {title.toLowerCase()}</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}>

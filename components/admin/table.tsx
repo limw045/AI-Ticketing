@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Trash2, Check, ChevronLeft, ChevronRight, Search, ArchiveRestore } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Input, Select } from "@/components/ui/FormField";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
+import { Alert } from "@/components/ui/Alert";
 
 export function AdminTable({
   header,
@@ -262,16 +264,18 @@ export function AdminPagination({
 }
 
 export function AdminTableSkeleton({ columns = 6 }: { columns?: number }) {
+  return <PageSkeleton variant="table" className={columns > 6 ? "skeleton-table--wide" : ""} />;
+}
+
+export function AdminLoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  if (!message) return null;
   return (
-    <div className="surface overflow-hidden" aria-label="Loading records">
-      <div className="grid gap-px bg-[var(--line)]" style={{ gridTemplateColumns: `repeat(${columns}, minmax(100px, 1fr))` }}>
-        {Array.from({ length: columns * 6 }).map((_, index) => (
-          <div key={index} className="h-12 animate-pulse bg-[var(--surface)] p-4">
-            <div className="h-3 rounded-full bg-[var(--surface-3)]" />
-          </div>
-        ))}
-      </div>
-    </div>
+    <Alert tone="error" role="alert">
+      <p>{message}</p>
+      <button type="button" onClick={onRetry} className="mt-2 font-semibold underline underline-offset-2">
+        Retry
+      </button>
+    </Alert>
   );
 }
 

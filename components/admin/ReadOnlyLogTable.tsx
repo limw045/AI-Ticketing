@@ -2,8 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useAdminResource } from "@/components/admin/useAdminResource";
-import { AdminPagination, AdminTable, AdminTableSkeleton, AdminTd, AdminTh, AdminThead, AdminToolbar } from "@/components/admin/table";
-import { Alert } from "@/components/ui/Alert";
+import { AdminLoadError, AdminPagination, AdminTable, AdminTableSkeleton, AdminTd, AdminTh, AdminThead, AdminToolbar } from "@/components/admin/table";
 import { Input, Select } from "@/components/ui/FormField";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { AdminResource } from "@/lib/admin/types";
@@ -23,14 +22,14 @@ export function ReadOnlyLogTable({
   const admin = useAdminResource(resource);
   return (
     <div className="space-y-5">
-      {admin.error && <Alert tone="error" role="alert">{admin.error}</Alert>}
+      <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       <AdminToolbar className="items-end">
         <label className="relative min-w-[240px] flex-1"><Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" /><Input value={admin.q} onChange={(event) => admin.setQ(event.target.value)} placeholder="Search logs..." className="pl-10" /></label>
         {filters.map((filter) => <Select key={filter.key} value={admin.filters[filter.key] ?? "all"} onChange={(event) => admin.setFilter(filter.key, event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label={filter.label}><option value="all">All {filter.label.toLowerCase()}</option>{filter.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select>)}
         <Input type="date" value={admin.dateFrom} onChange={(event) => admin.setDateFrom(event.target.value)} aria-label="From date" className="!w-auto !py-2.5" />
         <Input type="date" value={admin.dateTo} onChange={(event) => admin.setDateTo(event.target.value)} aria-label="To date" className="!w-auto !py-2.5" />
       </AdminToolbar>
-      {admin.loading ? <AdminTableSkeleton columns={columns.length} /> : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No log records match this view.</div> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={columns.length} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No log records match this view.</div> : (
         <AdminTable header={<><h2 className="font-display text-base font-bold">Immutable records</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}>
           <AdminThead>{columns.map((column) => <AdminTh key={column.key}>{column.label}</AdminTh>)}</AdminThead>
           <tbody className="divide-y divide-[var(--line)]">{admin.rows.map((row) => <tr key={row.id} className="hover:bg-[var(--surface-2)]">{columns.map((column) => { const value = readPath(row, column.key); return <AdminTd key={column.key} className={column.date ? "whitespace-nowrap font-mono text-[11px] text-[var(--faint)]" : ""}><span className={column.json ? "block max-w-[420px] truncate font-mono text-[10px] text-[var(--muted)]" : "text-xs text-[var(--ink)]"}>{column.date && value ? new Date(value).toLocaleString() : column.json ? JSON.stringify(value ?? {}) : String(value ?? "—")}</span></AdminTd>; })}</tr>)}</tbody>

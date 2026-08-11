@@ -8,6 +8,7 @@ import {
   AdminResourceToolbar,
   AdminTable,
   AdminTableSkeleton,
+  AdminLoadError,
   AdminTd,
   AdminTh,
   AdminThead,
@@ -48,7 +49,7 @@ export default function AdminApiClientsPage() {
   return (
     <div className="space-y-8">
       <PageHeader eyebrow="Administration" title="API clients" description="Generate one-time keys, rename integrations, revoke access, and restore archived client records." />
-      {admin.error && <Alert tone="error" role="alert">{admin.error}</Alert>}
+      <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
       <section className="surface p-6">
@@ -67,7 +68,7 @@ export default function AdminApiClientsPage() {
         <Select value={admin.filters.is_active ?? "all"} onChange={(event) => admin.setFilter("is_active", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Client status"><option value="all">All statuses</option><option value="true">Active</option><option value="false">Revoked</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading ? <AdminTableSkeleton columns={6} /> : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No API clients match this view.</div> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={6} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No API clients match this view.</div> : (
         <AdminTable header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} clients</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}>
           <AdminThead><AdminTh>Name</AdminTh><AdminTh>Status</AdminTh><AdminTh>Created by</AdminTh><AdminTh>Last used</AdminTh><AdminTh>Created</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
           <tbody className="divide-y divide-[var(--line)]">

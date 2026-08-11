@@ -33,6 +33,8 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { BackButton } from "@/components/ui/BackButton";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 
 const STATUS_STEPS = ["open", "in_progress", "resolved", "closed"];
 
@@ -259,17 +261,21 @@ export default function TicketDetailPage({
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center font-mono text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
-        Loading request #{ticketId}…
-      </div>
-    );
+    return <PageSkeleton variant="ticket-detail" />;
   }
 
   if (!ticket) {
     return (
-      <div className="py-20 text-center text-sm text-[var(--muted)]">
-        Ticket not found or access restricted.
+      <div className="space-y-5 py-12">
+        <BackButton href="/tickets" />
+        {error ? (
+          <Alert tone="error" role="alert">
+            <span>{error}</span>
+            <Button type="button" variant="secondary" onClick={() => void fetchTicketDetails()} className="mt-3">Retry</Button>
+          </Alert>
+        ) : (
+          <div className="surface py-16 text-center text-sm text-[var(--muted)]">Ticket not found or access restricted.</div>
+        )}
       </div>
     );
   }
@@ -285,6 +291,7 @@ export default function TicketDetailPage({
 
   return (
     <div className="space-y-8">
+      <BackButton href="/tickets" />
       {error && (
         <Alert tone="error" role="alert">
           {error}

@@ -316,6 +316,7 @@ export default function NewTicketPage() {
       )}
 
       <PageHeader
+        backHref="/tickets"
         eyebrow="Create request"
         title="Describe what is blocked."
         description="Pick a category for guided details, then attach screenshots or sanitized TXT logs when useful."
