@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Grant Thornton AI Department | Support Desk",
   description:
-    "Internal support desk for model access, data pipelines, GPU resources, and production issues.",
+    "Internal ticketing and case tracking for Grant Thornton automations. Automated services report issues with logs and context, and every case stays traceable to resolution.",
 };
 
 export default function RootLayout({
@@ -50,3 +50,4 @@ export default function RootLayout({
     </html>
   );
 }
+

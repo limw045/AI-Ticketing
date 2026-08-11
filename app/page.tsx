@@ -20,7 +20,7 @@ export default function Home() {
             href="/register"
             className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-[var(--brand-on)] transition hover:bg-[var(--brand-hover)]"
           >
-            Start today <ArrowRight className="h-4 w-4" />
+            Create account <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </header>
@@ -28,17 +28,18 @@ export default function Home() {
       <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 py-16 sm:px-10">
         <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
-          Grant Thornton · AI Department
+          Grant Thornton · Internal Automation Operations
         </div>
 
         <h1 className="heading-hero max-w-4xl text-4xl sm:text-6xl">
-          A clear route from request to resolution.
+          One place to report, trace, and resolve automation issues.
         </h1>
 
         <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
-          The AI Department support desk for model access, data pipelines, GPU
-          resources, and production issues. Tell us what is blocked — we route
-          it to the right specialist with the context they need.
+          Built for teams that rely on Grant Thornton&apos;s internal automations.
+          Automated services can raise structured tickets with logs and runtime
+          context, while staff can report blockers directly. Every case stays
+          traceable from the first signal to resolution.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -46,7 +47,7 @@ export default function Home() {
             href="/login"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-7 py-3.5 text-sm font-bold text-[var(--brand-on)] transition hover:bg-[var(--brand-hover)]"
           >
-            Sign in to AI desk <ArrowRight className="h-4 w-4" />
+            Open ticketing workspace <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/register"
@@ -61,31 +62,31 @@ export default function Home() {
         <div className="surface p-6">
           <ClipboardCheck className="h-5 w-5 text-[var(--brand-ink)]" />
           <h2 className="mt-5 font-display text-base font-bold">
-            Structured requests
+            Automation-ready intake
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Category templates, auto-context, and data-guard checks keep every
-            request complete from the start.
+            Internal tools can create tickets automatically with source details,
+            logs, and execution context already attached.
           </p>
         </div>
         <div className="surface p-6">
           <Route className="h-5 w-5 text-[var(--brand-ink)]" />
           <h2 className="mt-5 font-display text-base font-bold">
-            Tracked case path
+            Trace every case
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Every request moves through a visible lifecycle with subtasks,
-            assignees, and a full timeline.
+            Track ownership, status, comments, subtasks, and audit history from
+            the first alert through final resolution.
           </p>
         </div>
         <div className="surface p-6">
           <BookOpen className="h-5 w-5 text-[var(--brand-ink)]" />
           <h2 className="mt-5 font-display text-base font-bold">
-            Answers first
+            Resolve recurring issues faster
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Search the AI team&apos;s knowledge base before opening a ticket —
-            the desk learns as it resolves.
+            Turn resolved cases into searchable internal knowledge so repeated
+            failures are easier to diagnose and prevent.
           </p>
         </div>
       </section>
