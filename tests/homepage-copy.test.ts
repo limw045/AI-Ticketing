@@ -14,6 +14,6 @@ describe("homepage automation positioning", () => {
   it("keeps the internal entry-point CTAs", () => {
     expect(page).toContain("Open ticketing workspace");
     expect(page).toContain("Create staff account");
-    expect(page).toContain("Create account");
+    expect(page.match(/href="\/register"/g)).toHaveLength(1);
   });
 });

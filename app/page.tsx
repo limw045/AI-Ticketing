@@ -12,15 +12,9 @@ export default function Home() {
           <ThemeToggle />
           <Link
             href="/login"
-            className="hidden rounded-full px-4 py-2 text-sm font-semibold text-[var(--muted)] transition hover:text-[var(--ink)] sm:inline-flex"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
             className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-[var(--brand-on)] transition hover:bg-[var(--brand-hover)]"
           >
-            Create account <ArrowRight className="h-4 w-4" />
+            Sign in <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </header>
@@ -94,7 +88,7 @@ export default function Home() {
       <footer className="border-t border-[var(--line)] px-5 py-8 sm:px-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-[var(--faint)] md:flex-row">
           <div className="flex items-center gap-6">
-            <Link href="/login" className="hover:text-[var(--ink)]">
+            <Link href="/" className="hover:text-[var(--ink)]">
               Home
             </Link>
             <Link href="/faq" className="hover:text-[var(--ink)]">

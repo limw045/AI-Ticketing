@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { safeInternalNext } from "@/lib/auth-redirect";
 
 const protectedPrefixes = ["/tickets", "/faq", "/admin", "/dashboard"];
 
@@ -35,8 +36,10 @@ export async function proxy(request: NextRequest) {
 
   if (user && (pathname === "/login" || pathname === "/register")) {
     const ticketsUrl = request.nextUrl.clone();
-    ticketsUrl.pathname = "/dashboard";
-    ticketsUrl.search = "";
+    const next = safeInternalNext(request.nextUrl.searchParams.get("next"));
+    const [nextPath, nextQuery = ""] = next.split("?", 2);
+    ticketsUrl.pathname = nextPath;
+    ticketsUrl.search = nextQuery ? `?${nextQuery}` : "";
     return NextResponse.redirect(ticketsUrl);
   }
 

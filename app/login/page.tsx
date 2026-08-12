@@ -12,6 +12,7 @@ import {
   Input,
 } from "@/components/ui/FormField";
 import { setPortalMode } from "@/lib/portal-mode";
+import { destinationForPortal, safeInternalNext } from "@/lib/auth-redirect";
 import { ArrowRight, KeyRound, Mail, LayoutDashboard, UserRound } from "lucide-react";
 
 export default function LoginPage() {
@@ -22,10 +23,12 @@ export default function LoginPage() {
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPortalChoice, setShowPortalChoice] = useState(false);
+  const [requestedNext, setRequestedNext] = useState("/dashboard");
 
   useEffect(() => {
     const callbackError = new URLSearchParams(window.location.search).get("error");
     const verified = new URLSearchParams(window.location.search).get("verified");
+    setRequestedNext(safeInternalNext(new URLSearchParams(window.location.search).get("next")));
     if (callbackError) setError(callbackError);
     if (verified === "1") setNotice("Email verified successfully. Sign in to continue.");
   }, []);
@@ -72,19 +75,14 @@ export default function LoginPage() {
       setShowPortalChoice(true);
       return;
     }
-    const requestedNext = new URLSearchParams(window.location.search).get("next");
-    const next =
-      requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
-        ? requestedNext
-        : "/dashboard";
-    router.replace(next);
+    router.replace(requestedNext);
     router.refresh();
   };
 
-  const choosePortal = (destination: "/dashboard" | "/admin/dashboard") => {
-    setPortalMode(destination === "/dashboard" ? "user" : "admin");
+  const choosePortal = (mode: "user" | "admin") => {
+    setPortalMode(mode);
     setShowPortalChoice(false);
-    router.replace(destination);
+    router.replace(destinationForPortal(mode, requestedNext));
     router.refresh();
   };
 
@@ -186,7 +184,7 @@ export default function LoginPage() {
             </p>
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               <button
-                onClick={() => choosePortal("/dashboard")}
+                onClick={() => choosePortal("user")}
                 className="group rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 text-left transition hover:border-[var(--brand)]"
               >
                 <UserRound className="h-5 w-5 text-[var(--brand-ink)]" />
@@ -198,7 +196,7 @@ export default function LoginPage() {
                 </span>
               </button>
               <button
-                onClick={() => choosePortal("/admin/dashboard")}
+                onClick={() => choosePortal("admin")}
                 className="group rounded-2xl border border-[var(--brand)] bg-[var(--brand-soft)] p-5 text-left transition hover:bg-[var(--brand-soft)]/70"
               >
                 <LayoutDashboard className="h-5 w-5 text-[var(--brand-ink)]" />
