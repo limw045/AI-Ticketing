@@ -24,6 +24,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { canManageProfile, canManageRole, type WorkspaceRole } from "@/lib/admin/types";
 import { createClient } from "@/lib/supabase/client";
 import { DepartmentManagement } from "@/components/admin/DepartmentManagement";
+import { accountStatusLabel, accountTypeLabel, roleLabel } from "@/lib/display-labels";
+import { ListEmptyState } from "@/components/ui/ListEmptyState";
 
 export function StaffManagement({ administratorsOnly = false }: { administratorsOnly?: boolean }) {
   const admin = useAdminResource("staff");
@@ -131,7 +133,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         <Select value={admin.filters.user_type ?? "all"} onChange={(event) => admin.setFilter("user_type", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Staff type"><option value="all">All staff types</option><option value="full_time">Full-time</option><option value="intern">Intern</option><option value="contractor">Contractor</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <div className="surface py-16 text-center text-sm text-[var(--muted)]">No staff match this view.</div> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "No matching staff" : "No staff accounts yet"} description={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "Try a broader search or reset the active filters." : "Open registration to create the first employee account."} actionHref={!admin.q ? "/register" : undefined} actionLabel={!admin.q ? "Open registration" : undefined} /> : (
         <AdminTable
           header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} accounts</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
           mobile={
@@ -142,12 +144,12 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
                   id: String(row.id),
                   title: `${row.display_name}${row.id === admin.viewerId ? " (You)" : ""}`,
                   subtitle: row.email,
-                  badges: <><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{row.account_status}</StatusBadge><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{row.role.replace("_", " ")}</StatusBadge></>,
+                  badges: <><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{accountStatusLabel(row.account_status)}</StatusBadge><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{roleLabel(row.role)}</StatusBadge></>,
                   fields: [
                     { label: "Department", value: row.department },
-                    { label: "Staff type", value: row.user_type },
-                    { label: "Role", value: row.role.replace("_", " ") },
-                    { label: "Status", value: row.account_status },
+                    { label: "Staff type", value: accountTypeLabel(row.user_type) },
+                    { label: "Role", value: roleLabel(row.role) },
+                    { label: "Status", value: accountStatusLabel(row.account_status) },
                     { label: "Joined", value: new Date(row.created_at).toLocaleDateString() },
                   ],
                   actions: (close) => canManage ? admin.deleted ? <RestoreButton onRestore={async () => { await admin.mutate({ action: "restore", id: row.id }); close(); }} /> : <><Button type="button" variant="secondary" onClick={() => { startEdit(row); close(); }}><Pencil className="h-4 w-4" /> Edit</Button><TwoStepDelete onConfirm={async () => { await admin.mutate({ action: "delete", id: row.id }); close(); }} /></> : <span className="py-2 text-center font-mono text-xs text-[var(--faint)]">Read only</span>,
@@ -164,9 +166,9 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
                 <tr key={row.id} className="transition hover:bg-[var(--surface-2)]">
                   <AdminTd><span className="block text-sm font-semibold">{row.display_name}{row.id === admin.viewerId && <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 font-mono text-[9px] text-[var(--brand-ink)]">You</span>}</span><span className="block font-mono text-[11px] text-[var(--faint)]">{row.email}</span></AdminTd>
                   <AdminTd className="text-xs text-[var(--muted)]">{row.department}</AdminTd>
-                  <AdminTd><StatusBadge tone={row.user_type === "intern" ? "warning" : "neutral"}>{row.user_type}</StatusBadge></AdminTd>
-                  <AdminTd><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{row.role.replace("_", " ")}</StatusBadge></AdminTd>
-                  <AdminTd><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{row.account_status}</StatusBadge></AdminTd>
+                  <AdminTd><StatusBadge tone={row.user_type === "intern" ? "warning" : "neutral"}>{accountTypeLabel(row.user_type)}</StatusBadge></AdminTd>
+                  <AdminTd><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{roleLabel(row.role)}</StatusBadge></AdminTd>
+                  <AdminTd><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{accountStatusLabel(row.account_status)}</StatusBadge></AdminTd>
                   <AdminTd className="font-mono text-[11px] text-[var(--faint)]">{new Date(row.created_at).toLocaleDateString()}</AdminTd>
                   <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{canManage ? admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(row)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: row.id })} /></> : <span className="font-mono text-[10px] text-[var(--faint)]">Read only</span>}</div></AdminTd>
                 </tr>

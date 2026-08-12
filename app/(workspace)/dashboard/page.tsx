@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/FormField";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { getRoleHomeMetrics } from "@/lib/dashboard-metrics";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
+import { ticketStatusLabel } from "@/lib/display-labels";
 import {
   Clock,
   CheckCircle2,
@@ -186,7 +187,7 @@ export default function DashboardPage() {
                         {ticket.title}
                       </span>
                       <StatusBadge tone={statusTone(ticket.status)}>
-                        {ticket.status.replace("_", " ")}
+                        {ticketStatusLabel(ticket.status)}
                       </StatusBadge>
                     </Link>
                   </li>
@@ -292,7 +293,7 @@ export default function DashboardPage() {
                       {ticket.title}
                     </span>
                     <StatusBadge tone={statusTone(ticket.status)}>
-                      {ticket.status.replace("_", " ")}
+                      {ticketStatusLabel(ticket.status)}
                     </StatusBadge>
                   </Link>
                 </li>

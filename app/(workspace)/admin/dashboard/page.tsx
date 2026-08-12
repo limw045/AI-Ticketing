@@ -10,6 +10,7 @@ import { StatusBadge, severityTone } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/FormField";
 import { setPortalMode } from "@/lib/portal-mode";
+import { ticketStatusLabel } from "@/lib/display-labels";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import {
   Download,
@@ -331,7 +332,7 @@ export default function AdminDashboard() {
                       {ticket.author?.display_name}
                     </span>
                     <StatusBadge tone={severityTone(ticket.status)}>
-                      {ticket.status.replace("_", " ")}
+                      {ticketStatusLabel(ticket.status)}
                     </StatusBadge>
                   </Link>
                 </li>

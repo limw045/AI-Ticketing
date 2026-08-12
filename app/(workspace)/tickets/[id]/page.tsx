@@ -37,6 +37,7 @@ import { cn } from "@/lib/cn";
 import { BackButton } from "@/components/ui/BackButton";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
+import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
 
 const STATUS_STEPS = ["open", "in_progress", "resolved", "closed"];
 
@@ -342,11 +343,11 @@ export default function TicketDetailPage({
         <div>
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <StatusBadge tone={statusTone(ticket.status)}>
-              {ticket.status.replace("_", " ")}
+              {ticketStatusLabel(ticket.status)}
             </StatusBadge>
             <StatusBadge tone="neutral">{ticket.category}</StatusBadge>
             <StatusBadge tone={priorityTone(ticket.priority)}>
-              {ticket.priority === "urgent" ? "P0 Urgent" : ticket.priority}
+              {priorityLabel(ticket.priority)}
             </StatusBadge>
             <span className="font-mono text-xs font-semibold text-[var(--faint)]">
               #{ticket.ticket_number}
@@ -427,7 +428,7 @@ export default function TicketDetailPage({
                             : "text-[var(--faint)]"
                         )}
                       >
-                        {step.replace("_", " ")}
+                        {ticketStatusLabel(step)}
                       </span>
                       {isCurrent && (
                         <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 font-mono text-[9px] font-bold text-[var(--brand-ink)]">

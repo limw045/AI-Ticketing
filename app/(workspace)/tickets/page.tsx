@@ -31,6 +31,7 @@ import { getHistoricalCategoryOptions } from "@/lib/ticket-categories";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
+import { ticketStatusLabel } from "@/lib/display-labels";
 
 export default function TicketDashboard() {
   const router = useRouter();
@@ -336,7 +337,7 @@ export default function TicketDashboard() {
           </label>}
         </div>
         <div className="flex flex-wrap gap-2 md:hidden">
-          {statusFilter !== "all" && <span className="rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold capitalize text-[var(--brand-ink)]">{statusFilter.replace("_", " ")}</span>}
+          {statusFilter !== "all" && <span className="rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--brand-ink)]">{ticketStatusLabel(statusFilter)}</span>}
           {categoryFilter !== "all" && <span className="max-w-full truncate rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">{categoryFilter}</span>}
           {onlyMine && <span className="rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">Created by me</span>}
         </div>
@@ -524,7 +525,7 @@ export default function TicketDashboard() {
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </span>
                   <StatusBadge tone={statusTone(ticket.status)} className="shrink-0">
-                    {ticket.status.replace("_", " ")}
+                    {ticketStatusLabel(ticket.status)}
                   </StatusBadge>
                 </div>
               </div>
