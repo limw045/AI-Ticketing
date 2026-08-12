@@ -69,7 +69,7 @@ export default function TicketDashboard() {
     }
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, display_name, role, account_status")
+      .select("id, display_name, department_id, role, account_status")
       .eq("id", user.id)
       .single();
     if (profileError || !profile || profile.account_status !== "active") {
@@ -82,13 +82,17 @@ export default function TicketDashboard() {
     }
     setCurrentUser(profile);
 
-    const { data, error: ticketError } = await supabase
+    const managementSelect = "*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
+    const userPortalSelect = "id, ticket_number, title, description, status, priority, category, department_id, author_id, assignee_id, source, subtasks, is_pinned, pin_order, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
+    const activePortalMode = getPortalMode();
+    let ticketQuery = supabase
       .from("tickets")
-      .select(
-        "*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)"
-      )
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .select(activePortalMode === "admin" ? managementSelect : userPortalSelect)
+      .is("deleted_at", null);
+    if (activePortalMode !== "admin") {
+      ticketQuery = ticketQuery.or(`author_id.eq.${user.id},department_id.eq.${profile.department_id}`);
+    }
+    const { data, error: ticketError } = await ticketQuery.order("created_at", { ascending: false });
 
     if (ticketError) {
       setError(`Could not load tickets: ${ticketError.message}`);

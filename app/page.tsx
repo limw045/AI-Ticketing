@@ -76,11 +76,11 @@ export default function Home() {
         <div className="surface p-6">
           <BookOpen className="h-5 w-5 text-[var(--brand-ink)]" />
           <h2 className="mt-5 font-display text-base font-bold">
-            Resolve recurring issues faster
+            Authenticated internal Knowledge
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Turn resolved cases into searchable internal knowledge so repeated
-            failures are easier to diagnose and prevent.
+            After signing in, use searchable internal guidance to diagnose
+            recurring failures and prevent repeat requests.
           </p>
         </div>
       </section>

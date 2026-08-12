@@ -8,7 +8,7 @@ describe("homepage automation positioning", () => {
     expect(page).toContain("One place to report, trace, and resolve automation issues.");
     expect(page).toContain("Automation-ready intake");
     expect(page).toContain("Trace every case");
-    expect(page).toContain("Resolve recurring issues faster");
+    expect(page).toContain("Authenticated internal Knowledge");
   });
 
   it("keeps the internal entry-point CTAs", () => {

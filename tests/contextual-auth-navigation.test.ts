@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { destinationForPortal, safeInternalNext } from "../lib/auth-redirect";
+import { destinationForPortal, isKnowledgeDestination, safeInternalNext } from "../lib/auth-redirect";
 
 const proxy = readFileSync("proxy.ts", "utf8");
 const login = readFileSync("app/login/page.tsx", "utf8");
@@ -22,6 +22,9 @@ describe("contextual authentication navigation", () => {
   it("protects Knowledge and preserves next through the proxy", () => {
     expect(proxy).toContain('["/tickets", "/faq", "/admin", "/dashboard"]');
     expect(proxy).toContain('searchParams.set("next"');
+    expect(isKnowledgeDestination("/faq?category=VPN")).toBe(true);
+    expect(login).toContain("Sign in to continue to Internal Knowledge");
+    expect(home).toContain("Authenticated internal Knowledge");
   });
 
   it("prioritizes sign-in, keeps one registration CTA, and links footer Home correctly", () => {

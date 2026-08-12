@@ -12,7 +12,7 @@ import {
   Input,
 } from "@/components/ui/FormField";
 import { setPortalMode } from "@/lib/portal-mode";
-import { destinationForPortal, safeInternalNext } from "@/lib/auth-redirect";
+import { destinationForPortal, isKnowledgeDestination, safeInternalNext } from "@/lib/auth-redirect";
 import { ArrowRight, KeyRound, Mail, LayoutDashboard, UserRound } from "lucide-react";
 
 export default function LoginPage() {
@@ -92,7 +92,9 @@ export default function LoginPage() {
         Welcome back.
       </h1>
       <p className="mt-2 text-sm leading-5 text-[var(--muted)]">
-        Sign in with your GTMSW staff or Intern account.
+        {isKnowledgeDestination(requestedNext)
+          ? "Sign in to continue to Internal Knowledge. Your original destination will be preserved."
+          : "Sign in with your GTMSW staff or Intern account."}
       </p>
 
       {error && (

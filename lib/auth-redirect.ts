@@ -7,3 +7,8 @@ export function destinationForPortal(mode: "user" | "admin", requestedNext: stri
   if (mode === "user" && (next === "/admin" || next.startsWith("/admin/"))) return "/dashboard";
   return next;
 }
+
+export function isKnowledgeDestination(value: string | null | undefined) {
+  const next = safeInternalNext(value, "");
+  return next === "/faq" || next.startsWith("/faq?");
+}

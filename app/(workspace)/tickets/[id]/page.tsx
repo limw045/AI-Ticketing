@@ -73,16 +73,17 @@ export default function TicketDetailPage({
   const canReply = canManageTicket || isAuthor;
   const canSeeSensitiveContext = canManageTicket || isAuthor;
 
-  const loadComments = useCallback(async () => {
+  const loadComments = useCallback(async (includeInternalNotes: boolean) => {
     const supabase = createClient();
-    const { data, error: commentError } = await supabase
+    let commentQuery = supabase
       .from("comment_details")
       .select(
         "id, ticket_id, author_id, content, is_internal_note, type, created_at, updated_at, deleted_at, author"
       )
       .eq("ticket_id", ticketId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: true });
+      .is("deleted_at", null);
+    if (!includeInternalNotes) commentQuery = commentQuery.eq("is_internal_note", false);
+    const { data, error: commentError } = await commentQuery.order("created_at", { ascending: true });
 
     if (!commentError) setComments(data ?? []);
     return commentError;
@@ -101,7 +102,7 @@ export default function TicketDetailPage({
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, display_name, email, department, user_type, supervisor_name, role, account_status")
+      .select("id, display_name, email, department, department_id, user_type, supervisor_name, role, account_status")
       .eq("id", user.id)
       .single();
     if (profileError || !profile || profile.account_status !== "active") {
@@ -118,7 +119,7 @@ export default function TicketDetailPage({
     const profileCanManage =
       (profile.role === "admin" || profile.role === "super_admin") && activePortalMode === "admin";
 
-    const safeTicketSelect = "id, ticket_number, title, description, status, priority, category, author_id, assignee_id, source, subtasks, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
+    const safeTicketSelect = "id, ticket_number, title, description, status, priority, category, department_id, author_id, assignee_id, source, subtasks, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
     const managementTicketSelect = "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)";
 
     const ticketResult = await supabase
@@ -131,7 +132,7 @@ export default function TicketDetailPage({
 
     if (ticketError) {
       setError(`Could not load ticket: ${ticketError.message}`);
-    } else if (ticketData) {
+    } else if (ticketData && (profileCanManage || ticketData.author_id === profile.id || ticketData.department_id === profile.department_id)) {
       setTicket(ticketData.author_id === profile.id
         ? { ...ticketData, author: { ...ticketData.author, email: profile.email, supervisor_name: profile.supervisor_name } }
         : ticketData);
@@ -145,7 +146,7 @@ export default function TicketDetailPage({
       setDeletedTicket(Boolean(removed));
     }
 
-    const commentError = await loadComments();
+    const commentError = await loadComments(profileCanManage);
     if (commentError) setError(`Could not load discussion: ${commentError.message}`);
 
     if (profileCanManage) {
@@ -189,7 +190,7 @@ export default function TicketDetailPage({
     if (!insertError) {
       setNewComment("");
       setIsInternalNote(false);
-      const refreshError = await loadComments();
+      const refreshError = await loadComments(canManageTicket);
       if (refreshError) {
         setError(
           `Reply saved, but the discussion could not refresh: ${refreshError.message}`

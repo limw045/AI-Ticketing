@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge, priorityTone, statusTone } from "@/components/ui/StatusBadge";
 import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
 import { ListEmptyState } from "@/components/ui/ListEmptyState";
+import { createClient } from "@/lib/supabase/client";
 
 const STATUSES = ["open", "in_progress", "resolved", "closed"];
 const PRIORITIES = ["low", "medium", "high", "urgent"];
@@ -31,6 +32,7 @@ export default function AdminTicketsPage() {
   const admin = useAdminResource("tickets");
   const [agents, setAgents] = useState<any[]>([]);
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
@@ -46,6 +48,12 @@ export default function AdminTicketsPage() {
         (payload.rows ?? []).map((rule: any) => rule.category_name)
       ))
       .catch(() => setActiveCategories([]));
+    void createClient()
+      .from("departments")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("name")
+      .then(({ data }) => setDepartments(data ?? []));
   }, []);
 
   const categoryOptions = [...new Set([form.category, ...activeCategories])]
@@ -59,6 +67,7 @@ export default function AdminTicketsPage() {
       category: ticket.category,
       priority: ticket.priority,
       status: ticket.status,
+      department_id: ticket.department_id ?? "",
       assignee_id: ticket.assignee_id ?? "",
       is_pinned: Boolean(ticket.is_pinned),
       pin_order: ticket.pin_order ?? 0,
@@ -88,6 +97,7 @@ export default function AdminTicketsPage() {
         category: form.category,
         priority: form.priority,
         status: form.status,
+        department_id: form.department_id,
         assignee_id: form.assignee_id || null,
         is_pinned: form.is_pinned,
         pin_order: Number(form.pin_order) || 0,
@@ -119,6 +129,7 @@ export default function AdminTicketsPage() {
           <label className="md:col-span-2"><FieldLabel>Description</FieldLabel><Textarea rows={5} value={form.description ?? ""} onChange={(event) => setForm((value) => ({ ...value, description: event.target.value }))} required /></label>
           <label><FieldLabel>Category</FieldLabel><Select value={form.category ?? ""} onChange={(event) => setForm((value) => ({ ...value, category: event.target.value }))} required>{categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}</Select></label>
           <label><FieldLabel>Assignee</FieldLabel><Select value={form.assignee_id ?? ""} onChange={(event) => setForm((value) => ({ ...value, assignee_id: event.target.value }))}><option value="">Unassigned</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.display_name}</option>)}</Select></label>
+          <label><FieldLabel>Ticket department</FieldLabel><Select value={form.department_id ?? ""} onChange={(event) => setForm((value) => ({ ...value, department_id: event.target.value }))} required><option value="" disabled>Select a department</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}</Select><span className="mt-2 block text-xs text-[var(--muted)]">Changing this controls which department can read the request; the original author keeps access.</span></label>
           <label><FieldLabel>Priority</FieldLabel><Select value={form.priority ?? "medium"} onChange={(event) => setForm((value) => ({ ...value, priority: event.target.value }))}>{PRIORITIES.map((priority) => <option key={priority} value={priority}>{priority}</option>)}</Select></label>
           <label><FieldLabel>Status</FieldLabel><Select value={form.status ?? "open"} onChange={(event) => setForm((value) => ({ ...value, status: event.target.value }))}>{STATUSES.map((status) => <option key={status} value={status}>{ticketStatusLabel(status)}</option>)}</Select></label>
           <label><FieldLabel>Pin order</FieldLabel><Input type="number" value={form.pin_order ?? 0} onChange={(event) => setForm((value) => ({ ...value, pin_order: Number(event.target.value) }))} /></label>
