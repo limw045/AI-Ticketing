@@ -43,7 +43,12 @@ describe("getRoleHomeMetrics", () => {
       waitingOnCount: 0,
       totalVolume: 0,
       resolutionRate: 0,
+      hasResolutionSample: false,
       activeIncidents: 0,
     });
+  });
+
+  it("marks a non-empty queue as a valid resolution sample", () => {
+    expect(getRoleHomeMetrics(baseTickets, "user-a").hasResolutionSample).toBe(true);
   });
 });

@@ -45,7 +45,8 @@ export default function AdminDashboard() {
     }
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
-      .select("*, author:profiles!tickets_author_id_fkey(*)");
+      .select("*, author:profiles!tickets_author_id_fkey(*)")
+      .is("deleted_at", null);
     if (ticketError) setError(`Could not load dashboard tickets: ${ticketError.message}`);
     else setTickets(ticketData ?? []);
 

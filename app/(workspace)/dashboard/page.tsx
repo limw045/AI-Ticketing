@@ -66,6 +66,7 @@ export default function DashboardPage() {
         .select(
           "*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)"
         )
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (ticketError) setError(`Could not load tickets: ${ticketError.message}`);
       else setTickets(ticketData ?? []);
@@ -141,18 +142,17 @@ export default function DashboardPage() {
             <MetricCard
               label="Open requests"
               value={m.myOpenCount}
-              animate
               icon={<Inbox className="h-4 w-4" />}
             />
             <MetricCard
               label="In progress"
               value={m.waitingOnCount}
-              animate
               icon={<Clock className="h-4 w-4" />}
             />
             <MetricCard
               label="Resolution rate"
-              value={`${m.resolutionRate}%`}
+              value={m.hasResolutionSample ? `${m.resolutionRate}%` : "—"}
+              hint={!m.hasResolutionSample ? "No completed requests yet" : undefined}
               icon={<CheckCircle2 className="h-4 w-4" />}
             />
           </section>
@@ -237,14 +237,12 @@ export default function DashboardPage() {
             <MetricCard
               label="Urgent"
               value={m.urgentCount}
-              animate
               valueClassName="text-[var(--danger)]"
               icon={<TriangleAlert className="h-4 w-4" />}
             />
             <MetricCard
               label="Active incidents"
               value={m.activeIncidents}
-              animate
               icon={<TriangleAlert className="h-4 w-4" />}
             />
           </section>

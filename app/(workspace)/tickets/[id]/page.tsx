@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { exportTicketPDF } from "@/lib/pdf-export";
 import {
@@ -48,6 +49,7 @@ export default function TicketDetailPage({
   const ticketId = resolvedParams.id;
 
   const [ticket, setTicket] = useState<any>(null);
+  const [deletedTicket, setDeletedTicket] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [agents, setAgents] = useState<any[]>([]);
@@ -81,6 +83,7 @@ export default function TicketDetailPage({
 
   const fetchTicketDetails = useCallback(async () => {
     setError("");
+    setDeletedTicket(false);
     const supabase = createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -112,10 +115,22 @@ export default function TicketDetailPage({
         "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)"
       )
       .eq("id", ticketId)
-      .single();
+      .is("deleted_at", null)
+      .maybeSingle();
 
-    if (ticketError) setError(`Could not load ticket: ${ticketError.message}`);
-    else setTicket(ticketData);
+    if (ticketError) {
+      setError(`Could not load ticket: ${ticketError.message}`);
+    } else if (ticketData) {
+      setTicket(ticketData);
+    } else if (profileIsAgent) {
+      const { data: removed } = await supabase
+        .from("tickets")
+        .select("id")
+        .eq("id", ticketId)
+        .not("deleted_at", "is", null)
+        .maybeSingle();
+      setDeletedTicket(Boolean(removed));
+    }
 
     const commentError = await loadComments();
     if (commentError) setError(`Could not load discussion: ${commentError.message}`);
@@ -185,7 +200,8 @@ export default function TicketDetailPage({
     const { error: updateError } = await supabase
       .from("tickets")
       .update(updates)
-      .eq("id", ticketId);
+      .eq("id", ticketId)
+      .is("deleted_at", null);
     if (updateError) {
       setError(`Status update failed: ${updateError.message}`);
       return;
@@ -199,7 +215,8 @@ export default function TicketDetailPage({
     const { error: updateError } = await supabase
       .from("tickets")
       .update({ assignee_id: assigneeId || null })
-      .eq("id", ticketId);
+      .eq("id", ticketId)
+      .is("deleted_at", null);
     if (updateError) {
       setError(`Assignment failed: ${updateError.message}`);
       return;
@@ -221,7 +238,8 @@ export default function TicketDetailPage({
     const { error: updateError } = await supabase
       .from("tickets")
       .update({ subtasks: updated })
-      .eq("id", ticketId);
+      .eq("id", ticketId)
+      .is("deleted_at", null);
     if (updateError) {
       setError(`Subtask update failed: ${updateError.message}`);
       return;
@@ -241,7 +259,8 @@ export default function TicketDetailPage({
     const { error: updateError } = await supabase
       .from("tickets")
       .update({ subtasks: updated })
-      .eq("id", ticketId);
+      .eq("id", ticketId)
+      .is("deleted_at", null);
     if (updateError) {
       setError(`Subtask update failed: ${updateError.message}`);
       return;
@@ -269,7 +288,15 @@ export default function TicketDetailPage({
     return (
       <div className="space-y-5 py-12">
         <BackButton href="/tickets" />
-        {error ? (
+        {deletedTicket ? (
+          <Alert tone="warning" role="status">
+            <strong className="block">This ticket has been moved to the recycle bin.</strong>
+            <span className="mt-1 block">Restore it before opening its details.</span>
+            <Link href="/admin/recycle-bin" className="mt-3 inline-flex font-semibold underline underline-offset-2">
+              Go to recycle bin
+            </Link>
+          </Alert>
+        ) : error ? (
           <Alert tone="error" role="alert">
             <span>{error}</span>
             <Button type="button" variant="secondary" onClick={() => void fetchTicketDetails()} className="mt-3">Retry</Button>

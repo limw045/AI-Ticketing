@@ -77,6 +77,7 @@ export default function TicketDashboard() {
       .select(
         "*, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)"
       )
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (ticketError) {
@@ -151,7 +152,8 @@ export default function TicketDashboard() {
             status: "closed",
             resolved_at: new Date().toISOString(),
           })
-          .eq("id", filteredTickets[selectedIndex].id);
+          .eq("id", filteredTickets[selectedIndex].id)
+          .is("deleted_at", null);
         if (updateError) setError(`Could not close ticket: ${updateError.message}`);
         fetchTickets();
       } else if (
@@ -164,7 +166,8 @@ export default function TicketDashboard() {
         const { error: updateError } = await supabase
           .from("tickets")
           .update({ assignee_id: currentUser.id })
-          .eq("id", filteredTickets[selectedIndex].id);
+          .eq("id", filteredTickets[selectedIndex].id)
+          .is("deleted_at", null);
         if (updateError) setError(`Could not assign ticket: ${updateError.message}`);
         fetchTickets();
       }
@@ -191,7 +194,8 @@ export default function TicketDashboard() {
           ? { resolved_at: new Date().toISOString() }
           : {}),
       })
-      .in("id", selectedIds);
+      .in("id", selectedIds)
+      .is("deleted_at", null);
 
     if (updateError) {
       setError(`Bulk update failed: ${updateError.message}`);
@@ -258,25 +262,21 @@ export default function TicketDashboard() {
         <MetricCard
           label="Open"
           value={openCount}
-          animate
           icon={<Clock className="h-4 w-4" />}
         />
         <MetricCard
           label="In progress"
           value={inProgressCount}
-          animate
           icon={<ArrowUpDown className="h-4 w-4" />}
         />
         <MetricCard
           label="Resolved"
           value={resolvedCount}
-          animate
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
         <MetricCard
           label="Urgent"
           value={urgentCount}
-          animate
           valueClassName="text-[var(--danger)]"
           icon={<TriangleAlert className="h-4 w-4" />}
         />

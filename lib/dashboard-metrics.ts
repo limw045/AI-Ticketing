@@ -8,6 +8,7 @@ export interface RoleMetrics {
   waitingOnCount: number;
   totalVolume: number;
   resolutionRate: number;
+  hasResolutionSample: boolean;
   activeIncidents: number;
 }
 
@@ -33,6 +34,7 @@ export function getRoleHomeMetrics(
     (t) => t.author_id === currentUserId && t.status === "in_progress"
   ).length;
   const totalVolume = tickets.length;
+  const hasResolutionSample = totalVolume > 0;
   const resolutionRate =
     totalVolume > 0 ? Math.round((resolvedCount / totalVolume) * 100) : 0;
   const activeIncidents = tickets.filter((t) => t.is_active).length;
@@ -47,6 +49,7 @@ export function getRoleHomeMetrics(
     waitingOnCount,
     totalVolume,
     resolutionRate,
+    hasResolutionSample,
     activeIncidents,
   };
 }
