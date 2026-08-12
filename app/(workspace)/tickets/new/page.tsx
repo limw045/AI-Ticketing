@@ -16,13 +16,13 @@ import {
   type TicketAttachment,
 } from "@/lib/ticket-attachments";
 import {
-  resolveDefaultCategory,
   sortCategoryRules,
   type CategoryRule,
 } from "@/lib/ticket-categories";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Alert } from "@/components/ui/Alert";
 import { Button, FieldLabel, Input, Select, Textarea } from "@/components/ui/FormField";
+import { firstTicketSubmissionError, validateTicketSubmission, type TicketSubmissionErrors } from "@/lib/ticket-submission";
 import {
   ShieldCheck,
   Layers,
@@ -50,6 +50,9 @@ export default function NewTicketPage() {
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [formError, setFormError] = useState("");
   const [initialized, setInitialized] = useState(false);
+  const [impact, setImpact] = useState("");
+  const [p0Confirmed, setP0Confirmed] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<TicketSubmissionErrors>({});
   const parsedDescription = parseTicketDescription(description);
   const attachments = parsedDescription.attachments;
 
@@ -85,19 +88,19 @@ export default function NewTicketPage() {
 
       const rules = sortCategoryRules(data as CategoryRule[]);
       const draftCategory = typeof draft.category === "string" ? draft.category : "";
-      const selectedCategory = rules.some((rule) => rule.category_name === draftCategory)
-        ? draftCategory
-        : resolveDefaultCategory(rules) ?? "";
+      const selectedCategory = rules.some((rule) => rule.category_name === draftCategory) ? draftCategory : "";
       const selectedRule = rules.find((rule) => rule.category_name === selectedCategory);
 
       setCategoryRules(rules);
       setTitle(typeof draft.title === "string" ? draft.title : "");
       setCategory(selectedCategory);
       setPriority(typeof draft.priority === "string" ? draft.priority : "medium");
+      setImpact(typeof draft.impact === "string" ? draft.impact : "");
+      setP0Confirmed(draft.p0Confirmed === "true");
       setDescription(
         typeof draft.description === "string" && draft.description.trim()
           ? draft.description
-          : selectedRule?.template_markdown ?? ""
+          : ""
       );
       if (saved) {
         setSavedDraftAlert(true);
@@ -117,10 +120,10 @@ export default function NewTicketPage() {
     if (initialized && (title || description)) {
       localStorage.setItem(
         "ticketing_draft",
-        JSON.stringify({ title, description, category, priority })
+        JSON.stringify({ title, description, category, priority, impact, p0Confirmed: String(p0Confirmed) })
       );
     }
-  }, [title, description, category, priority, initialized]);
+  }, [title, description, category, priority, impact, p0Confirmed, initialized]);
 
   const handleCategoryChange = (cat: string) => {
     const currentTemplate = categoryRules.find(
@@ -130,6 +133,7 @@ export default function NewTicketPage() {
       (rule) => rule.category_name === cat
     )?.template_markdown;
     setCategory(cat);
+    setFieldErrors((current) => ({ ...current, category: undefined }));
     if (!description.trim() || description === currentTemplate) {
       setDescription(nextTemplate ?? "");
     }
@@ -181,6 +185,7 @@ export default function NewTicketPage() {
   };
 
   const handleClearDraft = async () => {
+    if (!window.confirm("Clear this draft and remove its uploaded attachments?")) return;
     setFormError("");
     const cleanupResults = await Promise.allSettled(
       attachments.map((attachment) => removeTicketAttachment(attachment.storagePath))
@@ -206,10 +211,12 @@ export default function NewTicketPage() {
       return;
     }
     setTitle("");
-    setDescription(
-      categoryRules.find((rule) => rule.category_name === category)
-        ?.template_markdown ?? ""
-    );
+    setCategory("");
+    setPriority("medium");
+    setDescription("");
+    setImpact("");
+    setP0Confirmed(false);
+    setFieldErrors({});
     localStorage.removeItem("ticketing_draft");
   };
 
@@ -217,6 +224,15 @@ export default function NewTicketPage() {
     e.preventDefault();
     setSecurityWarning(null);
     setFormError("");
+
+    const template = categoryRules.find((rule) => rule.category_name === category)?.template_markdown ?? "";
+    const validationErrors = validateTicketSubmission({ title, category, priority, description: parsedDescription.text, template, impact, p0Confirmed });
+    setFieldErrors(validationErrors);
+    const firstError = firstTicketSubmissionError(validationErrors);
+    if (firstError) {
+      document.getElementById(`ticket-${firstError}`)?.focus();
+      return;
+    }
 
     const scan = scanSensitiveData(title + " " + description);
     if (scan.hasSensitive) {
@@ -257,21 +273,17 @@ export default function NewTicketPage() {
       submittedAt: new Date().toISOString(),
     };
 
-    const { data: createdTicket, error: insertError } = await supabase
-      .from("tickets")
-      .insert({
-        title: title.trim(),
-        category,
-        priority,
-        description,
-        author_id: user.id,
-        device_context: deviceContext,
-        source: "portal",
-      })
-      .select("id")
-      .single();
+    const { data: createdTicketId, error: insertError } = await supabase.rpc("submit_portal_ticket", {
+      p_title: title.trim(),
+      p_category: category,
+      p_priority: priority,
+      p_description: description,
+      p_device_context: deviceContext,
+      p_attachment_paths: attachments.map((attachment) => attachment.storagePath),
+      p_impact: priority === "urgent" ? impact.trim() : null,
+    });
 
-    if (insertError || !createdTicket) {
+    if (insertError || !createdTicketId) {
       setFormError(
         `Failed to submit ticket: ${
           insertError?.message || "Database did not return the new ticket."
@@ -279,19 +291,6 @@ export default function NewTicketPage() {
       );
       setLoading(false);
     } else {
-      if (attachments.length > 0) {
-        const { error: attachmentBindError } = await supabase
-          .from("ticket_attachments")
-          .update({ ticket_id: createdTicket.id })
-          .eq("uploader_id", user.id)
-          .is("ticket_id", null)
-          .in("storage_path", attachments.map((attachment) => attachment.storagePath));
-        if (attachmentBindError) {
-          setFormError(`Ticket was created, but its attachments could not be linked: ${attachmentBindError.message}`);
-          setLoading(false);
-          return;
-        }
-      }
       localStorage.removeItem("ticketing_draft");
       router.replace("/tickets");
       router.refresh();
@@ -353,12 +352,15 @@ export default function NewTicketPage() {
             <label className="block">
               <FieldLabel>Title</FieldLabel>
               <Input
+                id="ticket-title"
                 type="text"
                 placeholder="Title of AI request or bug..."
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
+                onChange={(e) => { setTitle(e.target.value); setFieldErrors((current) => ({ ...current, title: undefined })); }}
+                aria-invalid={Boolean(fieldErrors.title)}
+                aria-describedby={fieldErrors.title ? "title-error" : undefined}
               />
+              {fieldErrors.title && <span id="title-error" className="mt-2 block text-xs text-[var(--danger)]">{fieldErrors.title}</span>}
             </label>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -367,10 +369,13 @@ export default function NewTicketPage() {
                 <span className="relative block">
                   <Layers className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-[var(--muted)]" />
                   <Select
+                    id="ticket-category"
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     className="pl-10"
+                    aria-invalid={Boolean(fieldErrors.category)}
                   >
+                    <option value="">Select a category…</option>
                     {categoryRules.map((rule) => (
                       <option key={rule.id} value={rule.category_name}>
                         {rule.category_name}
@@ -378,6 +383,7 @@ export default function NewTicketPage() {
                     ))}
                   </Select>
                 </span>
+                {fieldErrors.category && <span className="mt-2 block text-xs text-[var(--danger)]">{fieldErrors.category}</span>}
               </label>
 
               <label className="block">
@@ -397,6 +403,12 @@ export default function NewTicketPage() {
                 </span>
               </label>
             </div>
+
+            {priority === "urgent" && <div className="space-y-4 rounded-xl border border-[var(--danger)]/30 bg-[var(--danger-soft)] p-4">
+              <label className="block"><FieldLabel className="text-[var(--danger)]">Business impact</FieldLabel><Textarea id="ticket-impact" rows={3} value={impact} onChange={(event) => { setImpact(event.target.value); setFieldErrors((current) => ({ ...current, impact: undefined })); }} placeholder="Who is affected, what is blocked, and why can this not wait?" aria-invalid={Boolean(fieldErrors.impact)} />{fieldErrors.impact && <span className="mt-2 block text-xs text-[var(--danger)]">{fieldErrors.impact}</span>}</label>
+              <label className="flex items-start gap-3 text-sm"><input id="ticket-p0Confirmed" type="checkbox" checked={p0Confirmed} onChange={(event) => { setP0Confirmed(event.target.checked); setFieldErrors((current) => ({ ...current, p0Confirmed: undefined })); }} className="mt-0.5 h-5 w-5" /><span>I confirm this is business-critical and requires immediate response.</span></label>
+              {fieldErrors.p0Confirmed && <span className="block text-xs text-[var(--danger)]">{fieldErrors.p0Confirmed}</span>}
+            </div>}
 
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-3 py-1.5 font-mono text-[10px] font-semibold text-[var(--muted)]">
@@ -451,11 +463,12 @@ export default function NewTicketPage() {
           <div className="px-4 py-5 sm:px-6">
             {previewTab === "edit" ? (
               <Textarea
+                id="ticket-description"
                 rows={14}
                 value={description}
                 onPaste={handlePaste}
-                onChange={(e) => setDescription(e.target.value)}
-                required
+                onChange={(e) => { setDescription(e.target.value); setFieldErrors((current) => ({ ...current, description: undefined })); }}
+                aria-invalid={Boolean(fieldErrors.description)}
                 placeholder="Describe the request using the guidance for this category..."
                 className="min-h-[240px] font-mono sm:min-h-[320px]"
               />
@@ -464,6 +477,7 @@ export default function NewTicketPage() {
                 {parsedDescription.text}
               </div>
             )}
+            {fieldErrors.description && <span className="mt-2 block text-xs text-[var(--danger)]">{fieldErrors.description}</span>}
 
             <TicketAttachmentPicker
               attachments={attachments}
