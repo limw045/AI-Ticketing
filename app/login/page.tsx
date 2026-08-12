@@ -75,6 +75,7 @@ export default function LoginPage() {
       setShowPortalChoice(true);
       return;
     }
+    setPortalMode("user");
     router.replace(requestedNext);
     router.refresh();
   };

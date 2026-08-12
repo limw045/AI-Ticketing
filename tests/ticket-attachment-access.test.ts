@@ -22,5 +22,9 @@ describe("ticket attachment authorization", () => {
     expect(route).toContain('from("tickets")');
     expect(route).toContain('.is("deleted_at", null)');
     expect(route).toContain("Attachment access denied");
+    expect(route).toContain("PORTAL_MODE_COOKIE");
+    expect(route).toContain('portalMode === "admin"');
+    expect(route).toContain("visibleTicket.author_id === user.id");
+    expect(route).toContain("visibleTicket.department_id === profile.department_id");
   });
 });

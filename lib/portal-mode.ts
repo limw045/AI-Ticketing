@@ -1,6 +1,7 @@
 export type PortalMode = "user" | "admin";
 
 const STORAGE_KEY = "gt-portal";
+export const PORTAL_MODE_COOKIE = "gt-portal-mode";
 
 export function getPortalMode(): PortalMode {
   if (typeof window === "undefined") return "admin";
@@ -16,6 +17,11 @@ export function setPortalMode(mode: PortalMode) {
     window.localStorage.setItem(STORAGE_KEY, mode);
   } catch {
     // Storage can be unavailable; portal choice still navigates for this visit.
+  }
+  try {
+    document.cookie = `${PORTAL_MODE_COOKIE}=${mode}; Path=/; Max-Age=2592000; SameSite=Lax`;
+  } catch {
+    // Server routes fall back to the stricter user mode when cookies are unavailable.
   }
 }
 

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { PORTAL_MODE_COOKIE } from "@/lib/portal-mode";
 
 export async function GET(
   request: Request,
@@ -35,6 +37,17 @@ export async function GET(
     return NextResponse.json({ error: "Invalid attachment path" }, { status: 400 });
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("department_id, role, account_status, deleted_at")
+    .eq("id", user.id)
+    .single();
+  if (!profile || profile.account_status !== "active" || profile.deleted_at) {
+    return NextResponse.json({ error: "Attachment access denied" }, { status: 403 });
+  }
+  const portalMode = (await cookies()).get(PORTAL_MODE_COOKIE)?.value === "admin" ? "admin" : "user";
+  const hasAdminConsoleAccess = portalMode === "admin" && ["admin", "super_admin"].includes(profile.role);
+
   const { data: attachment } = await supabase
     .from("ticket_attachments")
     .select("uploader_id, ticket_id")
@@ -45,22 +58,19 @@ export async function GET(
   if (!allowed && attachment?.ticket_id) {
     const { data: visibleTicket } = await supabase
       .from("tickets")
-      .select("id")
+      .select("id, author_id, department_id")
       .eq("id", attachment.ticket_id)
       .is("deleted_at", null)
       .maybeSingle();
-    allowed = Boolean(visibleTicket);
+    allowed = Boolean(visibleTicket && (
+      hasAdminConsoleAccess
+      || visibleTicket.author_id === user.id
+      || visibleTicket.department_id === profile.department_id
+    ));
   }
   // Compatibility for attachments created before metadata tracking.
   if (!allowed && !attachment && decodedSegments[0] === user.id) allowed = true;
-  if (!allowed) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    allowed = Boolean(profile && ["admin", "super_admin"].includes(profile.role));
-  }
+  if (!allowed && !attachment) allowed = hasAdminConsoleAccess;
   if (!allowed) {
     return NextResponse.json({ error: "Attachment access denied" }, { status: 403 });
   }
