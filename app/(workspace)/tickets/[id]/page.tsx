@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/cn";
 import { BackButton } from "@/components/ui/BackButton";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
+import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
 
 const STATUS_STEPS = ["open", "in_progress", "resolved", "closed"];
 
@@ -61,10 +62,15 @@ export default function TicketDetailPage({
   const [commentNotice, setCommentNotice] = useState("");
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [mobileTab, setMobileTab] = useState<"conversation" | "details">("conversation");
+  const [portalMode, setPortalMode] = useState<PortalMode>("user");
 
   const isAgent =
     currentUserProfile?.role === "admin" ||
     currentUserProfile?.role === "super_admin";
+  const canManageTicket = isAgent && portalMode === "admin";
+  const isAuthor = ticket?.author_id === currentUserProfile?.id;
+  const canReply = canManageTicket || isAuthor;
+  const canSeeSensitiveContext = canManageTicket || isAuthor;
 
   const loadComments = useCallback(async () => {
     const supabase = createClient();
@@ -94,7 +100,7 @@ export default function TicketDetailPage({
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, display_name, role, account_status")
+      .select("id, display_name, email, department, user_type, supervisor_name, role, account_status")
       .eq("id", user.id)
       .single();
     if (profileError || !profile || profile.account_status !== "active") {
@@ -106,23 +112,29 @@ export default function TicketDetailPage({
       return;
     }
     setCurrentUserProfile(profile);
-    const profileIsAgent =
-      profile.role === "admin" || profile.role === "super_admin";
+    const activePortalMode = getPortalMode();
+    setPortalMode(activePortalMode);
+    const profileCanManage =
+      (profile.role === "admin" || profile.role === "super_admin") && activePortalMode === "admin";
 
-    const { data: ticketData, error: ticketError } = await supabase
+    const safeTicketSelect = "id, ticket_number, title, description, status, priority, category, author_id, assignee_id, source, subtasks, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
+    const managementTicketSelect = "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)";
+
+    const ticketResult = await supabase
       .from("tickets")
-      .select(
-        "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)"
-      )
+      .select(profileCanManage ? managementTicketSelect : safeTicketSelect)
       .eq("id", ticketId)
       .is("deleted_at", null)
       .maybeSingle();
+    const { data: ticketData, error: ticketError } = ticketResult as unknown as { data: any; error: any };
 
     if (ticketError) {
       setError(`Could not load ticket: ${ticketError.message}`);
     } else if (ticketData) {
-      setTicket(ticketData);
-    } else if (profileIsAgent) {
+      setTicket(ticketData.author_id === profile.id
+        ? { ...ticketData, author: { ...ticketData.author, email: profile.email, supervisor_name: profile.supervisor_name } }
+        : ticketData);
+    } else if (profileCanManage) {
       const { data: removed } = await supabase
         .from("tickets")
         .select("id")
@@ -135,7 +147,7 @@ export default function TicketDetailPage({
     const commentError = await loadComments();
     if (commentError) setError(`Could not load discussion: ${commentError.message}`);
 
-    if (profileIsAgent) {
+    if (profileCanManage) {
       const { data: agentData, error: agentError } = await supabase
         .from("profiles")
         .select("id, display_name, department")
@@ -154,8 +166,8 @@ export default function TicketDetailPage({
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     const content = newComment.trim();
-    if (!content || !currentUserProfile || isPostingComment) return;
-    if (isInternalNote && !isAgent) {
+    if (!content || !currentUserProfile || isPostingComment || !canReply) return;
+    if (isInternalNote && !canManageTicket) {
       setError("Only support agents can post internal notes.");
       return;
     }
@@ -191,7 +203,7 @@ export default function TicketDetailPage({
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
-    if (!isAgent) return;
+    if (!canManageTicket) return;
     const supabase = createClient();
     const updates: any = { status: newStatus };
     if (newStatus === "resolved" || newStatus === "closed") {
@@ -210,7 +222,7 @@ export default function TicketDetailPage({
   };
 
   const handleAssigneeChange = async (assigneeId: string) => {
-    if (!isAgent) return;
+    if (!canManageTicket) return;
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("tickets")
@@ -226,7 +238,7 @@ export default function TicketDetailPage({
 
   const handleAddSubtask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAgent || !newSubtaskTitle.trim() || !ticket) return;
+    if (!canManageTicket || !newSubtaskTitle.trim() || !ticket) return;
 
     const currentSubtasks = ticket.subtasks || [];
     const updated = [
@@ -249,7 +261,7 @@ export default function TicketDetailPage({
   };
 
   const handleToggleSubtask = async (subtaskId: string) => {
-    if (!isAgent || !ticket) return;
+    if (!canManageTicket || !ticket) return;
     const currentSubtasks = ticket.subtasks || [];
     const updated = currentSubtasks.map((st: any) =>
       st.id === subtaskId ? { ...st, completed: !st.completed } : st
@@ -463,11 +475,11 @@ export default function TicketDetailPage({
                 <li key={st.id}>
                   <button
                     type="button"
-                    disabled={!isAgent}
+                    disabled={!canManageTicket}
                     onClick={() => handleToggleSubtask(st.id)}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-soft)]",
-                      isAgent && "hover:bg-[var(--surface-2)]"
+                      canManageTicket && "hover:bg-[var(--surface-2)]"
                     )}
                   >
                     {st.completed ? (
@@ -495,7 +507,7 @@ export default function TicketDetailPage({
               )}
             </ul>
 
-            {isAgent && (
+            {canManageTicket && (
               <form onSubmit={handleAddSubtask} className="mt-3 flex gap-2">
                 <Input
                   type="text"
@@ -553,7 +565,7 @@ export default function TicketDetailPage({
                 </div>
               ))}
 
-              <form
+              {canReply ? <form
                 onSubmit={handlePostComment}
                 className="surface space-y-4 p-4 sm:p-5"
               >
@@ -572,7 +584,7 @@ export default function TicketDetailPage({
                 />
 
                 <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  {isAgent ? (
+                  {canManageTicket ? (
                     <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]">
                       <input
                         type="checkbox"
@@ -595,7 +607,9 @@ export default function TicketDetailPage({
                     {isPostingComment ? "Submitting…" : "Submit reply"}
                   </Button>
                 </div>
-              </form>
+              </form> : (
+                <Alert tone="info">You can follow this department request, but only its author can reply or reopen it.</Alert>
+              )}
             </div>
           </section>
         </div>
@@ -607,15 +621,15 @@ export default function TicketDetailPage({
               <Select
                 value={ticket.status}
                 onChange={(e) => handleUpdateStatus(e.target.value)}
-                disabled={!isAgent}
+                disabled={!canManageTicket}
               >
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>
                 <option value="closed">Closed</option>
               </Select>
-              {!isAgent &&
-                ticket.author_id === currentUserProfile?.id &&
+              {!canManageTicket &&
+                isAuthor &&
                 ["resolved", "closed"].includes(ticket.status) && (
                   <Button
                     type="button"
@@ -633,7 +647,7 @@ export default function TicketDetailPage({
               <Select
                 value={ticket.assignee_id || ""}
                 onChange={(e) => handleAssigneeChange(e.target.value)}
-                disabled={!isAgent}
+                disabled={!canManageTicket}
               >
                 <option value="">Unassigned</option>
                 {agents.map((agent) => (
@@ -657,9 +671,7 @@ export default function TicketDetailPage({
                 <span className="block text-sm font-semibold text-[var(--ink)]">
                   {ticket.author?.display_name}
                 </span>
-                <span className="block break-all text-xs text-[var(--muted)]">
-                  {ticket.author?.email}
-                </span>
+                {canSeeSensitiveContext && <span className="block break-all text-xs text-[var(--muted)]">{ticket.author?.email}</span>}
               </div>
             </div>
             <StatusBadge
@@ -667,15 +679,15 @@ export default function TicketDetailPage({
                 ticket.author?.user_type === "intern" ? "warning" : "neutral"
               }
             >
-              {ticket.author?.user_type === "intern"
+              {ticket.author?.user_type === "intern" && canSeeSensitiveContext
                 ? `Intern (Supervisor: ${
                     ticket.author?.supervisor_name || "N/A"
                   })`
-                : `Staff (${ticket.author?.department})`}
+                : `${ticket.author?.user_type === "intern" ? "Intern" : "Staff"} (${ticket.author?.department})`}
             </StatusBadge>
           </section>
 
-          <section className="surface space-y-3 p-5">
+          {canSeeSensitiveContext && <section className="surface space-y-3 p-5">
             <h3 className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
               <Monitor className="h-3.5 w-3.5" /> System context
             </h3>
@@ -699,7 +711,7 @@ export default function TicketDetailPage({
                 No device context attached.
               </p>
             )}
-          </section>
+          </section>}
         </aside>
       </div>
     </div>

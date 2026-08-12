@@ -30,6 +30,7 @@ import { cn } from "@/lib/cn";
 import { getHistoricalCategoryOptions } from "@/lib/ticket-categories";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
+import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
 
 export default function TicketDashboard() {
   const router = useRouter();
@@ -41,13 +42,21 @@ export default function TicketDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [onlyMine, setOnlyMine] = useState(false);
+  const [onlyMine, setOnlyMine] = useState(true);
+  const [portalMode, setPortalMode] = useState<PortalMode>("user");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const isAgent =
     currentUser?.role === "admin" || currentUser?.role === "super_admin";
+  const canManageQueue = isAgent && portalMode === "admin";
+
+  useEffect(() => {
+    const mode = getPortalMode();
+    setPortalMode(mode);
+    setOnlyMine(mode !== "admin");
+  }, []);
 
   const fetchTickets = useCallback(async () => {
     setError("");
@@ -141,7 +150,7 @@ export default function TicketDashboard() {
       } else if (e.key === "Enter" && filteredTickets[selectedIndex]) {
         router.push(`/tickets/${filteredTickets[selectedIndex].id}`);
       } else if (
-        isAgent &&
+        canManageQueue &&
         (e.key === "c" || e.key === "C") &&
         filteredTickets[selectedIndex]
       ) {
@@ -157,7 +166,7 @@ export default function TicketDashboard() {
         if (updateError) setError(`Could not close ticket: ${updateError.message}`);
         fetchTickets();
       } else if (
-        isAgent &&
+        canManageQueue &&
         (e.key === "m" || e.key === "M") &&
         filteredTickets[selectedIndex] &&
         currentUser
@@ -175,7 +184,7 @@ export default function TicketDashboard() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [filteredTickets, selectedIndex, currentUser, isAgent, router, fetchTickets]);
+  }, [filteredTickets, selectedIndex, currentUser, canManageQueue, router, fetchTickets]);
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) =>
@@ -184,7 +193,7 @@ export default function TicketDashboard() {
   };
 
   const handleBulkStatusChange = async (newStatus: string) => {
-    if (!isAgent || selectedIds.length === 0) return;
+    if (!canManageQueue || selectedIds.length === 0) return;
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("tickets")
@@ -231,11 +240,11 @@ export default function TicketDashboard() {
 
       <PageHeader
         eyebrow="Request queue"
-        title="Tickets"
-        description="Search, filter, and move requests through the desk. J / K navigate, M assigns yourself, C closes."
+        title={canManageQueue ? "Tickets" : "My requests"}
+        description={canManageQueue ? "Search, filter, assign, and update active requests across the desk." : "Follow your requests or switch to a read-only view of active department requests."}
         actions={
           <>
-            {isAgent && (
+            {canManageQueue && (
               <Button
                 type="button"
                 variant="secondary"
@@ -257,6 +266,13 @@ export default function TicketDashboard() {
           </>
         }
       />
+
+      {!canManageQueue && (
+        <div className="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] p-1" role="group" aria-label="Request scope">
+          <button type="button" onClick={() => setOnlyMine(true)} className={cn("rounded-full px-4 py-2 text-sm font-semibold", onlyMine ? "bg-[var(--brand)] text-[var(--brand-on)]" : "text-[var(--muted)]")}>My requests</button>
+          <button type="button" onClick={() => setOnlyMine(false)} className={cn("rounded-full px-4 py-2 text-sm font-semibold", !onlyMine ? "bg-[var(--brand)] text-[var(--brand-on)]" : "text-[var(--muted)]")}>Department requests</button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <MetricCard
@@ -314,10 +330,10 @@ export default function TicketDashboard() {
             <option value="all">All Categories</option>
             {categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}
           </select>
-          <label className="flex min-h-11 cursor-pointer items-center gap-2 px-2 text-sm font-medium text-[var(--muted)]">
+          {canManageQueue && <label className="flex min-h-11 cursor-pointer items-center gap-2 px-2 text-sm font-medium text-[var(--muted)]">
             <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="h-5 w-5 rounded border-[var(--line-strong)] text-[var(--brand)] focus:ring-[var(--brand-soft)]" />
             <span>Created by Me</span>
-          </label>
+          </label>}
         </div>
         <div className="flex flex-wrap gap-2 md:hidden">
           {statusFilter !== "all" && <span className="rounded-full bg-[var(--brand-soft)] px-3 py-1.5 text-xs font-semibold capitalize text-[var(--brand-ink)]">{statusFilter.replace("_", " ")}</span>}
@@ -330,12 +346,12 @@ export default function TicketDashboard() {
         <div className="space-y-5">
           <label className="block"><span className="mb-2 block text-sm font-semibold">Status</span><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-base"><option value="all">All statuses</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label>
           <label className="block"><span className="mb-2 block text-sm font-semibold">Category</span><select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-base"><option value="all">All categories</option>{categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}</select></label>
-          <label className="flex min-h-12 items-center justify-between gap-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4"><span className="text-sm font-semibold">Created by me</span><input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="h-6 w-6 rounded border-[var(--line-strong)] text-[var(--brand)]" /></label>
+          {canManageQueue && <label className="flex min-h-12 items-center justify-between gap-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4"><span className="text-sm font-semibold">Created by me</span><input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="h-6 w-6 rounded border-[var(--line-strong)] text-[var(--brand)]" /></label>}
           <button type="button" onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); setOnlyMine(false); }} className="min-h-11 w-full text-sm font-semibold text-[var(--muted)] underline underline-offset-4">Clear all filters</button>
         </div>
       </ResponsiveSheet>
 
-      {isAgent && selectedIds.length > 0 && (
+      {canManageQueue && selectedIds.length > 0 && (
         <div className="surface flex flex-wrap items-center justify-between gap-3 p-3.5">
           <span className="text-sm font-semibold">
             {selectedIds.length} tickets selected
@@ -445,7 +461,7 @@ export default function TicketDashboard() {
                 )}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                  {isAgent && (
+                  {canManageQueue && (
                     <button
                       type="button"
                       onClick={(e) => {

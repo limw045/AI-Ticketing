@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -23,25 +23,15 @@ import {
   validateRegistration,
 } from "@/lib/auth-policy";
 
-const DEPARTMENTS = [
-  "AI & Automation Transformation",
-  "AUDIT",
-  "Indirect Tax & Admin",
-  "M.S.WONG & CO",
-  "RockAcc",
-  "TAX",
-  "TYM",
-  "HR",
-  "Secretary",
-  "IT",
-] as const;
+type DepartmentOption = { id: string; name: string };
 
 export default function RegisterPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [department, setDepartment] = useState<string>(DEPARTMENTS[0]);
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [departmentId, setDepartmentId] = useState("");
   const [supervisor, setSupervisor] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,6 +42,20 @@ export default function RegisterPage() {
   const isStaff = accountType === "full_time";
   const isIntern = accountType === "intern";
   const isValidDomain = isStaff || isIntern;
+  const department = departments.find((item) => item.id === departmentId)?.name ?? "";
+
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.from("departments").select("id, name").eq("is_active", true).eq("is_system", false).order("name").then(({ data, error: loadError }) => {
+      if (loadError) {
+        setError("Departments are temporarily unavailable. Please try again.");
+        return;
+      }
+      const options = (data ?? []) as DepartmentOption[];
+      setDepartments(options);
+      setDepartmentId((current) => current || options[0]?.id || "");
+    });
+  }, []);
 
   const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -79,6 +83,7 @@ export default function RegisterPage() {
           display_name: displayName.trim(),
           user_type: userType,
           department,
+          department_id: departmentId,
           supervisor_name: isIntern ? supervisor.trim() : null,
         },
       },
@@ -195,13 +200,16 @@ export default function RegisterPage() {
           <span className="relative block">
             <Building2 className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
             <Select
-              value={department}
-              onChange={(event) => setDepartment(event.target.value)}
+              value={departmentId}
+              onChange={(event) => setDepartmentId(event.target.value)}
+              disabled={departments.length === 0}
+              required
               className="pl-10"
             >
-              {DEPARTMENTS.map((departmentName) => (
-                <option key={departmentName} value={departmentName}>
-                  {departmentName}
+              {departments.length === 0 && <option value="">Loading departments…</option>}
+              {departments.map((departmentOption) => (
+                <option key={departmentOption.id} value={departmentOption.id}>
+                  {departmentOption.name}
                 </option>
               ))}
             </Select>

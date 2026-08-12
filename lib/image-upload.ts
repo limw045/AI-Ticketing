@@ -107,6 +107,17 @@ export async function uploadTicketAttachment(
     .from("ticket-attachments")
     .upload(storagePath, uploadBody, { contentType, upsert: false });
   if (error) throw new Error(`Attachment upload failed: ${error.message}`);
+  const { error: metadataError } = await supabase.from("ticket_attachments").insert({
+    storage_path: storagePath,
+    uploader_id: user.id,
+    ticket_id: null,
+    display_name: displayName,
+    kind: textLog ? "log" : "image",
+  });
+  if (metadataError) {
+    await supabase.storage.from("ticket-attachments").remove([storagePath]);
+    throw new Error(`Attachment metadata failed: ${metadataError.message}`);
+  }
   onProgress?.(100);
 
   return {
@@ -128,6 +139,11 @@ export async function removeTicketAttachment(storagePath: string): Promise<void>
     .from("ticket-attachments")
     .remove([storagePath]);
   if (error) throw new Error(`Attachment removal failed: ${error.message}`);
+  await supabase
+    .from("ticket_attachments")
+    .delete()
+    .eq("storage_path", storagePath)
+    .is("ticket_id", null);
 }
 
 export async function compressAndUploadImage(

@@ -279,6 +279,19 @@ export default function NewTicketPage() {
       );
       setLoading(false);
     } else {
+      if (attachments.length > 0) {
+        const { error: attachmentBindError } = await supabase
+          .from("ticket_attachments")
+          .update({ ticket_id: createdTicket.id })
+          .eq("uploader_id", user.id)
+          .is("ticket_id", null)
+          .in("storage_path", attachments.map((attachment) => attachment.storagePath));
+        if (attachmentBindError) {
+          setFormError(`Ticket was created, but its attachments could not be linked: ${attachmentBindError.message}`);
+          setLoading(false);
+          return;
+        }
+      }
       localStorage.removeItem("ticketing_draft");
       router.replace("/tickets");
       router.refresh();

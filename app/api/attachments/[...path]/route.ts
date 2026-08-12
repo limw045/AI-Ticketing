@@ -35,15 +35,34 @@ export async function GET(
     return NextResponse.json({ error: "Invalid attachment path" }, { status: 400 });
   }
 
-  if (decodedSegments[0] !== user.id) {
+  const { data: attachment } = await supabase
+    .from("ticket_attachments")
+    .select("uploader_id, ticket_id")
+    .eq("storage_path", storagePath)
+    .maybeSingle();
+
+  let allowed = attachment?.ticket_id == null && attachment?.uploader_id === user.id;
+  if (!allowed && attachment?.ticket_id) {
+    const { data: visibleTicket } = await supabase
+      .from("tickets")
+      .select("id")
+      .eq("id", attachment.ticket_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    allowed = Boolean(visibleTicket);
+  }
+  // Compatibility for attachments created before metadata tracking.
+  if (!allowed && !attachment && decodedSegments[0] === user.id) allowed = true;
+  if (!allowed) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
-    if (!profile || !["admin", "super_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Attachment access denied" }, { status: 403 });
-    }
+    allowed = Boolean(profile && ["admin", "super_admin"].includes(profile.role));
+  }
+  if (!allowed) {
+    return NextResponse.json({ error: "Attachment access denied" }, { status: 403 });
   }
 
   const bucket = supabase.storage.from("ticket-attachments");

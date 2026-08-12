@@ -22,12 +22,16 @@ import { Button, FieldLabel, Input, Select } from "@/components/ui/FormField";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { canManageProfile, canManageRole, type WorkspaceRole } from "@/lib/admin/types";
+import { createClient } from "@/lib/supabase/client";
+import { DepartmentManagement } from "@/components/admin/DepartmentManagement";
 
 export function StaffManagement({ administratorsOnly = false }: { administratorsOnly?: boolean }) {
   const admin = useAdminResource("staff");
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
+  const [view, setView] = useState<"people" | "departments">("people");
 
   useEffect(() => {
     if (administratorsOnly) admin.setFilter("role_group", "administrators");
@@ -35,11 +39,15 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [administratorsOnly]);
 
+  useEffect(() => {
+    void createClient().from("departments").select("id, name").eq("is_active", true).eq("is_system", false).order("name").then(({ data }) => setDepartments(data ?? []));
+  }, []);
+
   const startEdit = (row: any) => {
     setEditing(row);
     setForm({
       display_name: row.display_name,
-      department: row.department,
+      department_id: row.department_id,
       user_type: row.user_type,
       supervisor_name: row.supervisor_name ?? "",
       role: row.role,
@@ -73,6 +81,13 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         }
       />
 
+      {!administratorsOnly && admin.viewerRole === "super_admin" && <div className="inline-flex w-fit rounded-xl border border-[var(--line)] bg-[var(--surface)] p-1">
+        <button type="button" onClick={() => setView("people")} className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === "people" ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]" : "text-[var(--muted)]"}`}>People</button>
+        <button type="button" onClick={() => setView("departments")} className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === "departments" ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]" : "text-[var(--muted)]"}`}>Departments</button>
+      </div>}
+
+      {view === "departments" && admin.viewerRole === "super_admin" ? <DepartmentManagement /> : <>
+
       <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
@@ -101,7 +116,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
             <button type="button" onClick={() => setEditing(null)} className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-2)]"><X className="h-4 w-4" /></button>
           </div>
           <label><FieldLabel>Display name</FieldLabel><Input value={String(form.display_name ?? "")} onChange={(event) => setForm((value) => ({ ...value, display_name: event.target.value }))} required /></label>
-          <label><FieldLabel>Department</FieldLabel><Input value={String(form.department ?? "")} onChange={(event) => setForm((value) => ({ ...value, department: event.target.value }))} required /></label>
+          <label><FieldLabel>Department</FieldLabel><Select value={String(form.department_id ?? "")} onChange={(event) => setForm((value) => ({ ...value, department_id: event.target.value }))} required>{departments.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}</Select></label>
           <label><FieldLabel>Staff type</FieldLabel><Select value={String(form.user_type ?? "full_time")} onChange={(event) => setForm((value) => ({ ...value, user_type: event.target.value }))}><option value="full_time">Full-time</option><option value="intern">Intern</option><option value="contractor">Contractor</option></Select></label>
           <label><FieldLabel>Supervisor</FieldLabel><Input value={String(form.supervisor_name ?? "")} onChange={(event) => setForm((value) => ({ ...value, supervisor_name: event.target.value || null }))} placeholder="Required for interns" /></label>
           <label><FieldLabel>Role</FieldLabel><Select disabled={!canManageRole(admin.viewerRole, editing.id === admin.viewerId)} value={String(form.role)} onChange={(event) => setForm((value) => ({ ...value, role: event.target.value }))}><option value="employee">Employee</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></Select></label>
@@ -161,6 +176,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         </AdminTable>
       )}
       <AdminPagination page={admin.page} pageSize={admin.pageSize} total={admin.total} onPageChange={admin.setPage} onPageSizeChange={admin.setPageSize} />
+      </>}
     </div>
   );
 }

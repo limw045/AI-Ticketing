@@ -44,7 +44,7 @@ const READ_SOURCES: Partial<Record<AdminResource, string>> = {
 
 const SELECTS: Partial<Record<AdminResource, string>> = {
   tickets:
-    "id, ticket_number, title, description, status, priority, category, author_id, assignee_id, source, reporter_email, subtasks, is_pinned, pin_order, created_at, updated_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)",
+    "id, ticket_number, title, description, status, priority, category, department_id, author_id, assignee_id, source, reporter_email, subtasks, is_pinned, pin_order, created_at, updated_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)",
   comments:
     "id, ticket_id, author_id, content, is_internal_note, type, created_at, updated_at, deleted_at, ticket, author",
   faqs: "id, question, answer, category, is_pinned, created_by, created_at, updated_at, deleted_at",
@@ -54,7 +54,7 @@ const SELECTS: Partial<Record<AdminResource, string>> = {
   "api-clients":
     "id, name, is_active, created_by, created_at, updated_at, last_used_at, deleted_at, creator:profiles!api_clients_created_by_fkey(id, display_name)",
   staff:
-    "id, display_name, email, department, user_type, supervisor_name, role, account_status, created_at, updated_at, deleted_at",
+    "id, display_name, email, department, department_id, user_type, supervisor_name, role, account_status, created_at, updated_at, deleted_at",
   "activity-logs":
     "id, actor_id, action, entity_type, entity_id, changed_fields, created_at, actor:profiles(id, display_name, email)",
   "api-request-logs":
@@ -90,13 +90,13 @@ const SEARCH_FIELDS: Partial<Record<AdminResource, string[]>> = {
 };
 
 const WRITABLE_FIELDS: Partial<Record<AdminResource, string[]>> = {
-  tickets: ["title", "description", "status", "priority", "category", "assignee_id", "subtasks", "is_pinned", "pin_order"],
+  tickets: ["title", "description", "status", "priority", "category", "department_id", "assignee_id", "subtasks", "is_pinned", "pin_order"],
   comments: ["ticket_id", "content", "is_internal_note"],
   faqs: ["question", "answer", "category", "is_pinned"],
   "category-rules": ["category_name", "template_markdown", "default_assignee_id"],
   incidents: ["title", "message", "severity", "is_active"],
   "api-clients": ["name", "is_active"],
-  staff: ["display_name", "department", "user_type", "supervisor_name", "role", "account_status"],
+  staff: ["display_name", "department_id", "user_type", "supervisor_name", "role", "account_status"],
 };
 
 async function requireAdmin(superOnly = false) {
