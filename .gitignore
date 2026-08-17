@@ -13,3 +13,4 @@ dist
 
 # Local Superpowers workspace data.
 .superpowers/
+!README.md
