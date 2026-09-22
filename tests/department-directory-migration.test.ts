@@ -5,6 +5,10 @@ const migration = readFileSync(
   new URL("../supabase/migrations/20260812010000_department_scoped_ticket_access.sql", import.meta.url),
   "utf8"
 );
+const directory = readFileSync(
+  new URL("../supabase/schema/department_directory.sql", import.meta.url),
+  "utf8"
+);
 
 describe("department scoped ticket migration", () => {
   it("creates controlled departments and stable profile/ticket references", () => {
@@ -23,5 +27,13 @@ describe("department scoped ticket migration", () => {
     expect(migration).toContain("set_ticket_department_snapshot");
     expect(migration).toContain("system-integrations");
     expect(migration).toContain("BEFORE INSERT ON public.tickets");
+  });
+
+  it("replaces the legacy initial department with active General", () => {
+    expect(directory).toMatch(/'General','general',true,false/);
+    expect(directory).toMatch(/UPDATE gtjbticketing\.profiles[\s\S]*slug='general'/);
+    expect(directory).toMatch(/UPDATE gtjbticketing\.tickets[\s\S]*slug='general'/);
+    expect(directory).toMatch(/DELETE FROM gtjbticketing\.departments[\s\S]*slug='initial-department'/);
+    expect(directory).not.toMatch(/SET is_active=false WHERE slug='initial-department'/);
   });
 });
