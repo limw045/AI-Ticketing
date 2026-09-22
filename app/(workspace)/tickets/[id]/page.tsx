@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseSchema } from "@/lib/supabase/config";
+import { createOwnedRealtimeChannel } from "@/lib/supabase/realtime-channel";
 import { exportTicketPDF } from "@/lib/pdf-export";
 import {
   StatusBadge,
@@ -182,7 +183,7 @@ export default function TicketDetailPage({
         refreshing = false;
       }
     };
-    const channel = supabase.channel(`ticket-discussion:${ticketId}`)
+    const channel = createOwnedRealtimeChannel(supabase, `ticket-discussion:${ticketId}`)
       .on("postgres_changes", { event: "*", schema: getSupabaseSchema(), table: "comments", filter: `ticket_id=eq.${ticketId}` }, () => { void refreshDiscussion(); })
       .subscribe();
     // Poll as a fallback when Realtime is unavailable for this deployment.

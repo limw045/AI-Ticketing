@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseSchema } from "@/lib/supabase/config";
+import { createOwnedRealtimeChannel } from "@/lib/supabase/realtime-channel";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
@@ -59,8 +60,7 @@ export function NotificationsMenu() {
         return;
       }
 
-      channel = supabase
-        .channel(`notifications:${user.id}`)
+      channel = createOwnedRealtimeChannel(supabase, `notifications:${user.id}`)
         .on(
           "postgres_changes",
           {
@@ -70,11 +70,13 @@ export function NotificationsMenu() {
             filter: `recipient_id=eq.${user.id}`,
           },
           (payload) => {
+            if (!active) return;
             const incoming = payload.new as WorkspaceNotification;
             setNotifications((items) => mergeNotification(items, incoming));
           }
         )
         .subscribe((status) => {
+          if (!active) return;
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             setError("Live notifications are unavailable. Reopen this menu to refresh.");
           }
