@@ -145,12 +145,12 @@ For a new isolated installation, create an empty `gtjbticketing` schema owned by
 
 1. `supabase/schema/prerequisites.sql` as the database administrator (adjust the role name for another installation).
 2. `supabase/schema/gtjbticketing.sql` as the schema owner.
-3. `supabase/schema/ticketing_onboarding.sql` as the schema owner.
+3. `supabase/schema/ticketing_departments.sql` and `supabase/schema/ticketing_onboarding.sql` as the schema owner.
 4. `supabase/schema/enable_ticketing_services.sql` as the database administrator.
 
 The bootstrap refuses a nonempty destination schema. It creates no Auth users or application rows, and excludes Signora objects and shared `public.profiles` triggers. The older files in `supabase/migrations/` describe the original `public` installation; do not replay them against a shared production project.
 
-Existing Auth users sign in normally and complete `/onboarding` to create their independent Ticketing profile. Roles are stored only in `gtjbticketing.profiles`. The existing reserved administrator email policy is enforced using the verified Auth email, not editable user metadata. On an empty installation, that administrator can create the first department during onboarding. Departments and ticket categories still require application configuration; they are not copied from development.
+Existing Auth users sign in normally and complete `/onboarding` to create their independent Ticketing profile. Roles are stored only in `gtjbticketing.profiles`. The existing reserved administrator email policy is enforced using the verified Auth email, not editable user metadata. Departments must be configured before onboarding; registration and profile setup only accept active, non-system directory entries. Profile department names follow their directory IDs, including subsequent renames. The approved department directory is in `supabase/schema/department_directory.sql` and was imported separately from development; users and tickets were not copied. Ticket categories still require application configuration.
 
 Allow the exact production callback URL `https://gt-ai-ticketing.vercel.app/auth/callback` in the shared Auth project's Redirect URLs. Signup and password recovery both request this URL without query parameters. Recovery uses an isolated, nonpersistent implicit-flow client so email links can be opened in another browser. The callback forwards URL fragments to `/reset-password`; that page removes credentials from the address bar, validates the recovery session, and shows the account email before enabling password changes. Older PKCE recovery links are also supported when the original verifier cookie is present. No wildcard or change to the shared Site URL is needed.
 

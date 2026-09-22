@@ -20,7 +20,7 @@ with psycopg.connect(os.environ['TICKETING_TEST_DATABASE_URL'], autocommit=True)
     try:
         execute('BEGIN')
         execute('CREATE SCHEMA IF NOT EXISTS gtjbticketing')
-        for filename in ('gtjbticketing.sql', 'ticketing_onboarding.sql'):
+        for filename in ('gtjbticketing.sql', 'ticketing_departments.sql', 'ticketing_onboarding.sql'):
             ddl = Path('supabase/schema', filename).read_text(encoding='utf-8')
             execute(ddl.replace('BEGIN;', '').replace('COMMIT;', ''))
 
@@ -46,8 +46,10 @@ with psycopg.connect(os.environ['TICKETING_TEST_DATABASE_URL'], autocommit=True)
         identity('ordinary@example.com', extra={'user_metadata': {'role': 'super_admin'}})
         rejected(signup, ('Ordinary', None, 'full_time', None, 'Unauthorized department'))
 
+        execute('RESET ROLE')
+        department = execute("INSERT INTO gtjbticketing.departments(name,slug) VALUES('Test Department','test') RETURNING id").fetchone()[0]
         admin_id = identity('lim.weijian@outlook.com')
-        admin = execute(signup, ('Ticketing Admin',None,'full_time',None,'Test Department')).fetchone()
+        admin = execute(signup, ('Ticketing Admin',department,'full_time',None,None)).fetchone()
         assert admin[6] == 'super_admin'
         department = execute('SELECT id FROM gtjbticketing.departments').fetchone()[0]
 
@@ -58,6 +60,18 @@ with psycopg.connect(os.environ['TICKETING_TEST_DATABASE_URL'], autocommit=True)
         repeated = execute(signup, ('Overwrite',department,'contractor',None,None)).fetchone()
         assert repeated[2] == 'Employee' and repeated[6] == 'employee'
         rejected("INSERT INTO gtjbticketing.profiles(id,email,display_name,user_type,department,role) VALUES(%s,'forged@example.com','Forged','full_time','Test Department','super_admin')", (str(uuid4()),))
+
+        execute('RESET ROLE')
+        rejected("UPDATE gtjbticketing.profiles SET department_id=NULL WHERE id=%s", (employee_id,))
+        execute("UPDATE gtjbticketing.profiles SET department='Forged' WHERE id=%s", (employee_id,))
+        assert execute('SELECT department FROM gtjbticketing.profiles WHERE id=%s', (employee_id,)).fetchone()[0] == 'Test Department'
+        execute("UPDATE gtjbticketing.departments SET name='Renamed Department' WHERE id=%s", (department,))
+        assert execute('SELECT department FROM gtjbticketing.profiles WHERE id=%s', (employee_id,)).fetchone()[0] == 'Renamed Department'
+        inactive = execute("INSERT INTO gtjbticketing.departments(name,slug,is_active) VALUES('Inactive','inactive',false) RETURNING id").fetchone()[0]
+        system = execute("INSERT INTO gtjbticketing.departments(name,slug,is_system) VALUES('System','system',true) RETURNING id").fetchone()[0]
+        identity('new@example.com')
+        for invalid in (None, uuid4(), inactive, system):
+            rejected(signup, ('Invalid', invalid, 'full_time', None, 'Free text'))
 
         identity('intern@example.com')
         rejected(signup, ('Intern',department,'intern',None,None))

@@ -47,21 +47,10 @@ BEGIN
   -- Preserve the project's existing reserved administrator policy. The email comes
   -- from the signed Auth JWT, never the request body or editable user metadata.
   IF actor_email = 'lim.weijian@outlook.com' THEN assigned_role := 'super_admin'; END IF;
-  IF p_department_id IS NULL AND assigned_role = 'super_admin' THEN
-    PERFORM pg_advisory_xact_lock(hashtextextended('gtjbticketing-initial-department', 0));
-    IF EXISTS (SELECT 1 FROM gtjbticketing.departments) THEN
-      RAISE EXCEPTION 'Select an existing department';
-    END IF;
-    IF p_initial_department_name IS NULL OR length(trim(p_initial_department_name)) NOT BETWEEN 2 AND 120 THEN
-      RAISE EXCEPTION 'Enter the first department name';
-    END IF;
-    INSERT INTO gtjbticketing.departments(name,slug)
-    VALUES (trim(p_initial_department_name),'initial-department') RETURNING * INTO selected_department;
-  ELSE
-    SELECT * INTO selected_department FROM gtjbticketing.departments
-    WHERE id = p_department_id AND is_active AND NOT is_system;
-    IF NOT FOUND THEN RAISE EXCEPTION 'Select an active department'; END IF;
-  END IF;
+  -- Keep the legacy fifth argument for deployed clients, but never create departments here.
+  SELECT * INTO selected_department FROM gtjbticketing.departments
+  WHERE id = p_department_id AND is_active AND NOT is_system;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Select an active department'; END IF;
   INSERT INTO gtjbticketing.profiles(id,email,display_name,user_type,department,
     department_id,supervisor_name,role,account_status)
   VALUES(actor_id,actor_email,trim(p_display_name),p_user_type,selected_department.name,
