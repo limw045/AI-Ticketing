@@ -78,7 +78,7 @@ export default function RegisterPage() {
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/login?verified=1`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           display_name: displayName.trim(),
           user_type: userType,
@@ -95,7 +95,7 @@ export default function RegisterPage() {
       return;
     }
     if (data.session) {
-      router.replace("/dashboard");
+      router.replace("/onboarding");
       router.refresh();
       return;
     }

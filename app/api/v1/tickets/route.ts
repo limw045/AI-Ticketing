@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
 
     const sanitizedLogs = sanitizeSystemLogs(system_logs);
 
-    const { url, anonKey } = getSupabasePublicConfig();
-    const supabase = createClient(url, anonKey, { auth: { persistSession: false } });
+    const { url, anonKey, schema } = getSupabasePublicConfig();
+    const supabase = createClient(url, anonKey, { db: { schema }, auth: { persistSession: false } });
     const { data: ticket, error: insertError } = await supabase.rpc("ingest_ticket", {
       p_api_key: apiKey,
       p_ticket_title: title,

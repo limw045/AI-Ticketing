@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Info, Radio } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabaseSchema } from "@/lib/supabase/config";
 import { cn } from "@/lib/cn";
 
 type IncidentSeverity = "info" | "warning" | "critical";
@@ -71,7 +72,7 @@ export function IncidentBanner({ canManage = false }: { canManage?: boolean }) {
       .channel("global-incidents")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "incidents" },
+        { event: "*", schema: getSupabaseSchema(), table: "incidents" },
         () => void fetchIncidents()
       )
       .subscribe();

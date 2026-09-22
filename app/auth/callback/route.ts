@@ -11,12 +11,16 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      if (!next.startsWith("/reset-password")) {
-        await supabase.auth.signOut();
+      // The installed SDK returns redirectType at runtime, although its public
+      // AuthTokenResponse type omits it. Narrow the property before reading it.
+      const isRecovery = "redirectType" in data && data.redirectType === "recovery";
+      const destination = isRecovery ? "/reset-password" : next;
+      if (destination !== "/reset-password") {
+        await supabase.auth.signOut({ scope: "local" });
       }
-      return NextResponse.redirect(new URL(next, requestUrl.origin));
+      return NextResponse.redirect(new URL(destination, requestUrl.origin));
     }
   }
 

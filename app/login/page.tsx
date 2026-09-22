@@ -53,9 +53,14 @@ export default function LoginPage() {
       .from("profiles")
       .select("account_status, role")
       .eq("id", data.user.id)
-      .single();
+      .maybeSingle();
+    if (!profileError && !profile) {
+      router.replace(`/onboarding?next=${encodeURIComponent(requestedNext)}`);
+      router.refresh();
+      return;
+    }
     if (profileError || !profile) {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: "local" });
       setError(
         "Your staff profile is not ready. Please contact the AI Department administrator."
       );
@@ -63,7 +68,7 @@ export default function LoginPage() {
       return;
     }
     if (profile.account_status !== "active") {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: "local" });
       setError(
         "This account is suspended. Please contact the AI Department administrator."
       );

@@ -20,7 +20,7 @@ describe("contextual authentication navigation", () => {
   });
 
   it("protects Knowledge and preserves next through the proxy", () => {
-    expect(proxy).toContain('["/tickets", "/faq", "/admin", "/dashboard"]');
+    expect(proxy).toContain('["/tickets", "/faq", "/admin", "/dashboard", "/onboarding"]');
     expect(proxy).toContain('searchParams.set("next"');
     expect(isKnowledgeDestination("/faq?category=VPN")).toBe(true);
     expect(login).toContain("Sign in to continue to Internal Knowledge");

@@ -135,15 +135,30 @@ Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-publishable-anon-key
+NEXT_PUBLIC_SUPABASE_SCHEMA=gtjbticketing
+NEXT_PUBLIC_TICKET_ATTACHMENT_BUCKET=gtjbticketing-attachments
 ```
 
 4. Apply database schema and migrations:
 
-Execute the SQL files inside `supabase/migrations/` in sequential order using the Supabase SQL editor or CLI:
+For a new isolated installation, create an empty `gtjbticketing` schema owned by the deployment database role, then apply these files in order:
 
-```bash
-supabase db push
-```
+1. `supabase/schema/prerequisites.sql` as the database administrator (adjust the role name for another installation).
+2. `supabase/schema/gtjbticketing.sql` as the schema owner.
+3. `supabase/schema/ticketing_onboarding.sql` as the schema owner.
+4. `supabase/schema/enable_ticketing_services.sql` as the database administrator.
+
+The bootstrap refuses a nonempty destination schema. It creates no Auth users or application rows, and excludes Signora objects and shared `public.profiles` triggers. The older files in `supabase/migrations/` describe the original `public` installation; do not replay them against a shared production project.
+
+Existing Auth users sign in normally and complete `/onboarding` to create their independent Ticketing profile. Roles are stored only in `gtjbticketing.profiles`. The existing reserved administrator email policy is enforced using the verified Auth email, not editable user metadata. On an empty installation, that administrator can create the first department during onboarding. Departments and ticket categories still require application configuration; they are not copied from development.
+
+Allow the exact production callback URL `https://gt-ai-ticketing.vercel.app/auth/callback` in the shared Auth project's Redirect URLs. Signup and password recovery both request this URL without query parameters. After a successful PKCE exchange, the callback uses the SDK's recovery marker to send password resets to `/reset-password`. No wildcard or change to the shared Site URL is needed. Request and open recovery emails in the same browser so the PKCE verifier cookie is available.
+
+For development data with production Auth, additionally set `NEXT_PUBLIC_SUPABASE_AUTH_URL` and `NEXT_PUBLIC_SUPABASE_AUTH_ANON_KEY` to the production project. Set `SUPABASE_DATA_JWT_SECRET` on the server to the development project's accepted legacy JWT signing secret. The server verifies the production session before exchanging it for a data token lasting at most five minutes, with the same user ID and the `authenticated` database role. Application roles are never copied into this token. No Auth user is created in development. This configuration requires the development project to still accept that signing key; do not rotate a shared project's keys as part of this migration. Leave the separate Auth variables unset when Auth and data belong to the same project.
+
+Keep environment-specific public settings in `.env.development.local` and `.env.production` (or deployment environment variables). Use `.env.local` only for local server secrets, because it takes precedence over `.env.production` during a production build. Public environment variables require a rebuild after changes.
+
+`scripts/database/export_ticketing_schema.py` exports the allowlisted structure from `TICKETING_SOURCE_DATABASE_URL`. `scripts/database/verify_ticketing_schema.py` uses `TICKETING_TEST_DATABASE_URL` to test permissions in an isolated temporary schema, and always rolls back. Both require Python and `psycopg`. Neither exports user passwords or creates Auth users.
 
 5. Start the development server:
 

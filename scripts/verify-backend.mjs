@@ -15,7 +15,10 @@ for (const name of required) {
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const attachmentBucket = process.env.NEXT_PUBLIC_TICKET_ATTACHMENT_BUCKET || "ticket-attachments";
+const schema = process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || "public";
 const createTestClient = () => createClient(url, anonKey, {
+  db: { schema },
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
 const employee = createTestClient();
@@ -61,7 +64,7 @@ async function captureNotification(client, recipientId, predicate, action) {
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema,
           table: "notifications",
           filter: `recipient_id=eq.${recipientId}`,
         },
@@ -96,7 +99,7 @@ async function cleanup() {
     await admin.from("api_clients").update({ is_active: false }).eq("id", apiClientId);
   }
   for (const object of uploadedObjects) {
-    await object.client.storage.from("ticket-attachments").remove([object.path]);
+    await object.client.storage.from(attachmentBucket).remove([object.path]);
   }
 }
 
@@ -318,18 +321,18 @@ try {
   const pngBytes = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nL8AAAAASUVORK5CYII=", "base64"));
   const employeeObject = `${employeeUser.id}/e2e-${runId}.png`;
   const adminObject = `${adminUser.id}/e2e-${runId}.png`;
-  const { error: employeeUploadError } = await employee.storage.from("ticket-attachments").upload(employeeObject, pngBytes, { contentType: "image/png" });
+  const { error: employeeUploadError } = await employee.storage.from(attachmentBucket).upload(employeeObject, pngBytes, { contentType: "image/png" });
   assert(!employeeUploadError, `Employee attachment upload failed: ${employeeUploadError?.message}`);
   uploadedObjects.push({ client: employee, path: employeeObject });
-  const { error: adminUploadError } = await admin.storage.from("ticket-attachments").upload(adminObject, pngBytes, { contentType: "image/png" });
+  const { error: adminUploadError } = await admin.storage.from(attachmentBucket).upload(adminObject, pngBytes, { contentType: "image/png" });
   assert(!adminUploadError, `Admin attachment upload failed: ${adminUploadError?.message}`);
   uploadedObjects.push({ client: admin, path: adminObject });
 
-  const { data: ownSigned, error: ownSignedError } = await employee.storage.from("ticket-attachments").createSignedUrl(employeeObject, 60);
+  const { data: ownSigned, error: ownSignedError } = await employee.storage.from(attachmentBucket).createSignedUrl(employeeObject, 60);
   assert(!ownSignedError && ownSigned?.signedUrl, "Employee cannot sign their own attachment");
-  const { data: agentSigned, error: agentSignedError } = await admin.storage.from("ticket-attachments").createSignedUrl(employeeObject, 60);
+  const { data: agentSigned, error: agentSignedError } = await admin.storage.from(attachmentBucket).createSignedUrl(employeeObject, 60);
   assert(!agentSignedError && agentSigned?.signedUrl, "Admin cannot access an employee attachment");
-  const { data: crossSigned, error: crossSignedError } = await employee.storage.from("ticket-attachments").createSignedUrl(adminObject, 60);
+  const { data: crossSigned, error: crossSignedError } = await employee.storage.from(attachmentBucket).createSignedUrl(adminObject, 60);
   assert(crossSignedError || !crossSigned?.signedUrl, "Employee unexpectedly accessed another user's attachment");
   pass("Private attachment upload and cross-user access policies work");
 

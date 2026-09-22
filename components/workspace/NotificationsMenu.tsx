@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabaseSchema } from "@/lib/supabase/config";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
@@ -64,7 +65,7 @@ export function NotificationsMenu() {
           "postgres_changes",
           {
             event: "INSERT",
-            schema: "public",
+            schema: getSupabaseSchema(),
             table: "notifications",
             filter: `recipient_id=eq.${user.id}`,
           },

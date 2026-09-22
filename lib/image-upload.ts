@@ -1,3 +1,4 @@
+import { getTicketAttachmentBucket } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { scanSensitiveData } from "@/lib/security-scanner";
 import {
@@ -104,7 +105,7 @@ export async function uploadTicketAttachment(
 
   const storagePath = `${user.id}/${objectName}`;
   const { error } = await supabase.storage
-    .from("ticket-attachments")
+    .from(getTicketAttachmentBucket())
     .upload(storagePath, uploadBody, { contentType, upsert: false });
   if (error) throw new Error(`Attachment upload failed: ${error.message}`);
   const { error: metadataError } = await supabase.from("ticket_attachments").insert({
@@ -115,7 +116,7 @@ export async function uploadTicketAttachment(
     kind: textLog ? "log" : "image",
   });
   if (metadataError) {
-    await supabase.storage.from("ticket-attachments").remove([storagePath]);
+    await supabase.storage.from(getTicketAttachmentBucket()).remove([storagePath]);
     throw new Error(`Attachment metadata failed: ${metadataError.message}`);
   }
   onProgress?.(100);
@@ -136,7 +137,7 @@ export async function removeTicketAttachment(storagePath: string): Promise<void>
     throw new Error("You can only remove attachments from your own draft.");
   }
   const { error } = await supabase.storage
-    .from("ticket-attachments")
+    .from(getTicketAttachmentBucket())
     .remove([storagePath]);
   if (error) throw new Error(`Attachment removal failed: ${error.message}`);
   await supabase

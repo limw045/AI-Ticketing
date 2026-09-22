@@ -178,16 +178,20 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase
+        const { data, error: profileError } = await supabase
           .from("profiles")
           .select("id, display_name, user_type, department, role, account_status")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
+        if (!profileError && !data) {
+          router.replace(`/onboarding?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+          return;
+        }
         if (data) setProfile(data);
       }
     };
     getProfile();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -232,7 +236,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     router.replace("/login");
     router.refresh();
   };

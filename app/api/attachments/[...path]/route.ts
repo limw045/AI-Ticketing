@@ -1,3 +1,4 @@
+import { getTicketAttachmentBucket } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
@@ -75,7 +76,7 @@ export async function GET(
     return NextResponse.json({ error: "Attachment access denied" }, { status: 403 });
   }
 
-  const bucket = supabase.storage.from("ticket-attachments");
+  const bucket = supabase.storage.from(getTicketAttachmentBucket());
   const { data, error } = shouldDownload
     ? await bucket.createSignedUrl(storagePath, 60, { download: downloadName })
     : await bucket.createSignedUrl(storagePath, 60);
