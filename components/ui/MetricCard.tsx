@@ -19,7 +19,7 @@ export function MetricCard({
   className?: string;
 }) {
   return (
-    <div className={cn("surface p-5", className)}>
+    <div className={cn("metric-card surface p-5", className)}>
       <div className="flex items-center justify-between gap-3">
         <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
           {label}

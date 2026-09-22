@@ -28,7 +28,7 @@ export default function VerifyEmailPage() {
   }, [router]);
 
   return (
-    <AuthShell step="Verify / Email" backHref="/login">
+    <AuthShell illustration="complete" backHref="/login">
       <div className="text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-soft)]">
           <MailCheck className="h-6 w-6 text-[var(--brand-ink)]" />
@@ -37,7 +37,7 @@ export default function VerifyEmailPage() {
           Check your inbox.
         </h1>
         <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-[var(--muted)]">
-          Supabase has sent a verification link to your email. Open it to
+          We’ve sent a verification link to your email. Open it to
           activate your account, then return to sign in.
         </p>
         <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--faint)]">

@@ -20,7 +20,7 @@ export function AdminTable({
   className?: string;
 }) {
   return (
-    <section className={cn("surface overflow-hidden", className)}>
+    <section className={cn("admin-table surface overflow-hidden", className)}>
       {header && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-6 py-4">
           {header}

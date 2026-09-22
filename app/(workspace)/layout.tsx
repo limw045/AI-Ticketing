@@ -1,3 +1,4 @@
+import "./workspace.css";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 
 export default function WorkspaceLayout({

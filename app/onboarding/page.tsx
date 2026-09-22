@@ -62,7 +62,7 @@ export default function OnboardingPage() {
     } finally { setSaving(false); }
   }
 
-  return <AuthShell step="Ticketing profile" backHref="/">
+  return <AuthShell illustration="complete" backHref="/">
     <h1 className="font-display text-2xl font-bold">Complete your Ticketing profile</h1>
     <p className="mt-2 text-sm text-[var(--muted)]">Signed in as {email || "your existing account"}. Add your work details to use the support desk.</p>
     {error && <div className="mt-5"><Alert tone="error" role="alert">{error}</Alert></div>}

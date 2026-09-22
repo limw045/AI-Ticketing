@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { buildCsv } from "@/lib/csv";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
-import { StatusBadge, severityTone } from "@/components/ui/StatusBadge";
+import { StatusBadge, statusTone } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/FormField";
 import { setPortalMode } from "@/lib/portal-mode";
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
 
       <PageHeader
         eyebrow="Operations"
-        title="The signal behind the queue."
+        title="Operations overview"
         description="Service desk metrics, category breakdown, and global incident management."
         actions={
           <Button type="button" variant="secondary" onClick={exportCSV}>
@@ -259,35 +259,6 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {quickLinks.map((link) => {
-          const Icon = link.icon;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="group surface flex items-start justify-between gap-4 p-6 transition hover:border-[var(--line-strong)]"
-            >
-              <div>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]">
-                  <Icon className="h-4 w-4 text-[var(--brand-ink)]" />
-                </span>
-                <h2 className="mt-4 font-display text-base font-bold">
-                  {link.label}
-                </h2>
-                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                  {link.description}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <StatusBadge tone="brand">{link.badge}</StatusBadge>
-                <ArrowRight className="h-4 w-4 text-[var(--faint)] transition group-hover:text-[var(--brand-ink)]" />
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <DashboardCharts tickets={tickets} />
       </div>
@@ -331,7 +302,7 @@ export default function AdminDashboard() {
                     <span className="hidden font-mono text-xs text-[var(--muted)] sm:block">
                       {ticket.author?.display_name}
                     </span>
-                    <StatusBadge tone={severityTone(ticket.status)}>
+                    <StatusBadge tone={statusTone(ticket.status)}>
                       {ticketStatusLabel(ticket.status)}
                     </StatusBadge>
                   </Link>
@@ -340,6 +311,37 @@ export default function AdminDashboard() {
             </ul>
           )}
         </div>
+      </section>
+      <section id="admin"><h2 className="font-display text-lg mb-5">Manage your workspace</h2>
+      <div className="admin-launcher grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {quickLinks.map((link) => {
+          const Icon = link.icon;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="group surface flex items-start justify-between gap-4 p-6 transition hover:border-[var(--line-strong)]"
+            >
+              <div>
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]">
+                  <Icon className="h-4 w-4 text-[var(--brand-ink)]" />
+                </span>
+                <h2 className="mt-4 font-display text-base font-bold">
+                  {link.label}
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                  {link.description}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <StatusBadge tone="brand">{link.badge}</StatusBadge>
+                <ArrowRight className="h-4 w-4 text-[var(--faint)] transition group-hover:text-[var(--brand-ink)]" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
       </section>
     </div>
   );

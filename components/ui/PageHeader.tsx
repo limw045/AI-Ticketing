@@ -21,14 +21,14 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-5 md:flex-row md:items-end md:justify-between",
+        "page-header flex flex-col gap-5 md:flex-row md:items-end md:justify-between",
         className
       )}
     >
       <div className="min-w-0">
         {backHref && <BackButton href={backHref} label={backLabel} className="mb-4" />}
         {eyebrow && (
-          <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
+          <div className="page-eyebrow mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
             {eyebrow}
           </div>

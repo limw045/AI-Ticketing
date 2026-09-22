@@ -18,6 +18,7 @@
   --brand-soft: #eee6f4;
   --brand-ink: #4a2376;
   --brand-on: #ffffff;
+  --illustration-surface: #f4f1fc;
   --success: #2e7d5b;
   --success-soft: #e4f3ec;
   --warning: #8a5a12;
@@ -89,6 +90,13 @@ body {
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* The supplied illustrations have a slightly warm, off-white paper background.
+   Normalize that paper to white before multiplying onto the shared lavender. */
+.support-illustration {
+  filter: brightness(1.03);
+  mix-blend-mode: multiply;
 }
 
 .safe-area-bottom {

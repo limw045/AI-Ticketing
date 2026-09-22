@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabaseSchema } from "@/lib/supabase/config";
 import { exportTicketPDF } from "@/lib/pdf-export";
 import {
   StatusBadge,
@@ -165,6 +166,38 @@ export default function TicketDetailPage({
     fetchTicketDetails();
   }, [fetchTicketDetails]);
 
+  useEffect(() => {
+    if (loading || !ticket?.id || !currentUserProfile?.id) return;
+    const supabase = createClient();
+    let refreshing = false;
+    let active = true;
+    const refreshDiscussion = async () => {
+      if (!active || refreshing || document.visibilityState === "hidden") return;
+      refreshing = true;
+      try {
+        await loadComments(canManageTicket);
+      } catch {
+        // Keep the current conversation and retry on the next poll/focus event.
+      } finally {
+        refreshing = false;
+      }
+    };
+    const channel = supabase.channel(`ticket-discussion:${ticketId}`)
+      .on("postgres_changes", { event: "*", schema: getSupabaseSchema(), table: "comments", filter: `ticket_id=eq.${ticketId}` }, () => { void refreshDiscussion(); })
+      .subscribe();
+    // Poll as a fallback when Realtime is unavailable for this deployment.
+    const timer = window.setInterval(() => { void refreshDiscussion(); }, 15000);
+    window.addEventListener("focus", refreshDiscussion);
+    document.addEventListener("visibilitychange", refreshDiscussion);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshDiscussion);
+      document.removeEventListener("visibilitychange", refreshDiscussion);
+      void supabase.removeChannel(channel);
+    };
+  }, [loading, ticket?.id, currentUserProfile?.id, ticketId, canManageTicket, loadComments]);
+
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     const content = newComment.trim();
@@ -301,7 +334,7 @@ export default function TicketDetailPage({
   if (!ticket) {
     return (
       <div className="space-y-5 py-12">
-        <BackButton href="/tickets" />
+        <BackButton href={canManageTicket ? "/admin/tickets" : "/tickets"} />
         {deletedTicket ? (
           <Alert tone="warning" role="status">
             <strong className="block">This ticket has been moved to the recycle bin.</strong>
@@ -393,8 +426,96 @@ export default function TicketDetailPage({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+      <div className="ticket-detail-layout grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="space-y-8 lg:col-span-2">
+          {/* Timeline */}
+          <section id="conversation" className={cn("ticket-conversation", mobileTab !== "conversation" && "hidden lg:block")}>
+            <h2 className="font-display text-base font-bold">
+              Conversation &amp; updates ({comments.length})
+            </h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">Replies are shared with the requester and support team. Internal notes stay private to support.</p>
+            <div className="mt-4 space-y-4">
+              {comments.length === 0 && <p className="conversation-empty">No updates yet. Start the conversation below.</p>}
+              {comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className={cn(
+                    "rounded-2xl border p-4 sm:p-5",
+                    comment.is_internal_note
+                      ? "border-[var(--warning)]/30 bg-[var(--warning-soft)]"
+                      : "border-[var(--line)] bg-[var(--surface)]"
+                  )}
+                >
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[var(--ink)]">
+                        {comment.author?.display_name || "System"}
+                      </span>
+                      {comment.is_internal_note && (
+                        <StatusBadge tone="warning">
+                          <Lock className="h-3 w-3" /> Internal note
+                        </StatusBadge>
+                      )}
+                    </div>
+                    <span className="font-mono text-[10px] font-medium text-[var(--faint)] sm:text-right">
+                      {new Date(comment.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="ticket-text text-sm leading-relaxed text-[var(--ink-2)]">
+                    {comment.content}
+                  </p>
+                </div>
+              ))}
+
+              {canReply ? <form
+                onSubmit={handlePostComment}
+                className="conversation-composer surface space-y-4 p-4 sm:p-5"
+              >
+                {commentNotice && <Alert tone="success">{commentNotice}</Alert>}
+                <Textarea
+                  rows={4}
+                  aria-label={isInternalNote ? "Internal note" : "Reply to conversation"}
+                  placeholder={isInternalNote ? "Add a private note for the support team…" : "Share an update or ask a question…"}
+                  value={newComment}
+                  onChange={(e) => {
+                    setNewComment(e.target.value);
+                    setCommentNotice("");
+                  }}
+                  required
+                  disabled={isPostingComment}
+                  className="text-sm"
+                />
+
+                <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  {canManageTicket ? (
+                    <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]">
+                      <input
+                        type="checkbox"
+                        checked={isInternalNote}
+                        onChange={(e) => setIsInternalNote(e.target.checked)}
+                        disabled={isPostingComment}
+                        className="h-4 w-4 rounded border-[var(--line-strong)] text-[var(--warning)] focus:ring-[var(--warning-soft)]"
+                      />
+                      Internal note — visible only to support
+                    </label>
+                  ) : (
+                    <div />
+                  )}
+                  <Button
+                    type="submit"
+                    disabled={isPostingComment || !newComment.trim()}
+                    className="w-full sm:w-auto"
+                  >
+                    <Send className="h-4 w-4" />
+                    {isPostingComment ? "Submitting…" : "Submit reply"}
+                  </Button>
+                </div>
+              </form> : (
+                <Alert tone="info">You can follow this department request, but only its author can reply or reopen it.</Alert>
+              )}
+            </div>
+          </section>
+
           {/* Case path lifecycle */}
           <section className={cn("surface p-4 sm:p-6", mobileTab !== "details" && "hidden lg:block")}>
             <h2 className="font-display text-base font-bold">Case path</h2>
@@ -448,7 +569,7 @@ export default function TicketDetailPage({
             <h2 className="font-display text-base font-bold">
               Issue description
             </h2>
-            <div className="mt-4 whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-5 font-mono text-sm leading-relaxed text-[var(--ink-2)]">
+            <div className="ticket-text mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-5 font-mono text-sm leading-relaxed text-[var(--ink-2)]">
               {parsedDescription.text}
             </div>
             <TicketAttachments attachments={parsedDescription.attachments} />
@@ -530,90 +651,7 @@ export default function TicketDetailPage({
             )}
           </section>
 
-          {/* Timeline */}
-          <section className={cn(mobileTab !== "conversation" && "hidden lg:block")}>
-            <h2 className="font-display text-base font-bold">
-              Timeline &amp; discussion ({comments.length})
-            </h2>
-            <div className="mt-4 space-y-4">
-              {comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className={cn(
-                    "rounded-2xl border p-4 sm:p-5",
-                    comment.is_internal_note
-                      ? "border-[var(--warning)]/30 bg-[var(--warning-soft)]"
-                      : "border-[var(--line)] bg-[var(--surface)]"
-                  )}
-                >
-                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-[var(--ink)]">
-                        {comment.author?.display_name || "System"}
-                      </span>
-                      {comment.is_internal_note && (
-                        <StatusBadge tone="warning">
-                          <Lock className="h-3 w-3" /> Internal note
-                        </StatusBadge>
-                      )}
-                    </div>
-                    <span className="font-mono text-[10px] font-medium text-[var(--faint)] sm:text-right">
-                      {new Date(comment.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-[var(--ink-2)]">
-                    {comment.content}
-                  </p>
-                </div>
-              ))}
 
-              {canReply ? <form
-                onSubmit={handlePostComment}
-                className="surface space-y-4 p-4 sm:p-5"
-              >
-                {commentNotice && <Alert tone="success">{commentNotice}</Alert>}
-                <Textarea
-                  rows={4}
-                  placeholder="Leave a comment or reply..."
-                  value={newComment}
-                  onChange={(e) => {
-                    setNewComment(e.target.value);
-                    setCommentNotice("");
-                  }}
-                  required
-                  disabled={isPostingComment}
-                  className="font-mono text-sm"
-                />
-
-                <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  {canManageTicket ? (
-                    <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--muted)]">
-                      <input
-                        type="checkbox"
-                        checked={isInternalNote}
-                        onChange={(e) => setIsInternalNote(e.target.checked)}
-                        disabled={isPostingComment}
-                        className="h-4 w-4 rounded border-[var(--line-strong)] text-[var(--warning)] focus:ring-[var(--warning-soft)]"
-                      />
-                      Post as internal note (hidden from employee)
-                    </label>
-                  ) : (
-                    <div />
-                  )}
-                  <Button
-                    type="submit"
-                    disabled={isPostingComment || !newComment.trim()}
-                    className="w-full sm:w-auto"
-                  >
-                    <Send className="h-4 w-4" />
-                    {isPostingComment ? "Submitting…" : "Submit reply"}
-                  </Button>
-                </div>
-              </form> : (
-                <Alert tone="info">You can follow this department request, but only its author can reply or reopen it.</Alert>
-              )}
-            </div>
-          </section>
         </div>
 
         <aside className={cn("space-y-6", mobileTab !== "details" && "hidden lg:block")}>

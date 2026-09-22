@@ -29,8 +29,7 @@ describe("operational metrics", () => {
   it("does not count up queue and requester status values", () => {
     const dashboard = read("app/(workspace)/dashboard/page.tsx");
     const tickets = read("app/(workspace)/tickets/page.tsx");
-    expect(dashboard.match(/\banimate\b/g)).toHaveLength(1);
-    expect(dashboard).toMatch(/label="Total volume"[\s\S]{0,120}\banimate\b/);
+    expect(dashboard).not.toMatch(/\banimate\b/);
     expect(tickets).not.toMatch(/\banimate\b/);
   });
 });

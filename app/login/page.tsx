@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { AuthPasswordInput } from "@/components/public/AuthPasswordInput";
 import { AuthShell } from "@/components/public/AuthShell";
 import { Alert } from "@/components/ui/Alert";
 import {
@@ -93,9 +94,9 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell step="01 / Sign in" backHref="/">
+    <AuthShell illustration="collaboration" backHref="/">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
-        Welcome back.
+        Welcome back!
       </h1>
       <p className="mt-2 text-sm leading-5 text-[var(--muted)]">
         {isKnowledgeDestination(requestedNext)
@@ -125,6 +126,7 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               type="email"
+              autoComplete="email"
               required
               placeholder="name@gtmsw.com.my"
               className="pl-10"
@@ -135,10 +137,11 @@ export default function LoginPage() {
           <FieldLabel>Password</FieldLabel>
           <span className="relative block">
             <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
-            <Input
+            <AuthPasswordInput
+              aria-label="Password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              type="password"
+              autoComplete="current-password"
               required
               placeholder="••••••••"
               className="pl-10"
@@ -154,7 +157,7 @@ export default function LoginPage() {
           </Link>
         </div>
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Signing in…" : "Sign in to AI desk"}
+          {loading ? "Signing in…" : "Sign in"}
           {!loading && <ArrowRight className="h-4 w-4" />}
         </Button>
       </form>

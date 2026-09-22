@@ -35,9 +35,9 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <AuthShell step="Recovery / 01" backHref="/login">
+    <AuthShell illustration="recovery" backHref="/login">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
-        Recover your access.
+        Forgot your password?
       </h1>
       <p className="mt-2 text-sm leading-5 text-[var(--muted)]">
         We will send a secure reset link to your registered staff or Intern
@@ -65,6 +65,8 @@ export default function ForgotPasswordPage() {
             <Input
               required
               type="email"
+              autoComplete="email"
+              placeholder="name@gtmsw.com.my"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="pl-10"

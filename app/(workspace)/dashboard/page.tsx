@@ -6,19 +6,19 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
-import { StatusBadge, statusTone } from "@/components/ui/StatusBadge";
+import { TicketActivity, RecentRequests } from "@/components/dashboard/TicketActivity";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/FormField";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { getRoleHomeMetrics } from "@/lib/dashboard-metrics";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
-import { ticketStatusLabel } from "@/lib/display-labels";
 import {
-  Clock,
   CheckCircle2,
   TriangleAlert,
   Inbox,
-  ArrowRight,
+  ArrowUpRight,
+  Plus,
+  UserRound,
   LayoutDashboard,
 } from "lucide-react";
 
@@ -100,212 +100,32 @@ export default function DashboardPage() {
   const isAdministrator = role === "admin" || role === "super_admin";
   const viewRole =
     isAdministrator && portalMode === "user" ? "employee" : isAdministrator ? "admin" : role;
-  const m = getRoleHomeMetrics(tickets, profile?.id);
-  const recent = tickets.slice(0, 5);
-  const myRecent = tickets
-    .filter((t) => t.author_id === profile?.id)
-    .slice(0, 5);
+  const visibleTickets = viewRole === "admin" ? tickets : tickets.filter(t => t.author_id === profile?.id);
+  const m = getRoleHomeMetrics(visibleTickets, profile?.id);
 
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Grant Thornton · AI Department"
-        title={`Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, ${profile?.display_name?.split(" ")[0] || "there"}.`}
+        title={viewRole === "admin" ? "Workspace overview" : "Your workspace"}
         description={
-          viewRole === "admin"
-            ? "Service desk health, staff access, and the queue behind the numbers."
-            : "Your requests, and answers worth reading before you open a new one."
+          `Welcome back, ${profile?.display_name?.split(" ")[0] || "there"}. Here’s what’s happening with ${viewRole === "admin" ? "your service desk" : "your requests"}.`
         }
-        actions={
-          <Link href="/tickets/new">
-            <Button>New ticket</Button>
-          </Link>
-        }
+        actions={<Link href="/tickets/new"><Button><Plus size={16} /> New ticket</Button></Link>}
       />
-
       {accessNotice && <Alert tone="warning" role="alert">{accessNotice}</Alert>}
-
-      {isAdministrator && portalMode === "user" && (
-        <Alert tone="info">
-          <strong className="block">You&apos;re viewing the user portal.</strong>
-          <span className="mt-0.5 block opacity-85">
-            Submit and follow your own requests here. Switch back to the admin
-            console anytime.
-          </span>
-          <Link
-            href="/admin/dashboard"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold underline"
-          >
-            <LayoutDashboard className="h-4 w-4" /> Open admin console
-          </Link>
-        </Alert>
-      )}
-
-      {viewRole === "employee" && (
-        <>
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <MetricCard
-              label="Open requests"
-              value={m.myOpenCount}
-              icon={<Inbox className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="In progress"
-              value={m.waitingOnCount}
-              icon={<Clock className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="Resolution rate"
-              value={m.hasResolutionSample ? `${m.resolutionRate}%` : "—"}
-              hint={!m.hasResolutionSample ? "No completed requests yet" : undefined}
-              icon={<CheckCircle2 className="h-4 w-4" />}
-            />
-          </section>
-
-          <section className="surface p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold">Your recent requests</h2>
-              <Link
-                href="/tickets?mine=1"
-                className="arrow-action"
-              >
-                View all
-              </Link>
-            </div>
-            {myRecent.length === 0 ? (
-              <div className="py-10 text-center text-sm text-[var(--muted)]">
-                You haven&apos;t opened any requests yet.
-              </div>
-            ) : (
-              <ul className="divide-y divide-[var(--line)]">
-                {myRecent.map((ticket) => (
-                  <li key={ticket.id}>
-                    <Link
-                      href={`/tickets/${ticket.id}`}
-                      className="flex items-center gap-4 py-3.5 transition hover:bg-[var(--surface-2)]"
-                    >
-                      <span className="font-mono text-xs font-semibold text-[var(--faint)]">
-                        #{ticket.ticket_number}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ink)]">
-                        {ticket.title}
-                      </span>
-                      <StatusBadge tone={statusTone(ticket.status)}>
-                        {ticketStatusLabel(ticket.status)}
-                      </StatusBadge>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="surface p-6">
-              <h2 className="font-display text-lg font-bold">Before you open a ticket</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Common requests like VPN access, model permissions, and GPU
-                access already have step-by-step answers in Knowledge.
-              </p>
-              <Link href="/faq" className="arrow-action mt-5">
-                <span className="arrow-action__label">Browse Knowledge</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
-              </Link>
-            </div>
-            <div className="surface p-6">
-              <h2 className="font-display text-lg font-bold">How the desk works</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Every request is routed by category, assigned to a specialist,
-                and tracked with a visible case path until it is resolved.
-              </p>
-              <Link href="/tickets" className="arrow-action mt-5">
-                <span className="arrow-action__label">See the queue</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
-              </Link>
-            </div>
-          </section>
-        </>
-      )}
-
-      {viewRole === "admin" && (
-        <>
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              label="Total volume"
-              value={m.totalVolume}
-              animate
-              icon={<Inbox className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="Resolution rate"
-              value={`${m.resolutionRate}%`}
-              icon={<CheckCircle2 className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="Urgent"
-              value={m.urgentCount}
-              valueClassName="text-[var(--danger)]"
-              icon={<TriangleAlert className="h-4 w-4" />}
-            />
-            <MetricCard
-              label="Active incidents"
-              value={m.activeIncidents}
-              icon={<TriangleAlert className="h-4 w-4" />}
-            />
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="surface p-6">
-              <h2 className="font-display text-lg font-bold">Analytics</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Volume by category, department ratios, and CSV export.
-              </p>
-              <Link href="/admin/dashboard" className="arrow-action mt-5">
-                <span className="arrow-action__label">Open analytics</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
-              </Link>
-            </div>
-            <div className="surface p-6">
-              <h2 className="font-display text-lg font-bold">Administration</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Incidents, API clients, and staff roles in one place.
-              </p>
-              <Link href="/admin/dashboard#admin" className="arrow-action mt-5">
-                <span className="arrow-action__label">Manage workspace</span> <ArrowRight className="arrow-action__icon h-4 w-4" />
-              </Link>
-            </div>
-          </section>
-
-          <section className="surface p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold">Latest requests</h2>
-              <Link
-                href="/tickets"
-                className="arrow-action"
-              >
-                Open queue
-              </Link>
-            </div>
-            <ul className="divide-y divide-[var(--line)]">
-              {recent.map((ticket) => (
-                <li key={ticket.id}>
-                  <Link
-                    href={`/tickets/${ticket.id}`}
-                    className="flex items-center gap-4 py-3.5 transition hover:bg-[var(--surface-2)]"
-                  >
-                    <span className="font-mono text-xs font-semibold text-[var(--faint)]">
-                      #{ticket.ticket_number}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ink)]">
-                      {ticket.title}
-                    </span>
-                    <StatusBadge tone={statusTone(ticket.status)}>
-                      {ticketStatusLabel(ticket.status)}
-                    </StatusBadge>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
+      {isAdministrator && portalMode === "user" && <Alert tone="info"><span>You’re viewing your personal requests.</span><Link href="/admin/dashboard" className="ml-3 inline-flex items-center gap-2 text-sm underline"><LayoutDashboard size={14} /> Open admin console</Link></Alert>}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Request summary">
+        <MetricCard label={viewRole === "admin" ? "Total requests" : "Your requests"} value={m.totalVolume} icon={<Inbox size={15} />} hint="Across all dates" />
+        <MetricCard label="Resolution rate" value={m.hasResolutionSample ? `${m.resolutionRate}%` : "—"} icon={<CheckCircle2 size={15} />} hint={m.hasResolutionSample ? "Resolved or closed requests" : "No requests yet"} />
+        <MetricCard label="Urgent requests" value={m.urgentCount} icon={<TriangleAlert size={15} />} valueClassName="text-[var(--danger)]" hint="Needs attention" />
+        <MetricCard label="Unassigned" value={m.unassignedCount} icon={<UserRound size={15} />} hint="Awaiting an owner" />
+      </section>
+      <TicketActivity tickets={visibleTickets} />
+      <RecentRequests tickets={visibleTickets} personal={viewRole !== "admin"} />
+      <section className="overview-shortcuts" aria-label="Workspace shortcuts">
+        <Link href="/faq"><div><h2>Find an answer in Knowledge</h2><p>Practical guides for access, tools, and common requests.</p></div><ArrowUpRight size={18} /></Link>
+        <Link href={viewRole === "admin" ? "/admin/dashboard" : "/tickets/new"}><div><h2>{viewRole === "admin" ? "Explore operations" : "Need a hand?"}</h2><p>{viewRole === "admin" ? "Explore department trends and manage your service desk." : "Share the details and get help from the team."}</p></div><ArrowUpRight size={18} /></Link>
+      </section>
     </div>
   );
 }

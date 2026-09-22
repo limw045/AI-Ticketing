@@ -37,6 +37,7 @@ export default function FAQPage() {
   const router = useRouter();
   const [faqs, setFaqs] = useState<any[]>(SEED_FAQS);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All topics");
   const [openFaqId, setOpenFaqId] = useState<string | null>("1");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -102,7 +103,7 @@ export default function FAQPage() {
   };
 
   const filteredFaqs = faqs.filter((faq) =>
-    `${faq.question} ${faq.answer} ${faq.category}`
+    (activeCategory === "All topics" || faq.category === activeCategory) && `${faq.question} ${faq.answer} ${faq.category}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
@@ -119,7 +120,7 @@ export default function FAQPage() {
 
       <PageHeader
         eyebrow="Knowledge"
-        title="Answers before tickets."
+        title="Knowledge"
         description="Search the operating knowledge of the AI team before you open a new request."
         actions={
           isAgent && (
@@ -134,11 +135,12 @@ export default function FAQPage() {
         }
       />
 
-      <div className="surface flex items-center gap-3 px-4 py-3">
+      <div className="knowledge-search surface flex items-center gap-3 px-4 py-3">
         <Search className="h-4 w-4 text-[var(--faint)]" />
         <input
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
+          aria-label="Search Knowledge"
           placeholder="Search VPN, models, GPUs, datasets..."
           className="min-h-11 w-full bg-transparent text-base text-[var(--ink)] outline-none placeholder:text-[var(--faint)] sm:text-sm"
         />
@@ -191,7 +193,9 @@ export default function FAQPage() {
         </form>
       )}
 
-      <div className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
+      <div className="knowledge-categories" role="group" aria-label="Knowledge topics">{["All topics", ...Array.from(new Set(faqs.map(faq => faq.category)))].map(category => <button type="button" key={category} aria-pressed={activeCategory === category} onClick={() => setActiveCategory(category)}>{category}</button>)}</div>
+      {filteredFaqs.length === 0 && <div className="surface p-8 text-center"><h2 className="font-display text-lg">No answers found</h2><p className="mt-2 text-sm text-[var(--muted)]">Try a different topic or a broader search.</p><button type="button" className="mt-4 text-sm text-[var(--brand-ink)]" onClick={() => {setSearchTerm("");setActiveCategory("All topics");}}>Clear filters</button></div>}
+      <div className="knowledge-list divide-y divide-[var(--line)] border-y border-[var(--line)]">
         {filteredFaqs.map((faq, index) => {
           const isOpen = openFaqId === faq.id;
           return (

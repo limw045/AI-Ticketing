@@ -273,9 +273,9 @@ export default function TicketDashboard() {
       />
 
       {!canManageQueue && (
-        <div className="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] p-1" role="group" aria-label="Request scope">
-          <button type="button" onClick={() => setOnlyMine(true)} className={cn("rounded-full px-4 py-2 text-sm font-semibold", onlyMine ? "bg-[var(--brand)] text-[var(--brand-on)]" : "text-[var(--muted)]")}>My requests</button>
-          <button type="button" onClick={() => setOnlyMine(false)} className={cn("rounded-full px-4 py-2 text-sm font-semibold", !onlyMine ? "bg-[var(--brand)] text-[var(--brand-on)]" : "text-[var(--muted)]")}>Department requests</button>
+        <div className="workspace-tabs" role="group" aria-label="Request scope">
+          <button type="button" onClick={() => setOnlyMine(true)} aria-pressed={onlyMine}>My requests</button>
+          <button type="button" onClick={() => setOnlyMine(false)} aria-pressed={!onlyMine}>Department requests</button>
         </div>
       )}
 
@@ -303,12 +303,13 @@ export default function TicketDashboard() {
         />
       </div>
 
-      <div className="surface space-y-3 p-4">
+      <div className="workspace-toolbar surface space-y-3 p-4">
         <div className="flex w-full items-center gap-3">
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3.5 top-3 h-4 w-4 text-[var(--faint)]" />
             <input
               type="text"
+              aria-label="Search tickets"
               placeholder="Search ticket #, title, or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -328,10 +329,10 @@ export default function TicketDashboard() {
           </button>
         </div>
         <div className="hidden flex-wrap items-center gap-3 md:flex">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-h-11 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]">
+          <select aria-label="Ticket status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-h-11 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]">
             <option value="all">All Statuses</option><option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
           </select>
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="min-h-11 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]">
+          <select aria-label="Ticket category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="min-h-11 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]">
             <option value="all">All Categories</option>
             {categoryOptions.map((categoryOption) => <option key={categoryOption} value={categoryOption}>{categoryOption}</option>)}
           </select>
@@ -450,7 +451,8 @@ export default function TicketDashboard() {
           </div>
         </section>
       ) : (
-        <div className="space-y-3">
+        <div className="ticket-list">
+          <div className="ticket-list-heading"><span>Request</span><span>Requester · Created · Status</span></div>
           {filteredTickets.map((ticket, idx) => {
             const isSelected = idx === selectedIndex;
             const isChecked = selectedIds.includes(ticket.id);
@@ -491,9 +493,7 @@ export default function TicketDashboard() {
                     #{ticket.ticket_number}
                   </span>
 
-                  <h3 className="truncate text-sm font-semibold text-[var(--ink)]">
-                    {ticket.title}
-                  </h3>
+                  <h3 className="truncate text-sm font-semibold text-[var(--ink)]"><Link href={`/tickets/${ticket.id}`} onClick={e => e.stopPropagation()}>{ticket.title}</Link></h3>
 
                   {ticket.priority === "urgent" && (
                     <StatusBadge

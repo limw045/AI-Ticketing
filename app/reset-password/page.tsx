@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, KeyRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AuthPasswordInput } from "@/components/public/AuthPasswordInput";
 import { AuthShell } from "@/components/public/AuthShell";
 import { Alert } from "@/components/ui/Alert";
-import { Button, FieldLabel, Input } from "@/components/ui/FormField";
+import { Button, FieldLabel } from "@/components/ui/FormField";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthShell step="Recovery / 02" backHref="/login">
+    <AuthShell illustration="recovery" backHref="/login">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
         Set a new password.
       </h1>
@@ -111,10 +112,11 @@ export default function ResetPasswordPage() {
             <FieldLabel>{field.label}</FieldLabel>
             <span className="relative block">
               <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
-              <Input
+              <AuthPasswordInput
+                aria-label={field.label}
                 required
                 minLength={8}
-                type="password"
+                autoComplete="new-password"
                 value={field.value}
                 onChange={(event) => field.set(event.target.value)}
                 className="pl-10"

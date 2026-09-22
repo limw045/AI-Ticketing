@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { AuthPasswordInput } from "@/components/public/AuthPasswordInput";
 import { AuthShell } from "@/components/public/AuthShell";
 import { Alert } from "@/components/ui/Alert";
 import { Button, FieldLabel, Input, Select } from "@/components/ui/FormField";
@@ -103,9 +104,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthShell step="02 / Register" backHref="/login">
+    <AuthShell illustration="requests" backHref="/login">
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
-        Create your access.
+        Create your account.
       </h1>
       <p className="mt-2 text-sm leading-5 text-[var(--muted)]">
         Use a GTMSW staff address or your Intern Outlook account.
@@ -121,9 +122,9 @@ export default function RegisterPage() {
 
       <form
         onSubmit={handleRegister}
-        className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2"
+        className="mt-8 grid grid-cols-1 gap-5"
       >
-        <label className="block md:col-span-2">
+        <label className="block">
           <FieldLabel>Full name</FieldLabel>
           <span className="relative block">
             <User className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
@@ -131,19 +132,20 @@ export default function RegisterPage() {
               required
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="Zhang San"
+              placeholder="Your full name"
               className="pl-10"
             />
           </span>
         </label>
 
-        <label className="block md:col-span-2">
+        <label className="block">
           <FieldLabel>Email address</FieldLabel>
           <span className="relative block">
             <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
             <Input
               required
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="name@gtmsw.com.my"
@@ -153,7 +155,7 @@ export default function RegisterPage() {
         </label>
 
         {normalizedEmail && (
-          <div className="font-mono text-[11px] font-semibold md:col-span-2">
+          <div className="font-mono text-[11px] font-semibold">
             {isAdminEmail && (
               <span className="inline-flex items-center gap-1.5 text-[var(--brand-ink)]">
                 <CheckCircle2 className="h-3.5 w-3.5" /> ADMIN EMAIL RECOGNIZED
@@ -178,7 +180,7 @@ export default function RegisterPage() {
         )}
 
         {isIntern && (
-          <label className="block md:col-span-2">
+          <label className="block">
             <FieldLabel className="text-[var(--warning)]">
               Supervisor / mentor
             </FieldLabel>
@@ -220,10 +222,11 @@ export default function RegisterPage() {
           <FieldLabel>Password</FieldLabel>
           <span className="relative block">
             <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-[var(--faint)]" />
-            <Input
+            <AuthPasswordInput
+              aria-label="Password"
               required
               minLength={8}
-              type="password"
+              autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="8+ characters"
@@ -235,9 +238,8 @@ export default function RegisterPage() {
         <Button
           type="submit"
           disabled={loading || !isValidDomain}
-          className="md:col-span-2"
         >
-          {loading ? "Creating access…" : "Create AI desk account"}
+          {loading ? "Creating access…" : "Create account"}
           {!loading && <ArrowRight className="h-4 w-4" />}
         </Button>
       </form>

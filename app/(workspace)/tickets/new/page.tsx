@@ -89,7 +89,6 @@ export default function NewTicketPage() {
       const rules = sortCategoryRules(data as CategoryRule[]);
       const draftCategory = typeof draft.category === "string" ? draft.category : "";
       const selectedCategory = rules.some((rule) => rule.category_name === draftCategory) ? draftCategory : "";
-      const selectedRule = rules.find((rule) => rule.category_name === selectedCategory);
 
       setCategoryRules(rules);
       setTitle(typeof draft.title === "string" ? draft.title : "");
@@ -330,11 +329,11 @@ export default function NewTicketPage() {
       <PageHeader
         backHref="/tickets"
         eyebrow="Create request"
-        title="Describe what is blocked."
+        title="Create a request"
         description="Pick a category for guided details, then attach screenshots or sanitized TXT logs when useful."
       />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="request-form space-y-8">
         <section className="surface p-4 sm:p-6">
           <div className="mb-6 flex items-center gap-3">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-[11px] font-bold text-[var(--brand-ink)]">
@@ -473,7 +472,7 @@ export default function NewTicketPage() {
                 className="min-h-[240px] font-mono sm:min-h-[320px]"
               />
             ) : (
-              <div className="min-h-[240px] whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-4 font-mono text-sm leading-relaxed text-[var(--ink-2)] sm:min-h-[320px] sm:p-5">
+              <div className="ticket-text min-h-[240px] rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-4 font-mono text-sm leading-relaxed text-[var(--ink-2)] sm:min-h-[320px] sm:p-5">
                 {parsedDescription.text}
               </div>
             )}
@@ -490,7 +489,7 @@ export default function NewTicketPage() {
           </div>
         </section>
 
-        <div className="safe-area-bottom sticky bottom-0 z-20 -mx-4 flex w-[calc(100%+2rem)] items-center justify-between gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 pt-3 shadow-[var(--shadow-lg)] sm:bottom-5 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-full sm:px-5 sm:py-3">
+        <div className="request-actions safe-area-bottom sticky bottom-0 z-20 -mx-4 flex w-[calc(100%+2rem)] items-center justify-between gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 pt-3 shadow-[var(--shadow-lg)] sm:bottom-5 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-full sm:px-5 sm:py-3">
           <button
             type="button"
             onClick={() => void handleClearDraft()}

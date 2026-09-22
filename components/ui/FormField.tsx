@@ -55,7 +55,7 @@ export function FieldLabel({
   return (
     <span
       className={cn(
-        "mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]",
+        "field-label mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]",
         className
       )}
     >

@@ -20,7 +20,7 @@ import {
   setPortalMode,
   type PortalMode,
 } from "@/lib/portal-mode";
-import { LogOut, Menu, UserRound, X } from "lucide-react";
+import { LogOut, Menu, UserRound, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 
@@ -53,11 +53,11 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       <div
         className={cn(
-          "flex items-center border-b border-[var(--line)]",
+          "workspace-brand flex items-center",
           isMobile || !sidebarCollapsed ? "px-5 py-4" : "justify-center px-2 py-4"
         )}
       >
-        <Link href="/dashboard" className="flex items-center">
+        <Link href="/dashboard" aria-label="Workspace overview" className="flex items-center">
           {sidebarCollapsed && !isMobile ? (
             <BrandMark size={30} />
           ) : (
@@ -66,30 +66,30 @@ function SidebarContent({
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+      <nav aria-label="Workspace" className="workspace-navigation flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        {(!sidebarCollapsed || isMobile) && <p className="workspace-nav-label">{showPortalSwitch ? "Administration" : "Workspace"}</p>}
         {navItems.map((item) => {
           const active = activeHref === item.href;
           const Icon = item.icon;
           return (
             <Link
               key={item.label}
+              aria-current={active ? "page" : undefined}
               href={item.href}
               onClick={() => {
                 onNavigate?.(item.href);
                 onClose?.();
               }}
               className={cn(
-                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                "workspace-nav-item group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
                 sidebarCollapsed && !isMobile && "justify-center px-2",
                 active
-                  ? "bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-sm)]"
+                  ? "workspace-nav-active bg-[var(--brand-soft)] text-[var(--brand-ink)]"
                   : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
               )}
               title={sidebarCollapsed && !isMobile ? item.label : undefined}
             >
-              {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--brand)]" />
-              )}
+
               <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               {(!sidebarCollapsed || isMobile) && <span>{item.label}</span>}
             </Link>
@@ -107,7 +107,7 @@ function SidebarContent({
         )}
       </nav>
 
-      <div className="border-t border-[var(--line)] p-3">
+      <div className="workspace-profile border-t border-[var(--line)] p-3">
         <div
           className={cn(
             "flex items-center gap-3 rounded-xl px-2 py-2",
@@ -261,13 +261,15 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     router.push("/dashboard");
   };
 
+  const activeNav = navItems.find(item => item.href === getActiveNavHref(pathname, navItems));
+
   return (
-    <div className="min-h-screen bg-[var(--canvas)]">
+    <div className={cn("workspace", sidebarCollapsed && "workspace--collapsed")}>
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden border-r border-[var(--line)] bg-[var(--workspace)] transition-[width] duration-200 lg:block",
-          sidebarCollapsed ? "w-[76px]" : "w-[248px]"
+          "workspace-sidebar fixed inset-y-0 left-0 z-40 hidden border-r border-[var(--line)] bg-[var(--workspace)] transition-[width] duration-200 lg:block",
+          sidebarCollapsed ? "w-[76px]" : "w-[232px]"
         )}
       >
         <SidebarContent
@@ -322,7 +324,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Top bar (mobile/tablet) */}
-      <header className="safe-area-top sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-[var(--workspace)]/90 px-4 pb-3 backdrop-blur lg:hidden">
+      <header className="workspace-mobile-bar safe-area-top sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--line)] bg-[var(--workspace)]/90 px-4 pb-3 backdrop-blur lg:hidden">
         <button
           ref={drawerTriggerRef}
           type="button"
@@ -333,48 +335,41 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         >
           <Menu className="h-4 w-4" />
         </button>
-        <Link href="/dashboard" className="mr-auto">
+        <Link href="/dashboard" aria-label="Workspace overview" className="mr-auto">
           <BrandMark size={28} />
         </Link>
         <ThemeToggle />
         <NotificationsMenu />
       </header>
 
-      {/* Desktop top actions */}
-      <div
-        className={cn(
-          "fixed right-5 top-4 z-30 hidden items-center gap-3 lg:flex",
-          sidebarCollapsed ? "right-5" : "right-6"
-        )}
-      >
-        <ThemeToggle />
-        <NotificationsMenu />
-      </div>
-
-      {/* Desktop collapse toggle */}
+      <header className="workspace-topbar">
+        <div className="workspace-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/dashboard">AI desk</Link><span>/</span>
+          <span>{activeNav?.label || (pathname.startsWith("/tickets/") ? "Ticket details" : "Overview")}</span>
+        </div>
+        <div className="workspace-topbar-actions">
+          <span className="workspace-access-label">{isAdmin && portalMode === "admin" ? "Admin workspace" : "Staff workspace"}</span>
+          <ThemeToggle /><NotificationsMenu />
+          <span className="workspace-avatar" title={profile?.display_name || "Your account"}>{profile?.display_name?.slice(0, 1)?.toUpperCase() || "U"}</span>
+        </div>
+      </header>
       <button
         type="button"
-        onClick={() => setSidebarCollapsed((v) => !v)}
+        onClick={() => setSidebarCollapsed(v => !v)}
         aria-label={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
-        className={cn(
-          "fixed left-3 top-4 z-30 hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] transition lg:inline-flex",
-          sidebarCollapsed ? "translate-x-[44px]" : "translate-x-[204px]"
-        )}
+        aria-expanded={!sidebarCollapsed}
+        className="workspace-collapse"
       >
-        {sidebarCollapsed ? (
-          <Menu className="h-3.5 w-3.5" />
-        ) : (
-          <X className="h-3.5 w-3.5" />
-        )}
+        {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
       <main
         className={cn(
-          "min-h-screen px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:pt-20",
-          sidebarCollapsed ? "lg:pl-[100px]" : "lg:pl-[272px]"
+          "workspace-main min-h-screen",
+          sidebarCollapsed ? "lg:ml-[76px]" : "lg:ml-[232px]"
         )}
       >
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="workspace-content">
           <IncidentBanner canManage={isAdmin} />
           {children}
         </div>
