@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  // Recovery credentials arrive in the fragment, which is never sent to the
+  // server. Browsers retain that fragment through this redirect.
+  if (!code) {
+    return NextResponse.redirect(new URL("/reset-password", requestUrl.origin));
+  }
   const requestedNext = requestUrl.searchParams.get("next");
   const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
     ? requestedNext
@@ -24,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const loginUrl = new URL("/login", requestUrl.origin);
-  loginUrl.searchParams.set("error", "Email confirmation failed or expired. Please sign in again.");
-  return NextResponse.redirect(loginUrl);
+  const resetUrl = new URL("/reset-password", requestUrl.origin);
+  resetUrl.searchParams.set("error", "recovery_session_missing");
+  return NextResponse.redirect(resetUrl);
 }

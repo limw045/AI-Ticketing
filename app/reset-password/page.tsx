@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, KeyRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -15,9 +16,41 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [accountEmail, setAccountEmail] = useState("");
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    async function initializeRecovery() {
+      const url = new URL(window.location.href);
+      const fragment = new URLSearchParams(url.hash.slice(1));
+      const accessToken = fragment.get("access_token");
+      const refreshToken = fragment.get("refresh_token");
+      const recoveryError = fragment.get("error") || url.searchParams.get("error");
+      // Remove credentials from the address bar before any asynchronous work.
+      window.history.replaceState(null, "", url.pathname);
+      if (recoveryError) throw new Error("This reset link is invalid, expired, or could not be verified. Request a new link below.");
+      const supabase = createClient();
+      if (accessToken || refreshToken) {
+        if (!accessToken || !refreshToken || fragment.get("type") !== "recovery") {
+          throw new Error("This is not a valid password reset link. Request a new link below.");
+        }
+        const { error: sessionError } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (sessionError) throw new Error("This reset link could not be verified. Request a new link below.");
+      }
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("A valid recovery session is required. Request a new reset link below.");
+      setAccountEmail(user.email ?? "");
+      setReady(true);
+    }
+    void initializeRecovery().catch(cause => setError(cause instanceof Error ? cause.message : "Unable to verify this reset link. Please request a new one."));
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!ready) return;
     setError("");
     if (password.length < 8) {
       setError("Use at least 8 characters for the new password.");
@@ -52,6 +85,9 @@ export default function ResetPasswordPage() {
       <h1 className="font-display text-2xl font-bold tracking-[-0.03em]">
         Set a new password.
       </h1>
+      <p className="mt-2 text-sm text-[var(--muted)]">
+        {ready ? `Updating the password for ${accountEmail}.` : error ? "Request a new link to continue." : "Verifying your reset link…"}
+      </p>
 
       {error && (
         <div className="mt-6">
@@ -88,13 +124,14 @@ export default function ResetPasswordPage() {
         ))}
         <Button
           type="submit"
-          disabled={loading || Boolean(success)}
+          disabled={!ready || loading || Boolean(success)}
           className="w-full"
         >
           {loading ? "Updating…" : "Update password"}
           {!loading && <ArrowRight className="h-4 w-4" />}
         </Button>
       </form>
+      <p className="mt-5 text-center text-sm"><Link className="text-[var(--brand-ink)] underline" href="/forgot-password">Request a new reset link</Link></p>
     </AuthShell>
   );
 }

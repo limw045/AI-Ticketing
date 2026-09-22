@@ -32,7 +32,13 @@ describe("exact callback URL password recovery", () => {
   it("does not open recovery when the code exchange fails", async () => {
     exchangeCodeForSession.mockResolvedValue({ data: { redirectType: null }, error: new Error("Expired") });
     const response = await GET(new NextRequest("https://gt-ai-ticketing.vercel.app/auth/callback?code=expired"));
-    expect(new URL(response.headers.get("location")!).pathname).toBe("/login");
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/reset-password");
+    expect(new URL(response.headers.get("location")!).searchParams.get("error")).toBe("recovery_session_missing");
+  });
+  it("sends fragment-based recovery to the client reset page without exchanging a code", async () => {
+    const response = await GET(new NextRequest("https://gt-ai-ticketing.vercel.app/auth/callback"));
+    expect(response.headers.get("location")).toBe("https://gt-ai-ticketing.vercel.app/reset-password");
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
   });
   it("requests only the exact allowlisted callback for recovery and signup", () => {
     for (const path of ["app/forgot-password/page.tsx", "app/register/page.tsx"]) {
