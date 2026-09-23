@@ -2,6 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeCategoryRuleInput } from "@/lib/admin/category-rule-input";
 import {
   isAdminRole,
   normalizeAdminListQuery,
@@ -247,7 +248,8 @@ export async function mutateAdminResource(input: AdminMutationInput): Promise<Ad
   try {
     const { supabase, user, role } = await requireAdmin(false);
     const { resource, action, id, expectedUpdatedAt } = input;
-    const data = pickWritable(resource, input.data ?? {});
+    const writable = pickWritable(resource, input.data ?? {});
+    const data = resource === "category-rules" ? normalizeCategoryRuleInput(writable) : writable;
 
     if (["activity-logs", "api-request-logs", "notifications", "recycle-bin"].includes(resource)) {
       return { ok: false, code: "FORBIDDEN", message: "System records are read-only." };
