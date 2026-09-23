@@ -144,9 +144,6 @@ export default function FAQPage() {
           placeholder="Search VPN, models, GPUs, datasets..."
           className="min-h-11 w-full bg-transparent text-base text-[var(--ink)] outline-none placeholder:text-[var(--faint)] sm:text-sm"
         />
-        <span className="hidden font-mono text-xs text-[var(--faint)] sm:inline">
-          / SEARCH
-        </span>
       </div>
 
       {showAddForm && (

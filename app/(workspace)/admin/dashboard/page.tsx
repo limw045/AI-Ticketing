@@ -261,7 +261,7 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
         <DashboardCharts tickets={tickets} />
       </div>
 
@@ -321,23 +321,13 @@ export default function AdminDashboard() {
             <Link
               key={link.href}
               href={link.href}
-              className="group surface flex items-start justify-between gap-4 p-5 transition hover:bg-[var(--surface-2)]"
+              className="group surface grid min-h-[142px] grid-cols-[minmax(0,1fr)_auto] grid-rows-[36px_auto_1fr] gap-x-4 gap-y-1 p-5 transition hover:bg-[var(--surface-2)]"
             >
-              <div>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]">
-                  <Icon className="h-4 w-4 text-[var(--brand-ink)]" />
-                </span>
-                <h4 className="mt-3 font-display text-base font-semibold">
-                  {link.label}
-                </h4>
-                <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
-                  {link.description}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <StatusBadge tone="brand">{link.badge}</StatusBadge>
-                <ArrowRight className="h-4 w-4 text-[var(--faint)] transition group-hover:text-[var(--brand-ink)]" />
-              </div>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]"><Icon className="h-4 w-4 text-[var(--brand-ink)]" /></span>
+              <StatusBadge tone="brand" className="self-start justify-self-end">{link.badge}</StatusBadge>
+              <h4 className="col-span-2 mt-2 font-display text-base font-semibold">{link.label}</h4>
+              <p className="self-start text-sm leading-5 text-[var(--muted)]">{link.description}</p>
+              <ArrowRight className="h-4 w-4 self-end justify-self-end text-[var(--faint)] transition group-hover:text-[var(--brand-ink)]" />
             </Link>
           );
         })}

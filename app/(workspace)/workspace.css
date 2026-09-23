@@ -58,6 +58,7 @@
 .workspace tbody tr { transition: background 140ms; }
 .workspace tbody tr:hover { background: var(--surface-2); }
 .workspace .admin-table { border-radius: var(--radius-md); }
+.workspace .admin-table .button-action { min-height: 36px; }
 .workspace .admin-toolbar { padding: 0 0 12px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
 .workspace .admin-table > div:first-child { padding: 14px 18px; }
 .workspace .admin-table > div.overflow-x-auto { padding: 0; }
@@ -88,7 +89,8 @@
 .workspace .ticket-text { min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; font-size: 16px; line-height: 1.5; }
 .workspace .admin-launcher { gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .workspace .admin-launcher > a { border: 0; border-radius: 0; border-bottom: 1px solid var(--line); padding: 20px; }
-.workspace .admin-launcher h2 { margin-top: 12px; }
+@media (min-width: 640px) { .workspace .admin-launcher > a:nth-child(odd) { border-right: 1px solid var(--line); }.workspace .admin-launcher > a:nth-last-child(-n+2) { border-bottom: 0; } }
+.workspace .admin-launcher > a:last-child { border-bottom: 0; }
 @media (max-width: 1023px) {
   .workspace-topbar, .workspace-collapse { display: none; }
   .workspace-main { padding: 24px 24px 48px; }

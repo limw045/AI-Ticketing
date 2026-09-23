@@ -43,6 +43,8 @@ import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
 import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
 
 const STATUS_STEPS = ["open", "in_progress", "resolved", "closed"];
+const SAFE_TICKET_SELECT = "id, ticket_number, title, description, status, priority, category, department_id, author_id, assignee_id, source, subtasks, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
+const MANAGEMENT_TICKET_SELECT = "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)";
 
 export default function TicketDetailPage({
   params,
@@ -122,12 +124,9 @@ export default function TicketDetailPage({
     const profileCanManage =
       (profile.role === "admin" || profile.role === "super_admin") && activePortalMode === "admin";
 
-    const safeTicketSelect = "id, ticket_number, title, description, status, priority, category, department_id, author_id, assignee_id, source, subtasks, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
-    const managementTicketSelect = "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)";
-
     const ticketResult = await supabase
       .from("tickets")
-      .select(profileCanManage ? managementTicketSelect : safeTicketSelect)
+      .select(profileCanManage ? MANAGEMENT_TICKET_SELECT : SAFE_TICKET_SELECT)
       .eq("id", ticketId)
       .is("deleted_at", null)
       .maybeSingle();
@@ -173,32 +172,49 @@ export default function TicketDetailPage({
     const supabase = createClient();
     let refreshing = false;
     let active = true;
-    const refreshDiscussion = async () => {
+    const refreshDetails = async () => {
       if (!active || refreshing || document.visibilityState === "hidden") return;
       refreshing = true;
       try {
+        const ticketResult = await supabase
+          .from("tickets")
+          .select(canManageTicket ? MANAGEMENT_TICKET_SELECT : SAFE_TICKET_SELECT)
+          .eq("id", ticketId)
+          .is("deleted_at", null)
+          .maybeSingle();
+        if (active && !ticketResult.error && ticketResult.data) {
+          const next = ticketResult.data as any;
+          setTicket((current: any) => current ? {
+            ...current,
+            ...next,
+            author: next.author_id === currentUserProfile.id
+              ? { ...next.author, email: currentUserProfile.email, supervisor_name: currentUserProfile.supervisor_name }
+              : next.author,
+          } : current);
+        }
         await loadComments(canManageTicket);
       } catch {
-        // Keep the current conversation and retry on the next poll/focus event.
+        // Keep the current details and retry on the next poll/focus event.
       } finally {
         refreshing = false;
       }
     };
     const channel = createOwnedRealtimeChannel(supabase, `ticket-discussion:${ticketId}`)
-      .on("postgres_changes", { event: "*", schema: getSupabaseSchema(), table: "comments", filter: `ticket_id=eq.${ticketId}` }, () => { void refreshDiscussion(); })
+      .on("postgres_changes", { event: "*", schema: getSupabaseSchema(), table: "comments", filter: `ticket_id=eq.${ticketId}` }, () => { void refreshDetails(); })
+      .on("postgres_changes", { event: "*", schema: getSupabaseSchema(), table: "tickets", filter: `id=eq.${ticketId}` }, () => { void refreshDetails(); })
       .subscribe();
     // Poll as a fallback when Realtime is unavailable for this deployment.
-    const timer = window.setInterval(() => { void refreshDiscussion(); }, 15000);
-    window.addEventListener("focus", refreshDiscussion);
-    document.addEventListener("visibilitychange", refreshDiscussion);
+    const timer = window.setInterval(() => { void refreshDetails(); }, 8000);
+    window.addEventListener("focus", refreshDetails);
+    document.addEventListener("visibilitychange", refreshDetails);
     return () => {
       active = false;
       window.clearInterval(timer);
-      window.removeEventListener("focus", refreshDiscussion);
-      document.removeEventListener("visibilitychange", refreshDiscussion);
+      window.removeEventListener("focus", refreshDetails);
+      document.removeEventListener("visibilitychange", refreshDetails);
       void supabase.removeChannel(channel);
     };
-  }, [loading, ticket?.id, currentUserProfile?.id, ticketId, canManageTicket, loadComments]);
+  }, [loading, ticket?.id, currentUserProfile?.id, currentUserProfile?.email, currentUserProfile?.supervisor_name, ticketId, canManageTicket, loadComments]);
 
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -660,16 +676,15 @@ export default function TicketDetailPage({
           <section className="surface space-y-5 p-5">
             <div>
               <FieldLabel>Status</FieldLabel>
-              <Select
+              {canManageTicket ? <Select
                 value={ticket.status}
                 onChange={(e) => handleUpdateStatus(e.target.value)}
-                disabled={!canManageTicket}
               >
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>
                 <option value="closed">Closed</option>
-              </Select>
+              </Select> : <div className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--field-border)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--ink)]">{ticketStatusLabel(ticket.status)}</div>}
               {!canManageTicket &&
                 isAuthor &&
                 ["resolved", "closed"].includes(ticket.status) && (
@@ -686,18 +701,17 @@ export default function TicketDetailPage({
 
             <div>
               <FieldLabel>Assignee</FieldLabel>
-              <Select
-                value={ticket.assignee_id || ""}
-                onChange={(e) => handleAssigneeChange(e.target.value)}
-                disabled={!canManageTicket}
-              >
-                <option value="">Unassigned</option>
-                {agents.map((agent) => (
-                  <option key={agent.id} value={agent.id}>
-                    {agent.display_name} ({agent.department})
-                  </option>
-                ))}
-              </Select>
+              {canManageTicket ? <Select
+                  value={ticket.assignee_id || ""}
+                  onChange={(e) => handleAssigneeChange(e.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  {agents.map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.display_name} ({agent.department})
+                    </option>
+                  ))}
+                </Select> : <div className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--field-border)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--ink)]">{ticket.assignee?.display_name ?? (ticket.assignee_id ? "Assigned" : "Unassigned")}</div>}
             </div>
           </section>
 

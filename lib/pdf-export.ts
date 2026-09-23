@@ -18,7 +18,7 @@ export async function exportTicketPDF(ticket: any) {
   try {
     const response = await fetch("/brand/ticketing-apple-icon.png");
     if (response.ok) {
-      doc.addImage(new Uint8Array(await response.arrayBuffer()), "PNG", 14, 6, 24, 24);
+      doc.addImage(new Uint8Array(await response.arrayBuffer()), "PNG", 20, 11, 12, 12);
     }
   } catch {
     // A temporarily unavailable brand asset must not prevent ticket export.
@@ -30,11 +30,11 @@ export async function exportTicketPDF(ticket: any) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...PURPLE);
-  doc.text("Grant Thornton AI Department", 43, 19);
+  doc.text("Grant Thornton AI Department", 36, 18);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  doc.text("SUPPORT DESK", 43, 25);
+  doc.text("SUPPORT DESK", 36, 23);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);

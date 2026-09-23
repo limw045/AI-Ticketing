@@ -6,6 +6,7 @@ import { ArrowUpRight, CalendarDays, Search, ChartNoAxesColumn } from "lucide-re
 import { StatusBadge, statusTone, priorityTone } from "@/components/ui/StatusBadge";
 import { buildRequestActivity } from "@/lib/request-activity";
 import { ticketStatusLabel } from "@/lib/display-labels";
+import { priorityLabel } from "@/lib/display-labels";
 import { formatDate } from "@/lib/date-display";
 
 export interface OverviewTicket {
@@ -77,7 +78,7 @@ export function RecentRequests({ tickets, personal = false }: { tickets: Overvie
     <section className="recent-requests" aria-labelledby="recent-title">
       <div className="recent-heading"><h2 id="recent-title">{personal ? "Your requests" : "Latest requests"}</h2><Link href={personal ? "/tickets?mine=1" : "/tickets"}>View all requests <ArrowUpRight size={14} /></Link></div>
       <div className="recent-toolbar"><div className="workspace-tabs" role="group" aria-label="Filter recent requests"><button onClick={() => setStatus("all")} aria-pressed={status === "all"}>All requests</button>{stages.map(s => <button key={s.status} onClick={() => setStatus(s.status)} aria-pressed={status === s.status}>{s.label}</button>)}</div><label className="recent-search"><Search size={14} /><input aria-label="Search recent requests" placeholder="Search requests…" value={query} onChange={e => setQuery(e.target.value)} /></label></div>
-      <div className="recent-table-scroll"><table className="recent-table"><thead><tr><th>Request</th><th>Status</th><th>Priority</th><th>Category</th><th>Created</th></tr></thead><tbody>{filtered.map(ticket => <tr key={ticket.id}><td><Link href={`/tickets/${ticket.id}`}><span className="request-id">#{ticket.ticket_number}</span><span>{ticket.title}</span></Link></td><td><StatusBadge tone={statusTone(ticket.status)}>{ticketStatusLabel(ticket.status)}</StatusBadge></td><td><StatusBadge tone={priorityTone(ticket.priority)}>{ticket.priority}</StatusBadge></td><td>{ticket.category}</td><td>{formatDate(ticket.created_at)}</td></tr>)}</tbody></table></div>
+      <div className="recent-table-scroll"><table className="recent-table"><thead><tr><th>Request</th><th>Status</th><th>Priority</th><th>Category</th><th>Created</th></tr></thead><tbody>{filtered.map(ticket => <tr key={ticket.id}><td><Link href={`/tickets/${ticket.id}`}><span className="request-id">#{ticket.ticket_number}</span><span>{ticket.title}</span></Link></td><td><StatusBadge tone={statusTone(ticket.status)}>{ticketStatusLabel(ticket.status)}</StatusBadge></td><td><StatusBadge tone={priorityTone(ticket.priority)}>{priorityLabel(ticket.priority)}</StatusBadge></td><td>{ticket.category}</td><td>{formatDate(ticket.created_at)}</td></tr>)}</tbody></table></div>
       {filtered.length === 0 && <div className="recent-empty"><Search size={22} /><h3>{tickets.length ? "No matching requests" : "Your requests will appear here"}</h3><p>{tickets.length ? "Try another search or choose a different status." : "Create a request whenever you need a hand from the team."}</p>{!tickets.length && <Link href="/tickets/new">Create your first request <ArrowUpRight size={14} /></Link>}</div>}
       <p className="recent-count">Showing {filtered.length} of {tickets.length} requests</p>
     </section>

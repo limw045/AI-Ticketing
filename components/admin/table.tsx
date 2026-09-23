@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Trash2, Check, ChevronLeft, ChevronRight, Search, ArchiveRestore } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { Input, Select } from "@/components/ui/FormField";
+import { Button, Input, Select } from "@/components/ui/FormField";
 import { DateFilterInput } from "@/components/admin/DateFilterInput";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Alert } from "@/components/ui/Alert";
@@ -105,14 +105,13 @@ export function TwoStepDelete({
   };
 
   return (
-    <button
+    <Button
       type="button"
+      variant="danger"
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition",
-        confirming
-          ? "bg-[var(--danger)] text-white"
-          : "bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white",
+        "!min-h-9 !px-3 !py-1.5 !text-[13px]",
+        confirming && "!bg-[var(--danger)] !text-white",
         className
       )}
     >
@@ -125,7 +124,7 @@ export function TwoStepDelete({
           <Trash2 className="h-3.5 w-3.5" /> {label}
         </>
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -295,13 +294,14 @@ export function AdminLoadError({ message, onRetry }: { message: string; onRetry:
 
 export function RestoreButton({ onRestore }: { onRestore: () => unknown | Promise<unknown> }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="secondary"
       onClick={onRestore}
-      className="inline-flex items-center gap-1.5 rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-xs font-bold text-[var(--success)] transition hover:opacity-80"
+      className="!min-h-9 !px-3 !py-1.5 !text-[13px]"
     >
       <ArchiveRestore className="h-3.5 w-3.5" /> Restore
-    </button>
+    </Button>
   );
 }
 
