@@ -27,7 +27,7 @@
 .heroArt { isolation: isolate; border-radius: 28px; background: var(--illustration-surface); padding: 28px 24px 30px; color: #302347; }
 .artHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #79658f; font-size: 9px; letter-spacing: 0.13em; }
 .artDot { width: 7px; height: 7px; border-radius: 50%; background: #bba7da; flex-shrink: 0; }
-.heroImage { display: block; width: 100%; height: auto; margin: 6px auto 0; }
+.heroImage { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; margin: 6px auto 0; }
 .heroArt > p { text-align: center; font-family: var(--font-manrope), sans-serif; font-size: 22px; line-height: 1.4; letter-spacing: -0.035em; margin-top: -5px; }
 .heroArt strong { font-weight: 650; }
 .features { border-top: 1px solid var(--line); padding: 56px 0 60px; scroll-margin-top: 24px; }
