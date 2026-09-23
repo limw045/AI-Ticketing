@@ -10,6 +10,7 @@ import { NotificationsMenu } from "@/components/workspace/NotificationsMenu";
 import { IncidentBanner } from "@/components/IncidentBanner";
 import {
   getNavItems,
+  groupNavItems,
   getActiveNavHref,
   ADMIN_CONSOLE_ITEMS,
   type WorkspaceRole,
@@ -66,48 +67,54 @@ function SidebarContent({
         </Link>
       </div>
 
-      <nav aria-label="Workspace" className="workspace-navigation flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {(!sidebarCollapsed || isMobile) && <p className="workspace-nav-label">{showPortalSwitch ? "Administration" : "Workspace"}</p>}
-        {navItems.map((item) => {
-          const active = activeHref === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.label}
-              aria-current={active ? "page" : undefined}
-              href={item.href}
-              onClick={() => {
-                onNavigate?.(item.href);
-                onClose?.();
-              }}
-              className={cn(
-                "workspace-nav-item group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                sidebarCollapsed && !isMobile && "justify-center px-2",
-                active
-                  ? "workspace-nav-active bg-[var(--brand-soft)] text-[var(--brand-ink)]"
-                  : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
-              )}
-              title={sidebarCollapsed && !isMobile ? item.label : undefined}
-            >
+      <nav aria-label={showPortalSwitch ? "Administration" : "Workspace"} className="workspace-navigation min-h-0 flex-1 overflow-y-auto px-3 py-4">
+        {groupNavItems(navItems).map((section) => (
+          <div key={section.label} role="group" aria-label={section.label} className="workspace-nav-section">
+            {(!sidebarCollapsed || isMobile) && <p className="workspace-nav-label">{section.label}</p>}
+            {section.items.map((item) => {
+              const active = activeHref === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.label}
+                  aria-label={item.label}
+                  aria-current={active ? "page" : undefined}
+                  href={item.href}
+                  onClick={() => {
+                    onNavigate?.(item.href);
+                    onClose?.();
+                  }}
+                  className={cn(
+                    "workspace-nav-item group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                    sidebarCollapsed && !isMobile && "justify-center px-2",
+                    active
+                      ? "workspace-nav-active bg-[var(--brand-soft)] text-[var(--brand-ink)]"
+                      : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
+                  )}
+                  title={sidebarCollapsed && !isMobile ? item.label : undefined}
+                >
 
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {(!sidebarCollapsed || isMobile) && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {(!sidebarCollapsed || isMobile) && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+              </div>
+        ))}
+      </nav>
+      <div className="workspace-profile border-t border-[var(--line)] p-3">
         {showPortalSwitch && (
           <button
             type="button"
             onClick={onSwitchToUserPortal}
-            className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
+            aria-label="Staff workspace"
+            title="Staff workspace"
+            className={cn("workspace-portal-switch mb-3 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--ink)]", sidebarCollapsed && !isMobile && "justify-center px-2")}
           >
             <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>View user portal</span>
+            {(!sidebarCollapsed || isMobile) && <span>Staff workspace</span>}
           </button>
         )}
-      </nav>
-
-      <div className="workspace-profile border-t border-[var(--line)] p-3">
         <div
           className={cn(
             "flex items-center gap-3 rounded-xl px-2 py-2",

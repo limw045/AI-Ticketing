@@ -23,6 +23,7 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  group: string;
   roles: WorkspaceRole[];
 }
 
@@ -30,30 +31,35 @@ export const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
     label: "Overview",
+    group: "Workspace",
     icon: LayoutDashboard,
     roles: ["employee", "admin", "super_admin"],
   },
   {
     href: "/tickets",
-    label: "Tickets",
+    label: "All tickets",
+    group: "Requests",
     icon: Ticket,
     roles: ["employee", "admin", "super_admin"],
   },
   {
     href: "/tickets/new",
-    label: "Create ticket",
+    label: "New ticket",
+    group: "Requests",
     icon: PlusCircle,
     roles: ["employee", "admin", "super_admin"],
   },
   {
     href: "/faq",
-    label: "Knowledge",
+    label: "Help & guides",
+    group: "Resources",
     icon: BookOpen,
     roles: ["employee", "admin", "super_admin"],
   },
   {
     href: "/admin/dashboard",
-    label: "Analytics",
+    label: "Admin console",
+    group: "Administration",
     icon: BarChart3,
     roles: ["admin", "super_admin"],
   },
@@ -62,61 +68,71 @@ export const NAV_ITEMS: NavItem[] = [
 export const ADMIN_CONSOLE_ITEMS: NavItem[] = [
   {
     href: "/admin/dashboard",
-    label: "Operations",
+    label: "Dashboard",
+    group: "Overview",
     icon: BarChart3,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/tickets",
-    label: "Tickets",
+    label: "Ticket queue",
+    group: "Service desk",
     icon: TicketCheck,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/comments",
-    label: "Comments",
+    label: "Conversations",
+    group: "Service desk",
     icon: MessageSquareText,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/knowledge",
-    label: "Knowledge",
+    label: "Knowledge & routing",
+    group: "Configuration",
     icon: Library,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/incidents",
-    label: "Incidents",
+    label: "Service incidents",
+    group: "Service desk",
     icon: Radio,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/api-clients",
-    label: "API clients",
+    label: "API integrations",
+    group: "Configuration",
     icon: KeyRound,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/staff",
-    label: "Staff",
+    label: "Staff accounts",
+    group: "People & access",
     icon: Users,
     roles: ["admin", "super_admin"],
   },
   {
     href: "/admin/admin-management",
-    label: "Admin management",
+    label: "Administrators",
+    group: "People & access",
     icon: ShieldCheck,
     roles: ["super_admin"],
   },
   {
     href: "/admin/recycle-bin",
-    label: "Recycle bin",
+    label: "Deleted records",
+    group: "System",
     icon: ArchiveRestore,
     roles: ["super_admin"],
   },
   {
     href: "/admin/system-logs",
-    label: "System logs",
+    label: "Audit logs",
+    group: "System",
     icon: ScrollText,
     roles: ["super_admin"],
   },
@@ -149,4 +165,14 @@ export function getActiveNavHref(
     }
   }
   return activeHref;
+}
+
+export function groupNavItems(items: NavItem[]) {
+  const groups = new Map<string, NavItem[]>();
+  for (const item of items) {
+    const entries = groups.get(item.group) ?? [];
+    entries.push(item);
+    groups.set(item.group, entries);
+  }
+  return Array.from(groups, ([label, items]) => ({ label, items }));
 }
