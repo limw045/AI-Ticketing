@@ -180,7 +180,7 @@ export default function LoginPage() {
           aria-labelledby="portal-choice-title"
         >
           <section className="surface my-4 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto p-5 sm:p-7">
-            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand-ink)]">
+            <div className="font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--brand-ink)]">
               Administrative access detected
             </div>
             <h2

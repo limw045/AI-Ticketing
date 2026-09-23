@@ -155,7 +155,7 @@ export default function RegisterPage() {
         </label>
 
         {normalizedEmail && (
-          <div className="font-mono text-[11px] font-semibold">
+          <div className="font-mono text-xs font-semibold">
             {isAdminEmail && (
               <span className="inline-flex items-center gap-1.5 text-[var(--brand-ink)]">
                 <CheckCircle2 className="h-3.5 w-3.5" /> ADMIN EMAIL RECOGNIZED

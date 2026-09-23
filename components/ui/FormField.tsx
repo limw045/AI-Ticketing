@@ -8,7 +8,7 @@ export function Input({
     <input
       {...props}
       className={cn(
-        "min-h-11 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-base text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm",
+        "min-h-11 w-full rounded-xl border border-[var(--field-border)] bg-[var(--surface)] px-4 py-3 text-base text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--color-focus)] focus:ring-2 focus:ring-[var(--color-focus)] sm:text-sm",
         className
       )}
     />
@@ -23,7 +23,7 @@ export function Select({
     <select
       {...props}
       className={cn(
-        "min-h-11 w-full appearance-none rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-base font-medium text-[var(--ink)] outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm",
+        "min-h-11 w-full appearance-none rounded-xl border border-[var(--field-border)] bg-[var(--surface)] px-4 py-3 text-base font-medium text-[var(--ink)] outline-none transition focus:border-[var(--color-focus)] focus:ring-2 focus:ring-[var(--color-focus)] sm:text-sm",
         className
       )}
     />
@@ -38,7 +38,7 @@ export function Textarea({
     <textarea
       {...props}
       className={cn(
-        "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-relaxed text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-soft)] sm:text-sm",
+        "w-full rounded-xl border border-[var(--field-border)] bg-[var(--surface)] px-4 py-3 text-base leading-relaxed text-[var(--ink)] outline-none transition placeholder:text-[var(--faint)] focus:border-[var(--color-focus)] focus:ring-2 focus:ring-[var(--color-focus)] sm:text-sm",
         className
       )}
     />
@@ -55,7 +55,7 @@ export function FieldLabel({
   return (
     <span
       className={cn(
-        "field-label mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]",
+        "field-label mb-2 block text-sm font-medium text-[var(--ink-2)]",
         className
       )}
     >
@@ -73,7 +73,7 @@ export function Button({
 }) {
   const variants = {
     primary:
-      "button-action button-action--primary bg-[var(--brand)] text-[var(--brand-on)] shadow-[var(--shadow-sm)]",
+      "button-action button-action--primary bg-[var(--button-primary-bg)] text-[var(--button-primary-on)] shadow-[var(--shadow-sm)]",
     secondary:
       "button-action button-action--secondary bg-[var(--surface)] border border-[var(--line-strong)] text-[var(--ink)]",
     ghost:

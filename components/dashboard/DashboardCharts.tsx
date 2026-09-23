@@ -43,12 +43,12 @@ import {
 } from "@/lib/dashboard-charts";
 
 const DEPT_COLORS = [
-  "#5c2d91",
-  "#8b64b8",
-  "#b996d2",
-  "#3d6f9d",
-  "#2e7d5b",
-  "#b03a48",
+  "var(--chart-series-1)",
+  "var(--chart-series-2)",
+  "var(--chart-series-3)",
+  "var(--chart-series-4)",
+  "var(--chart-series-5)",
+  "var(--chart-series-6)",
 ];
 
 const tooltipStyle = {

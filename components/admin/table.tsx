@@ -33,7 +33,7 @@ export function AdminTable({
         </table>
       </div>
       {!mobile && (
-        <p className="border-t border-[var(--line)] px-4 py-2 text-center font-mono text-[10px] text-[var(--faint)] md:hidden">
+        <p className="border-t border-[var(--line)] px-4 py-2 text-center font-mono text-xs text-[var(--faint)] md:hidden">
           Swipe horizontally to view all columns
         </p>
       )}
@@ -61,7 +61,7 @@ export function AdminTh({
   return (
     <th
       className={cn(
-        "px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]",
+        "px-4 py-3 font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]",
         className
       )}
     >
@@ -235,7 +235,7 @@ export function AdminPagination({
   const last = Math.min(total, page * pageSize);
   return (
     <div className="surface flex flex-col items-stretch justify-between gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-      <span className="font-mono text-[11px] text-[var(--faint)]">
+      <span className="font-mono text-xs text-[var(--faint)]">
         {first}–{last} of {total}
       </span>
       <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
@@ -258,7 +258,7 @@ export function AdminPagination({
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <span className="min-w-[72px] text-center font-mono text-[11px] text-[var(--muted)]">
+        <span className="min-w-[72px] text-center font-mono text-xs text-[var(--muted)]">
           {page} / {pages}
         </span>
         <button
@@ -350,7 +350,7 @@ export function AdminMobileList({ items }: { items: AdminMobileItem[] }) {
         <dl className="divide-y divide-[var(--line)]">
           {selected?.fields.map((field, index) => (
             <div key={`${field.label}-${index}`} className="grid gap-1 py-3 sm:grid-cols-[9rem_1fr] sm:gap-4">
-              <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--faint)]">{field.label}</dt>
+              <dt className="font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--faint)]">{field.label}</dt>
               <dd className="break-words text-sm text-[var(--ink)] sm:text-right">{field.value}</dd>
             </div>
           ))}

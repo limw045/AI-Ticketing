@@ -40,7 +40,7 @@ describe("Supabase Auth email templates", () => {
       expect(html).toContain('role="presentation"');
       expect(html).toContain("Grant Thornton");
       expect(html).toContain("AI Department");
-      expect(html).toContain("#5c2d91");
+      expect(html).toContain("#4F2D7F");
       expect(html).toContain(
         "Grant Thornton Malaysia · Confidential system email"
       );

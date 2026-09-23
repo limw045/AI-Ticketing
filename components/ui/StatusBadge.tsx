@@ -26,7 +26,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "status-badge inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
+        "status-badge inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
         tones[tone],
         className
       )}
@@ -39,11 +39,15 @@ export function StatusBadge({
 export function statusTone(status: string): Tone {
   switch (status) {
     case "open":
-      return "info";
     case "in_progress":
-      return "brand";
+      return "info";
+    case "action_required":
+    case "on_hold":
+      return "warning";
     case "resolved":
       return "success";
+    case "failed":
+      return "danger";
     case "closed":
       return "neutral";
     default:

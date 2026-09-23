@@ -133,7 +133,7 @@ function IncidentSection({
               <AdminTd><span className="block max-w-[320px] truncate text-xs text-[var(--muted)]">{incident.message}</span></AdminTd>
               <AdminTd><StatusBadge tone={severityTone(incident.severity)}>{incident.severity}</StatusBadge></AdminTd>
               <AdminTd><StatusBadge tone={incident.is_active ? "success" : "neutral"}>{incident.is_active ? "Active" : "Resolved"}</StatusBadge></AdminTd>
-              <AdminTd className="whitespace-nowrap font-mono text-[11px] text-[var(--faint)]">{new Date(incident.updated_at).toLocaleString()}</AdminTd>
+              <AdminTd className="whitespace-nowrap font-mono text-xs text-[var(--faint)]">{new Date(incident.updated_at).toLocaleString()}</AdminTd>
               <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{deleted ? <RestoreButton onRestore={() => onRestore(incident)} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => onEdit(incident)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => onDelete(incident)} /></>}</div></AdminTd>
             </tr>
           ))}

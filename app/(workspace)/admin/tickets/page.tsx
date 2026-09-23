@@ -172,12 +172,12 @@ export default function AdminTicketsPage() {
               <tr key={ticket.id} className="transition hover:bg-[var(--surface-2)]">
                 <AdminTd className="font-mono text-xs text-[var(--faint)]">#{ticket.ticket_number}</AdminTd>
                 <AdminTd><Link href={`/tickets/${ticket.id}`} className="inline-flex max-w-[240px] items-center gap-1.5 font-semibold hover:text-[var(--brand-ink)]"><span className="truncate">{ticket.title}</span><ExternalLink className="h-3 w-3 text-[var(--faint)]" /></Link></AdminTd>
-                <AdminTd><span className="block text-xs font-medium">{ticket.author?.display_name ?? ticket.reporter_email ?? "API"}</span><span className="font-mono text-[10px] text-[var(--faint)]">{ticket.source}</span></AdminTd>
+                <AdminTd><span className="block text-xs font-medium">{ticket.author?.display_name ?? ticket.reporter_email ?? "API"}</span><span className="font-mono text-xs text-[var(--faint)]">{ticket.source}</span></AdminTd>
                 <AdminTd className="text-xs text-[var(--muted)]">{ticket.category}</AdminTd>
                 <AdminTd><StatusBadge tone={priorityTone(ticket.priority)}>{priorityLabel(ticket.priority)}</StatusBadge></AdminTd>
                 <AdminTd><StatusBadge tone={statusTone(ticket.status)}>{ticketStatusLabel(ticket.status)}</StatusBadge></AdminTd>
                 <AdminTd className="text-xs text-[var(--muted)]">{ticket.assignee?.display_name ?? "Unassigned"}</AdminTd>
-                <AdminTd className="font-mono text-[11px] text-[var(--faint)]">{new Date(ticket.created_at).toLocaleDateString()}</AdminTd>
+                <AdminTd className="font-mono text-xs text-[var(--faint)]">{new Date(ticket.created_at).toLocaleDateString()}</AdminTd>
                 <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: ticket.id })} /> : <><Link href={`/tickets/${ticket.id}#conversation`} onClick={() => setPortalMode("admin")} className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-soft)] px-3 py-2 text-xs font-medium text-[var(--brand-ink)]"><MessageSquare size={14} /> Conversation</Link><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(ticket)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: ticket.id })} /></>}</div></AdminTd>
               </tr>
             ))}

@@ -1,71 +1,161 @@
 @import "tailwindcss";
 
 :root {
-  /* Core semantic tokens (light default) */
-  --canvas: #dedede;
-  --workspace: #f7f7f6;
-  --surface: #ffffff;
-  --surface-2: #f3f2f1;
-  --surface-3: #e9e8e7;
-  --ink: #18171b;
-  --ink-2: #3e3b42;
-  --muted: #77737b;
-  --faint: #a8a3aa;
-  --line: #e2dfe2;
-  --line-strong: #cbc7cc;
-  --brand: #5c2d91;
-  --brand-hover: #4a2376;
-  --brand-soft: #eee6f4;
-  --brand-ink: #4a2376;
-  --brand-on: #ffffff;
-  --illustration-surface: #f4f1fc;
-  --success: #2e7d5b;
-  --success-soft: #e4f3ec;
-  --warning: #8a5a12;
-  --warning-soft: #fbf0dc;
-  --danger: #b03a48;
-  --danger-soft: #fbe9eb;
-  --info: #3d6f9d;
-  --info-soft: #e8f0f7;
+  /* Foundations: primitives describe the palette, semantics describe its use. */
+  --palette-purple-core: #4f2d7f;
+  --palette-purple-hover: #43246d;
+  --palette-purple-pressed: #371b5b;
+  --palette-lavender: #e6e6fa;
+  --palette-neutral-0: #ffffff;
+  --palette-neutral-50: #f8f7fa;
+  --palette-neutral-100: #f3f0f6;
+  --palette-neutral-200: #e5e1e8;
+  --palette-neutral-900: #18141d;
+
+  --color-bg-canvas: var(--palette-neutral-50);
+  --color-bg-surface: var(--palette-neutral-0);
+  --color-bg-elevated: var(--palette-neutral-100);
+  --color-bg-hover: #ece8f0;
+  --color-text-primary: var(--palette-neutral-900);
+  --color-text-secondary: #625c68;
+  --color-text-tertiary: #746e7b;
+  --color-border-default: var(--palette-neutral-200);
+  --color-border-strong: #96909d;
+  --color-action-primary: var(--palette-purple-core);
+  --color-action-hover: var(--palette-purple-hover);
+  --color-action-pressed: var(--palette-purple-pressed);
+  --color-action-on: #ffffff;
+  --color-action-soft: #efeaf4;
+  --color-link: var(--palette-purple-core);
+  --color-focus: #7655a5;
+  --color-accent-lavender: var(--palette-lavender);
+  --color-icon-highlight: var(--palette-purple-core);
+
+  /* Illustration colors are separate from UI surfaces and action colors. */
+  --illustration-graphite: #26273b;
+  --illustration-navy: #0f172a;
+  --illustration-lavender: var(--palette-lavender);
+  --illustration-highlight: #eef2ff;
+  --color-illustration-canvas: #f4f1fc;
+
+  --color-status-success: #286c4e;
+  --color-status-success-soft: #e4f3ec;
+  --color-status-warning: #8a5a12;
+  --color-status-warning-soft: #fbf0dc;
+  --color-status-danger: #b03a48;
+  --color-status-danger-soft: #fbe9eb;
+  --color-status-info: #3d6f9d;
+  --color-status-info-soft: #e8f0f7;
+  --chart-series-1: #4f2d7f;
+  --chart-series-2: #674195;
+  --chart-series-3: #8060a8;
+  --chart-series-4: #9d85bb;
+  --chart-series-5: #bba9ce;
+  --chart-series-6: #d3c8dd;
+
+  /* Compatibility names are mapped to semantic roles across the existing UI. */
+  --canvas: var(--color-bg-canvas);
+  --workspace: var(--color-bg-surface);
+  --surface: var(--color-bg-surface);
+  --surface-2: var(--color-bg-elevated);
+  --surface-3: var(--color-bg-hover);
+  --ink: var(--color-text-primary);
+  --ink-2: var(--color-text-secondary);
+  --muted: var(--color-text-secondary);
+  --faint: var(--color-text-tertiary);
+  --line: var(--color-border-default);
+  --line-strong: var(--color-border-strong);
+  --brand: var(--color-action-primary);
+  --brand-hover: var(--color-action-hover);
+  --brand-soft: var(--color-action-soft);
+  --brand-ink: var(--color-link);
+  --brand-on: var(--color-action-on);
+  --illustration-surface: var(--color-illustration-canvas);
+  --success: var(--color-status-success);
+  --success-soft: var(--color-status-success-soft);
+  --warning: var(--color-status-warning);
+  --warning-soft: var(--color-status-warning-soft);
+  --danger: var(--color-status-danger);
+  --danger-soft: var(--color-status-danger-soft);
+  --info: var(--color-status-info);
+  --info-soft: var(--color-status-info-soft);
+
+  /* Component roles keep controls, selection and badges on the same system. */
+  --button-primary-bg: var(--color-action-primary);
+  --button-primary-on: var(--color-action-on);
+  --field-border: var(--color-border-strong);
+  --nav-active-bg: var(--color-action-soft);
+
+  --text-display: 3.5rem;
+  --text-h1: 2.75rem;
+  --text-h2: 2rem;
+  --text-h3: 1.5rem;
+  --text-page: 2rem;
+  --text-section: 1.375rem;
+  --text-card: 1rem;
+  --text-body: 1rem;
+  --text-label: 0.875rem;
+  --text-meta: 0.75rem;
+  --text-button: 0.875rem;
+  --tracking-eyebrow: 0.06em;
+  --tracking-heading: -0.025em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
   --shadow-sm: 0 1px 2px rgba(24, 23, 27, 0.06);
   --shadow-md: 0 6px 24px -8px rgba(24, 23, 27, 0.14);
   --shadow-lg: 0 24px 60px -18px rgba(24, 23, 27, 0.28);
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --interaction-hover: color-mix(in srgb, var(--surface-3) 72%, transparent);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --interaction-hover: var(--color-bg-hover);
+  --motion-fast: 120ms ease-out;
   --motion-quiet: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-slow: 240ms cubic-bezier(0.16, 1, 0.3, 1);
   --loader-track: #e32636;
   --loader-duration: 3s;
 }
 
 :root[data-theme="dark"] {
-  --canvas: #111012;
-  --workspace: #19171b;
-  --surface: #211f23;
-  --surface-2: #262329;
-  --surface-3: #2e2a31;
-  --ink: #f5f3f6;
-  --ink-2: #d2ccd5;
-  --muted: #aaa4ad;
-  --faint: #76707b;
-  --line: #333036;
-  --line-strong: #464149;
-  --brand: #a781c4;
-  --brand-hover: #b996d2;
-  --brand-soft: #35254a;
-  --brand-ink: #d8c6ea;
-  --brand-on: #1b1023;
-  --illustration-surface: #1a2035;
-  --success: #7fc9a8;
-  --success-soft: #1d362c;
-  --warning: #e0b35f;
-  --warning-soft: #382d19;
-  --danger: #e58b96;
-  --danger-soft: #3b2126;
-  --info: #8fb7dd;
-  --info-soft: #1d2c3c;
+  --color-bg-canvas: #0b0f19;
+  --color-bg-surface: #12131d;
+  --color-bg-elevated: #191b28;
+  --color-bg-hover: #222432;
+  --color-text-primary: #f5f4f7;
+  --color-text-secondary: #b6b1be;
+  --color-text-tertiary: #898390;
+  --color-border-default: #2a2c38;
+  --color-border-strong: #6f7180;
+  --color-action-primary: #6b5cf4;
+  --color-action-hover: #5a4ae0;
+  --color-action-pressed: #4c3dcc;
+  --color-action-on: #ffffff;
+  --color-action-soft: #2b2750;
+  --color-link: #c9c1ff;
+  --color-focus: #a99cff;
+  --color-icon-highlight: #eef2ff;
+  --color-illustration-canvas: #1a2035;
+  --color-status-success: #7fc9a8;
+  --color-status-success-soft: #1d362c;
+  --color-status-warning: #e0b35f;
+  --color-status-warning-soft: #382d19;
+  --color-status-danger: #e58b96;
+  --color-status-danger-soft: #3b2126;
+  --color-status-info: #8fb7dd;
+  --color-status-info-soft: #1d2c3c;
+  --chart-series-1: #6b5cf4;
+  --chart-series-2: #887af7;
+  --chart-series-3: #a297fa;
+  --chart-series-4: #b8aefc;
+  --chart-series-5: #d0c9fe;
+  --chart-series-6: #e3deff;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 6px 24px -8px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 24px 60px -18px rgba(0, 0, 0, 0.65);
@@ -86,7 +176,8 @@ html[data-theme="dark"] {
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-ui), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
   min-height: 100vh;
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
@@ -137,7 +228,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -189,12 +280,22 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.035em;
+  font-family: inherit;
+  letter-spacing: var(--tracking-heading);
+}
+
+.status-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .font-mono {
-  font-family: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
 }
 
 .text-muted {
@@ -206,17 +307,17 @@ body {
 }
 
 .heading-hero {
-  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  font-family: inherit;
   font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1.02;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.1;
 }
 
 .heading-page {
-  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  font-family: inherit;
   font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.12;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.2;
 }
 
 /* ---- Scoped GT loading and data skeletons ---- */
@@ -397,7 +498,7 @@ body {
   gap: 0.45rem;
   color: var(--muted);
   font-size: 0.8125rem;
-  font-weight: 650;
+  font-weight: 600;
   text-decoration-line: underline;
   text-decoration-color: transparent;
   text-underline-offset: 4px;
@@ -486,10 +587,10 @@ body {
     overflow: visible;
     clip: auto;
     white-space: normal;
-    font-family: var(--font-plex-mono), ui-monospace, monospace;
-    font-size: 0.6875rem;
+    font-family: inherit;
+    font-size: var(--text-meta);
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
   }
 }

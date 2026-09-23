@@ -1,5 +1,5 @@
 .mark {
-  background: #fff;
+  background: var(--surface);
 }
 
 .lightLogo,

@@ -110,7 +110,7 @@ export function TicketAttachmentPicker({
           ))}
         </div>
       ) : (
-        <p className="mt-4 flex items-center gap-2 text-[11px] text-[var(--faint)]">
+        <p className="mt-4 flex items-center gap-2 text-xs text-[var(--faint)]">
           <ImagePlus className="h-3.5 w-3.5" /> You can also paste a screenshot with Ctrl + V.
         </p>
       )}

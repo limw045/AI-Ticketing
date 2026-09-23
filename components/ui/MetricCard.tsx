@@ -21,7 +21,7 @@ export function MetricCard({
   return (
     <div className={cn("metric-card surface p-5", className)}>
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+        <span className="font-mono text-xs font-semibold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]">
           {label}
         </span>
         {icon && <span className="text-[var(--muted)]">{icon}</span>}

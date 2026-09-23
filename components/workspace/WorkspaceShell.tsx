@@ -130,7 +130,7 @@ function SidebarContent({
               <span className="block truncate text-xs font-semibold text-[var(--ink)]">
                 {profile.display_name || "AI Department"}
               </span>
-              <span className="block truncate font-mono text-[10px] text-[var(--muted)]">
+              <span className="block truncate font-mono text-xs text-[var(--muted)]">
                 {profile.role === "super_admin"
                     ? "Super Admin"
                     : profile.role === "admin"

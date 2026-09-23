@@ -489,7 +489,7 @@ export default function TicketDashboard() {
                     </button>
                   )}
 
-                  <span className="shrink-0 font-mono text-[11px] font-semibold text-[var(--faint)]">
+                  <span className="shrink-0 font-mono text-xs font-semibold text-[var(--faint)]">
                     #{ticket.ticket_number}
                   </span>
 
@@ -506,7 +506,7 @@ export default function TicketDashboard() {
                 </div>
 
                 <div className="flex w-full shrink-0 items-center justify-between gap-3 border-t border-[var(--line)] pt-3 text-xs sm:w-auto sm:justify-end sm:border-0 sm:pt-0">
-                  <span className="hidden rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--muted)] md:inline-flex">
+                  <span className="hidden rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--muted)] md:inline-flex">
                     {ticket.category}
                   </span>
 
@@ -514,18 +514,18 @@ export default function TicketDashboard() {
                     <span className="block text-xs font-semibold leading-tight text-[var(--ink)]">
                       {ticket.author?.display_name || "Unknown Author"}
                     </span>
-                    <span className="mt-0.5 block font-mono text-[10px] text-[var(--faint)]">
+                    <span className="mt-0.5 block font-mono text-xs text-[var(--faint)]">
                       {ticket.author?.user_type === "intern"
                         ? "Intern"
                         : "Staff"}
                     </span>
                   </div>
 
-                  <span className="hidden w-16 text-right font-mono text-[10px] font-medium text-[var(--faint)] lg:block">
+                  <span className="hidden w-16 text-right font-mono text-xs font-medium text-[var(--faint)] lg:block">
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </span>
 
-                  <span className="font-mono text-[10px] text-[var(--faint)] sm:hidden">
+                  <span className="font-mono text-xs text-[var(--faint)] sm:hidden">
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </span>
                   <StatusBadge tone={statusTone(ticket.status)} className="shrink-0">

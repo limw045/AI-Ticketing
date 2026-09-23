@@ -21,7 +21,7 @@ export interface OverviewTicket {
 
 const stages = [
   { status: "open", label: "Open", color: "var(--info)" },
-  { status: "in_progress", label: "In progress", color: "var(--brand)" },
+  { status: "in_progress", label: "In progress", color: "var(--info)" },
   { status: "resolved", label: "Resolved", color: "var(--success)" },
   { status: "closed", label: "Closed", color: "var(--faint)" },
 ];

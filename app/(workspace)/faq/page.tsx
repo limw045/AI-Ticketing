@@ -144,7 +144,7 @@ export default function FAQPage() {
           placeholder="Search VPN, models, GPUs, datasets..."
           className="min-h-11 w-full bg-transparent text-base text-[var(--ink)] outline-none placeholder:text-[var(--faint)] sm:text-sm"
         />
-        <span className="hidden font-mono text-[10px] text-[var(--faint)] sm:inline">
+        <span className="hidden font-mono text-xs text-[var(--faint)] sm:inline">
           / SEARCH
         </span>
       </div>
@@ -212,7 +212,7 @@ export default function FAQPage() {
                   <span className="block text-base font-semibold tracking-tight text-[var(--ink)]">
                     {faq.question}
                   </span>
-                  <span className="mt-1.5 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  <span className="mt-1.5 block font-mono text-xs font-semibold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]">
                     {faq.category}
                   </span>
                 </span>

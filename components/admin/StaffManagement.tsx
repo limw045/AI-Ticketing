@@ -100,7 +100,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
           <div className="flex items-center justify-between md:col-span-2">
             <div>
               <h2 className="font-display text-base font-bold">Edit {editing.display_name}</h2>
-              <p className="mt-1 font-mono text-[11px] text-[var(--faint)]">{editing.email}</p>
+              <p className="mt-1 font-mono text-xs text-[var(--faint)]">{editing.email}</p>
             </div>
             <button type="button" onClick={() => setEditing(null)} className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-2)]"><X className="h-4 w-4" /></button>
           </div>
@@ -151,13 +151,13 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
               const canManage = canManageProfile(admin.viewerRole, row.role as WorkspaceRole, row.id === admin.viewerId);
               return (
                 <tr key={row.id} className="transition hover:bg-[var(--surface-2)]">
-                  <AdminTd><span className="block text-sm font-semibold">{row.display_name}{row.id === admin.viewerId && <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 font-mono text-[9px] text-[var(--brand-ink)]">You</span>}</span><span className="block font-mono text-[11px] text-[var(--faint)]">{row.email}</span></AdminTd>
+                  <AdminTd><span className="block text-sm font-semibold">{row.display_name}{row.id === admin.viewerId && <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 text-xs text-[var(--brand-ink)]">You</span>}</span><span className="block font-mono text-xs text-[var(--faint)]">{row.email}</span></AdminTd>
                   <AdminTd className="text-xs text-[var(--muted)]">{row.department}</AdminTd>
                   <AdminTd><StatusBadge tone={row.user_type === "intern" ? "warning" : "neutral"}>{accountTypeLabel(row.user_type)}</StatusBadge></AdminTd>
                   <AdminTd><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{roleLabel(row.role)}</StatusBadge></AdminTd>
                   <AdminTd><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{accountStatusLabel(row.account_status)}</StatusBadge></AdminTd>
-                  <AdminTd className="font-mono text-[11px] text-[var(--faint)]">{new Date(row.created_at).toLocaleDateString()}</AdminTd>
-                  <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{canManage ? admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(row)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: row.id })} /></> : <span className="font-mono text-[10px] text-[var(--faint)]">Read only</span>}</div></AdminTd>
+                  <AdminTd className="font-mono text-xs text-[var(--faint)]">{new Date(row.created_at).toLocaleDateString()}</AdminTd>
+                  <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{canManage ? admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(row)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: row.id })} /></> : <span className="font-mono text-xs text-[var(--faint)]">Read only</span>}</div></AdminTd>
                 </tr>
               );
             })}

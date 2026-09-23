@@ -117,7 +117,7 @@ export function IncidentBanner({ canManage = false }: { canManage?: boolean }) {
       </span>
       <div className="relative z-10 flex shrink-0 items-center gap-2 border-r border-current/20 bg-inherit px-3 sm:px-4">
         <StatusIcon className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden font-mono text-[10px] font-bold uppercase tracking-[0.14em] sm:inline">
+        <span className="hidden font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] sm:inline">
           Service status
         </span>
         <strong className="whitespace-nowrap text-xs">

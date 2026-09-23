@@ -336,7 +336,7 @@ export default function NewTicketPage() {
       <form onSubmit={handleSubmit} className="request-form space-y-8">
         <section className="surface p-4 sm:p-6">
           <div className="mb-6 flex items-center gap-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-[11px] font-bold text-[var(--brand-ink)]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-xs font-bold text-[var(--brand-ink)]">
               1
             </span>
             <div>
@@ -410,10 +410,10 @@ export default function NewTicketPage() {
             </div>}
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-3 py-1.5 font-mono text-[10px] font-semibold text-[var(--muted)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-3 py-1.5 font-mono text-xs font-semibold text-[var(--muted)]">
                 <Monitor className="h-3.5 w-3.5" /> Auto-context attached
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-transparent bg-[var(--success-soft)] px-3 py-1.5 font-mono text-[10px] font-bold text-[var(--success)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-transparent bg-[var(--success-soft)] px-3 py-1.5 font-mono text-xs font-bold text-[var(--success)]">
                 <ShieldCheck className="h-3.5 w-3.5" /> Data guard active
               </span>
             </div>
@@ -423,7 +423,7 @@ export default function NewTicketPage() {
         <section className="surface overflow-hidden">
           <div className="flex flex-col gap-4 border-b border-[var(--line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-[11px] font-bold text-[var(--brand-ink)]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-xs font-bold text-[var(--brand-ink)]">
                 2
               </span>
               <div>

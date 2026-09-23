@@ -50,7 +50,7 @@ export function BrandLockup({
           Grant Thornton
         </span>
         {!compact && (
-          <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+          <span className="mt-1 text-xs font-medium uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]">
             AI Department
           </span>
         )}

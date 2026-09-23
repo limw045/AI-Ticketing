@@ -458,7 +458,7 @@ export default function TicketDetailPage({
                         </StatusBadge>
                       )}
                     </div>
-                    <span className="font-mono text-[10px] font-medium text-[var(--faint)] sm:text-right">
+                    <span className="font-mono text-xs font-medium text-[var(--faint)] sm:text-right">
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
@@ -543,7 +543,7 @@ export default function TicketDetailPage({
                       </span>
                       <span
                         className={cn(
-                          "font-mono text-[11px] font-bold uppercase tracking-[0.12em]",
+                          "font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)]",
                           isCurrent
                             ? "text-[var(--brand-ink)]"
                             : reached
@@ -554,7 +554,7 @@ export default function TicketDetailPage({
                         {ticketStatusLabel(step)}
                       </span>
                       {isCurrent && (
-                        <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 font-mono text-[9px] font-bold text-[var(--brand-ink)]">
+                        <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 text-xs font-bold text-[var(--brand-ink)]">
                           Current
                         </span>
                       )}
@@ -582,7 +582,7 @@ export default function TicketDetailPage({
               <h2 className="font-display text-base font-bold">
                 Sub-tasks
               </h2>
-              <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-mono text-[10px] font-bold text-[var(--brand-ink)]">
+              <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-mono text-xs font-bold text-[var(--brand-ink)]">
                 {completedSubtasks} / {subtasks.length}
               </span>
             </div>
@@ -701,7 +701,7 @@ export default function TicketDetailPage({
           </section>
 
           <section className="surface space-y-3 p-5">
-            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+            <h3 className="font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]">
               Reporter info
             </h3>
             <div className="flex items-center gap-3">
@@ -729,7 +729,7 @@ export default function TicketDetailPage({
           </section>
 
           {canSeeSensitiveContext && <section className="surface space-y-3 p-5">
-            <h3 className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+            <h3 className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]">
               <Monitor className="h-3.5 w-3.5" /> System context
             </h3>
             {ticket.device_context ? (

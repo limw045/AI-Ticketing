@@ -152,7 +152,7 @@ export function NotificationsMenu() {
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand)] px-1 font-mono text-[9px] font-bold text-[var(--brand-on)]">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-xs font-bold text-[var(--brand-on)]">
             {unreadCount}
           </span>
         )}
@@ -161,10 +161,10 @@ export function NotificationsMenu() {
       {open && (
         <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
           <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+            <span className="font-mono text-xs font-bold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--muted)]">
               Notifications
             </span>
-            <span className="font-mono text-[10px] text-[var(--faint)]">
+            <span className="font-mono text-xs text-[var(--faint)]">
               {unreadCount} unread
             </span>
           </div>
@@ -206,7 +206,7 @@ export function NotificationsMenu() {
                   <strong className="block truncate text-xs text-[var(--ink)]">
                     {notification.title}
                   </strong>
-                  <span className="mt-1 block line-clamp-2 text-[11px] leading-4 text-[var(--muted)]">
+                  <span className="mt-1 block line-clamp-2 text-xs leading-4 text-[var(--muted)]">
                     {notification.body}
                   </span>
                 </span>

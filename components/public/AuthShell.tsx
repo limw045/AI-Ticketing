@@ -70,12 +70,10 @@ export function AuthShell({
               className={`${styles.image} ${styles.darkImage}`}
             />
             <div className={styles.caption}>
-              <span className={styles.eyebrow}>YOUR EVERYDAY SUPPORT, SIMPLIFIED</span>
               <h2>{artwork.title}</h2>
               <p>{artwork.description}</p>
             </div>
           </div>
-          <span className={styles.artworkFooter}>THE AI DESK · GTMSW</span>
         </aside>
       </div>
     </main>

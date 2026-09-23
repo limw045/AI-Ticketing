@@ -1,24 +1,11 @@
 import "./globals.css";
-import { Manrope, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/app/theme";
 
-const manrope = Manrope({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-mono",
+  variable: "--font-ui",
   display: "swap",
 });
 
@@ -46,9 +33,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className={`${manrope.variable} ${inter.variable} ${plexMono.variable} antialiased`}
-      >
+      <body className={`${geist.variable} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

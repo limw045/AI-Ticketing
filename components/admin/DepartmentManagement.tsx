@@ -54,7 +54,7 @@ export function DepartmentManagement() {
     </form>
     <div className="surface divide-y divide-[var(--line)] overflow-hidden">
       {departments.map((department) => <div key={department.id} className="flex items-center justify-between gap-4 p-4">
-        <div><p className="text-sm font-semibold">{department.name}</p><p className="font-mono text-[10px] text-[var(--faint)]">{department.slug}</p></div>
+        <div><p className="text-sm font-semibold">{department.name}</p><p className="font-mono text-xs text-[var(--faint)]">{department.slug}</p></div>
         <div className="flex items-center gap-3"><StatusBadge tone={department.is_active ? "success" : "neutral"}>{department.is_active ? "Active" : "Inactive"}</StatusBadge>{department.is_system ? <StatusBadge tone="neutral">System</StatusBadge> : <Button type="button" variant="secondary" className="!min-h-9 !px-3 !py-1.5 !text-xs" onClick={() => void toggleDepartment(department)}>{department.is_active ? "Deactivate" : "Restore"}</Button>}</div>
       </div>)}
     </div>

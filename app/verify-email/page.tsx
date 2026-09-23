@@ -40,7 +40,7 @@ export default function VerifyEmailPage() {
           We’ve sent a verification link to your email. Open it to
           activate your account, then return to sign in.
         </p>
-        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--faint)]">
+        <div className="mt-6 font-mono text-xs font-semibold uppercase tracking-[var(--tracking-eyebrow)] text-[var(--faint)]">
           Returning to login in {seconds}s
         </div>
         <Link href="/login" className="mt-7 block">

@@ -269,7 +269,7 @@ export function SimpleCrudPage({
                 {columns.map((column) => {
                   const value = readPath(row, column.key);
                   return (
-                    <AdminTd key={column.key} className={column.format === "date" ? "whitespace-nowrap font-mono text-[11px] text-[var(--faint)]" : ""}>
+                    <AdminTd key={column.key} className={column.format === "date" ? "whitespace-nowrap font-mono text-xs text-[var(--faint)]" : ""}>
                       {column.format === "status" || column.format === "visibility" ? (
                         <StatusBadge tone={value ? "success" : "neutral"}>{displayValue(value, column.format)}</StatusBadge>
                       ) : (
@@ -283,7 +283,7 @@ export function SimpleCrudPage({
                 <AdminTd className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     {isReadOnlyRow?.(row) ? (
-                      <span className="font-mono text-[10px] text-[var(--faint)]">System managed</span>
+                      <span className="font-mono text-xs text-[var(--faint)]">System managed</span>
                     ) : admin.deleted ? (
                       <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} />
                     ) : (
