@@ -35,16 +35,30 @@ import {
   RotateCcw,
   Circle,
   Check,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { BackButton } from "@/components/ui/BackButton";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
 import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
+import { commentSenderLabel } from "@/lib/comment-sender";
 
 const STATUS_STEPS = ["open", "in_progress", "resolved", "closed"];
 const SAFE_TICKET_SELECT = "id, ticket_number, title, description, status, priority, category, department_id, author_id, assignee_id, source, subtasks, created_at, updated_at, resolved_at, deleted_at, author:profiles!tickets_author_id_fkey(id, display_name, department, user_type), assignee:profiles!tickets_assignee_id_fkey(id, display_name, department)";
 const MANAGEMENT_TICKET_SELECT = "*, author:profiles!tickets_author_id_fkey(*), assignee:profiles!tickets_assignee_id_fkey(*)";
+
+function CommentRoleBadge({ comment }: { comment: { author?: { role?: string | null } | null; type?: string | null; is_internal_note?: boolean } }) {
+  const sender = commentSenderLabel({
+    role: comment.author?.role,
+    type: comment.type,
+    isInternalNote: comment.is_internal_note,
+  });
+  return <StatusBadge tone={sender === "Admin" ? "brand" : "neutral"}>
+    {sender === "Admin" ? <ShieldCheck className="h-3 w-3" aria-hidden="true" /> : sender === "Staff" ? <User className="h-3 w-3" aria-hidden="true" /> : null}
+    {sender}
+  </StatusBadge>;
+}
 
 export default function TicketDetailPage({
   params,
@@ -90,8 +104,23 @@ export default function TicketDetailPage({
     if (!includeInternalNotes) commentQuery = commentQuery.eq("is_internal_note", false);
     const { data, error: commentError } = await commentQuery.order("created_at", { ascending: true });
 
-    if (!commentError) setComments(data ?? []);
-    return commentError;
+    if (commentError) return commentError;
+
+    const rows = data ?? [];
+    const authorIds = [...new Set(rows.map((comment) => comment.author_id).filter(Boolean))];
+    const roles = new Map<string, string>();
+    if (authorIds.length > 0) {
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .in("id", authorIds);
+      if (!error) for (const profile of profiles ?? []) roles.set(profile.id, profile.role);
+    }
+    setComments(rows.map((comment) => ({
+      ...comment,
+      author: comment.author ? { ...comment.author, role: roles.get(comment.author_id) ?? null } : null,
+    })));
+    return null;
   }, [ticketId]);
 
   const fetchTicketDetails = useCallback(async () => {
@@ -465,10 +494,11 @@ export default function TicketDetailPage({
                   )}
                 >
                   <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-bold text-[var(--ink)]">
-                        {comment.author?.display_name || "System"}
+                        {comment.author?.display_name || (comment.type === "system_audit" ? "System" : "Former user")}
                       </span>
+                      <CommentRoleBadge comment={comment} />
                       {comment.is_internal_note && (
                         <StatusBadge tone="warning">
                           <Lock className="h-3 w-3" /> Internal note
