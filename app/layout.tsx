@@ -24,7 +24,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   icons: {
-    icon: { url: "/brand/ticketing-icon.png", sizes: "64x64", type: "image/png" },
+    icon: { url: "/brand/ticketing-icon-transparent.png", sizes: "1254x1254", type: "image/png" },
     apple: { url: "/brand/ticketing-apple-icon.png", sizes: "180x180", type: "image/png" },
   },
   title: "Grant Thornton AI Department | Support Desk",
