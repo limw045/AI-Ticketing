@@ -11,16 +11,17 @@ export function BrandMark({
   return (
     <span
       aria-hidden="true"
-      className={cn("relative inline-block shrink-0 overflow-hidden rounded-full", className)}
+      className={cn("relative inline-block shrink-0 overflow-hidden rounded-lg bg-white", className)}
       style={{ width: size, height: size }}
     >
       <Image
-        src="/brand/gt-automation-mark.png"
+        src="/brand/ticketing-logo.png"
         alt=""
-        width={447}
-        height={447}
-        className="h-full w-full object-contain"
-        priority
+        width={1254}
+        height={1254}
+        sizes="64px"
+        className="absolute max-w-none"
+        style={{ width: "150%", height: "150%", left: "-25%", top: "-21%" }}
       />
     </span>
   );

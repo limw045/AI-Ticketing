@@ -1,10 +1,18 @@
 import jsPDF from "jspdf";
 import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
 
-export function exportTicketPDF(ticket: any) {
+export async function exportTicketPDF(ticket: any) {
   const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text(`Grant Thornton AI Department · Ticket Report: #${ticket.ticket_number || "1001"}`, 20, 20);
+  try {
+    const response = await fetch("/brand/ticketing-apple-icon.png");
+    if (response.ok) {
+      doc.addImage(new Uint8Array(await response.arrayBuffer()), "PNG", 14, 4, 27, 27);
+    }
+  } catch {
+    // A temporarily unavailable brand asset must not prevent ticket export.
+  }
+  doc.setFontSize(13);
+  doc.text(`Grant Thornton AI Department · Ticket Report: #${ticket.ticket_number || "1001"}`, 43, 20);
   doc.setFontSize(12);
   doc.text(`Title: ${ticket.title || "N/A"}`, 20, 35);
   doc.text(`Category: ${ticket.category || "General"}`, 20, 45);

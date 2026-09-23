@@ -23,6 +23,10 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: { url: "/brand/ticketing-icon.png", sizes: "64x64", type: "image/png" },
+    apple: { url: "/brand/ticketing-apple-icon.png", sizes: "180x180", type: "image/png" },
+  },
   title: "Grant Thornton AI Department | Support Desk",
   description:
     "Internal ticketing and case tracking for Grant Thornton automations. Automated services report issues with logs and context, and every case stays traceable to resolution.",
