@@ -333,7 +333,7 @@ export default function NewTicketPage() {
         description="Pick a category for guided details, then attach screenshots or sanitized TXT logs when useful."
       />
 
-      <form onSubmit={handleSubmit} className="request-form space-y-8">
+      <form onSubmit={handleSubmit} className="request-form space-y-8 pb-6">
         <section className="surface p-4 sm:p-6">
           <div className="mb-6 flex items-center gap-3">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] font-mono text-xs font-bold text-[var(--brand-ink)]">
@@ -429,11 +429,11 @@ export default function NewTicketPage() {
               <div>
                 <h2 className="font-display text-base font-bold">Description</h2>
                 <p className="text-xs text-[var(--muted)]">
-                  Follow the guidance and avoid credentials or sensitive data.
+                  Describe the issue in plain language. We prepare guidance for the category you choose.
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-2 items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface-2)] p-1 text-xs font-semibold sm:flex">
+            <div className="flex flex-wrap items-center gap-2"><span className="text-xs text-[var(--muted)]">Supports Markdown</span><div className="grid grid-cols-2 items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface-2)] p-1 text-xs font-semibold sm:flex">
               <button
                 type="button"
                 onClick={() => setPreviewTab("edit")}
@@ -456,7 +456,7 @@ export default function NewTicketPage() {
               >
                 Preview
               </button>
-            </div>
+            </div></div>
           </div>
 
           <div className="px-4 py-5 sm:px-6">
@@ -469,10 +469,10 @@ export default function NewTicketPage() {
                 onChange={(e) => { setDescription(e.target.value); setFieldErrors((current) => ({ ...current, description: undefined })); }}
                 aria-invalid={Boolean(fieldErrors.description)}
                 placeholder="Describe the request using the guidance for this category..."
-                className="min-h-[240px] font-mono sm:min-h-[320px]"
+                className="min-h-[240px] sm:min-h-[320px]"
               />
             ) : (
-              <div className="ticket-text min-h-[240px] rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-4 font-mono text-sm leading-relaxed text-[var(--ink-2)] sm:min-h-[320px] sm:p-5">
+              <div className="ticket-text min-h-[240px] rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-4 text-sm leading-relaxed text-[var(--ink-2)] sm:min-h-[320px] sm:p-5">
                 {parsedDescription.text}
               </div>
             )}
@@ -489,7 +489,7 @@ export default function NewTicketPage() {
           </div>
         </section>
 
-        <div className="request-actions safe-area-bottom sticky bottom-0 z-20 -mx-4 flex w-[calc(100%+2rem)] items-center justify-between gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 pt-3 shadow-[var(--shadow-lg)] sm:bottom-5 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-full sm:px-5 sm:py-3">
+        <div className="request-actions safe-area-bottom sticky bottom-0 z-20 flex w-full items-center justify-between gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
           <button
             type="button"
             onClick={() => void handleClearDraft()}

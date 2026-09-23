@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DepartmentManagement } from "@/components/admin/DepartmentManagement";
 import { accountStatusLabel, accountTypeLabel, roleLabel } from "@/lib/display-labels";
 import { ListEmptyState } from "@/components/ui/ListEmptyState";
+import { formatDate } from "@/lib/date-display";
 
 export function StaffManagement({ administratorsOnly = false }: { administratorsOnly?: boolean }) {
   const admin = useAdminResource("staff");
@@ -34,6 +35,8 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
   const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
   const [view, setView] = useState<"people" | "departments">("people");
+  const hasFilters = Boolean(admin.q || admin.dateFrom || admin.dateTo || admin.deleted || Object.entries(admin.filters).some(([key, value]) => key !== "role_group" && value && value !== "all"));
+  const clearVisibleFilters = () => { admin.clearFilters(); if (administratorsOnly) admin.setFilter("role_group", "administrators"); };
 
   useEffect(() => {
     if (administratorsOnly) admin.setFilter("role_group", "administrators");
@@ -78,7 +81,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         title={administratorsOnly ? "Admin management" : "Staff access & roles"}
         description={
           administratorsOnly
-            ? "Promote, demote, suspend, or restore administrators. Self-management and removal of the final active Super Admin are blocked."
+            ? "Manage privileged administrator access. Self-management and removal of the final active Super Admin are blocked."
             : "Manage Employee profile details and access. Administrator accounts remain read-only unless you are a Super Admin."
         }
       />
@@ -115,14 +118,14 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
       )}
 
       <AdminResourceToolbar q={admin.q} onQChange={admin.setQ} deleted={admin.deleted} onDeletedChange={admin.setDeleted} dateFrom={admin.dateFrom} dateTo={admin.dateTo} onDateFromChange={admin.setDateFrom} onDateToChange={admin.setDateTo}>
-        {!administratorsOnly && <Select value={admin.filters.role ?? "all"} onChange={(event) => admin.setFilter("role", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Role"><option value="all">All roles</option><option value="employee">Employee</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></Select>}
-        <Select value={admin.filters.account_status ?? "all"} onChange={(event) => admin.setFilter("account_status", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Account status"><option value="all">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></Select>
-        <Select value={admin.filters.user_type ?? "all"} onChange={(event) => admin.setFilter("user_type", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Staff type"><option value="all">All staff types</option><option value="full_time">Full-time</option><option value="intern">Intern</option><option value="contractor">Contractor</option></Select>
+        {!administratorsOnly && <Select value={admin.filters.role ?? "all"} onChange={(event) => admin.setFilter("role", event.target.value)} className="!w-auto !py-2.5 !text-[13px]" aria-label="Role"><option value="all">All roles</option><option value="employee">Employee</option><option value="admin">Admin</option><option value="super_admin">Super Admin</option></Select>}
+        <Select value={admin.filters.account_status ?? "all"} onChange={(event) => admin.setFilter("account_status", event.target.value)} className="!w-auto !py-2.5 !text-[13px]" aria-label="Account status"><option value="all">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></Select>
+        <Select value={admin.filters.user_type ?? "all"} onChange={(event) => admin.setFilter("user_type", event.target.value)} className="!w-auto !py-2.5 !text-[13px]" aria-label="Staff type"><option value="all">All staff types</option><option value="full_time">Full-time</option><option value="intern">Intern</option><option value="contractor">Contractor</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "No matching staff" : "No staff accounts yet"} description={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "Try a broader search or reset the active filters." : "Share the registration link above so staff can create their accounts."} /> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={hasFilters ? "No matching staff" : administratorsOnly ? "No administrators yet" : "No staff accounts yet"} description={hasFilters ? "Try a broader search or reset the active filters." : administratorsOnly ? "Privileged accounts will appear here when an administrator is assigned." : "Share the registration link above so staff can create their accounts."} actionLabel={hasFilters ? "Clear filters" : undefined} onAction={hasFilters ? clearVisibleFilters : undefined} /> : (
         <AdminTable
-          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} accounts</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
+          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} {administratorsOnly ? "administrators" : "staff accounts"}</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
           mobile={
             <AdminMobileList
               items={admin.rows.map((row) => {
@@ -137,7 +140,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
                     { label: "Staff type", value: accountTypeLabel(row.user_type) },
                     { label: "Role", value: roleLabel(row.role) },
                     { label: "Status", value: accountStatusLabel(row.account_status) },
-                    { label: "Joined", value: new Date(row.created_at).toLocaleDateString() },
+                    { label: "Joined", value: formatDate(row.created_at) },
                   ],
                   actions: (close) => canManage ? admin.deleted ? <RestoreButton onRestore={async () => { await admin.mutate({ action: "restore", id: row.id }); close(); }} /> : <><Button type="button" variant="secondary" onClick={() => { startEdit(row); close(); }}><Pencil className="h-4 w-4" /> Edit</Button><TwoStepDelete onConfirm={async () => { await admin.mutate({ action: "delete", id: row.id }); close(); }} /></> : <span className="py-2 text-center font-mono text-xs text-[var(--faint)]">Read only</span>,
                 };
@@ -156,8 +159,8 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
                   <AdminTd><StatusBadge tone={row.user_type === "intern" ? "warning" : "neutral"}>{accountTypeLabel(row.user_type)}</StatusBadge></AdminTd>
                   <AdminTd><StatusBadge tone={row.role === "super_admin" ? "brand" : "neutral"}>{roleLabel(row.role)}</StatusBadge></AdminTd>
                   <AdminTd><StatusBadge tone={row.account_status === "active" ? "success" : "danger"}>{accountStatusLabel(row.account_status)}</StatusBadge></AdminTd>
-                  <AdminTd className="font-mono text-xs text-[var(--faint)]">{new Date(row.created_at).toLocaleDateString()}</AdminTd>
-                  <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{canManage ? admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(row)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: row.id })} /></> : <span className="font-mono text-xs text-[var(--faint)]">Read only</span>}</div></AdminTd>
+                  <AdminTd className="whitespace-nowrap text-[13px] text-[var(--muted)]">{formatDate(row.created_at)}</AdminTd>
+                  <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{canManage ? admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-[13px]" onClick={() => startEdit(row)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: row.id })} /></> : <span className="font-mono text-xs text-[var(--faint)]">Read only</span>}</div></AdminTd>
                 </tr>
               );
             })}

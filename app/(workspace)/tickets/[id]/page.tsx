@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getSupabaseSchema } from "@/lib/supabase/config";
 import { createOwnedRealtimeChannel } from "@/lib/supabase/realtime-channel";
 import { exportTicketPDF } from "@/lib/pdf-export";
+import { formatDateTime } from "@/lib/date-display";
 import {
   StatusBadge,
   statusTone,
@@ -396,7 +397,7 @@ export default function TicketDetailPage({
             </strong>{" "}
             ({ticket.author?.user_type === "intern" ? "Intern" : "Staff"} ·{" "}
             {ticket.author?.department}) on{" "}
-            {new Date(ticket.created_at).toLocaleString()}
+            {formatDateTime(ticket.created_at)}
           </p>
         </div>
 
@@ -459,7 +460,7 @@ export default function TicketDetailPage({
                       )}
                     </div>
                     <span className="font-mono text-xs font-medium text-[var(--faint)] sm:text-right">
-                      {new Date(comment.created_at).toLocaleString()}
+                      {formatDateTime(comment.created_at)}
                     </span>
                   </div>
                   <p className="ticket-text text-sm leading-relaxed text-[var(--ink-2)]">

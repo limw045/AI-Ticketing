@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Trash2, Check, ChevronLeft, ChevronRight, Search, ArchiveRestore } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Input, Select } from "@/components/ui/FormField";
+import { DateFilterInput } from "@/components/admin/DateFilterInput";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Alert } from "@/components/ui/Alert";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
@@ -138,7 +139,7 @@ export function AdminToolbar({
   return (
     <div
       className={cn(
-        "surface flex flex-col items-stretch gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 [&>label]:w-full [&>select]:!w-full sm:[&>label]:w-auto sm:[&>select]:!w-auto",
+        "admin-toolbar surface flex flex-col items-stretch gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 [&>label]:w-full [&>select]:!w-full sm:[&>label]:w-auto sm:[&>select]:!w-auto",
         className
       )}
     >
@@ -200,16 +201,16 @@ export function AdminResourceToolbar({
         </button>
         <div className="hidden flex-wrap items-end gap-3 md:flex">
           {children}
-          <Input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} aria-label="Created from" className="!w-auto !py-2.5" />
-          <Input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} aria-label="Created to" className="!w-auto !py-2.5" />
+          <DateFilterInput label="Created from" value={dateFrom} onChange={onDateFromChange} className="w-[164px]" />
+          <DateFilterInput label="Created to" value={dateTo} onChange={onDateToChange} className="w-[164px]" />
           {deletedToggle}
         </div>
       </AdminToolbar>
       <ResponsiveSheet open={filtersOpen} onOpenChange={setFiltersOpen} title="Filter records" description="Apply filters to this administrative view." footer={<button type="button" onClick={() => setFiltersOpen(false)} className="min-h-11 w-full rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-on)]">Apply filters</button>}>
         <div className="space-y-4 [&>select]:!w-full">
           {children}
-          <label className="block"><span className="mb-2 block text-sm font-semibold">Created from</span><Input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} /></label>
-          <label className="block"><span className="mb-2 block text-sm font-semibold">Created to</span><Input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} /></label>
+          <label className="block"><span className="mb-2 block text-sm font-semibold">Created from</span><DateFilterInput label="Created from" value={dateFrom} onChange={onDateFromChange} className="w-full" /></label>
+          <label className="block"><span className="mb-2 block text-sm font-semibold">Created to</span><DateFilterInput label="Created to" value={dateTo} onChange={onDateToChange} className="w-full" /></label>
           {deletedToggle}
         </div>
       </ResponsiveSheet>
@@ -233,9 +234,10 @@ export function AdminPagination({
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(total, page * pageSize);
+  if (total === 0) return null;
   return (
-    <div className="surface flex flex-col items-stretch justify-between gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-      <span className="font-mono text-xs text-[var(--faint)]">
+    <div className="admin-pagination flex flex-col items-stretch justify-between gap-3 border-t border-[var(--line)] px-1 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+      <span className="text-[13px] text-[var(--muted)]">
         {first}–{last} of {total}
       </span>
       <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
@@ -243,7 +245,7 @@ export function AdminPagination({
           value={pageSize}
           onChange={(event) => onPageSizeChange(Number(event.target.value) as 25 | 50 | 100)}
           aria-label="Rows per page"
-          className="!w-auto !py-2 !text-xs"
+          className="!w-auto !py-2 !text-[13px]"
         >
           <option value={25}>25 rows</option>
           <option value={50}>50 rows</option>

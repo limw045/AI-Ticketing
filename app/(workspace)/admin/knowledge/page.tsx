@@ -57,7 +57,9 @@ export default function AdminKnowledgePage() {
           compact
           resource="faqs"
           title="FAQs"
+          itemName="answer"
           description="Answers shown in the employee Knowledge page."
+          emptyDescription="Publish an answer to help staff resolve common requests."
           columns={[
             { key: "question", label: "Question" },
             { key: "answer", label: "Answer", format: "truncate" },
@@ -74,7 +76,8 @@ export default function AdminKnowledgePage() {
           filters={[
             {
               key: "is_pinned",
-              label: "Pinned state",
+              label: "Pin status",
+              allLabel: "All",
               options: [
                 { label: "Pinned", value: "true" },
                 { label: "Not pinned", value: "false" },
@@ -87,7 +90,9 @@ export default function AdminKnowledgePage() {
           compact
           resource="category-rules"
           title="Category rules"
+          itemName="category rule"
           description="Default request templates and assignee routing."
+          emptyDescription="Add a category rule to guide and route new requests."
           columns={[
             { key: "category_name", label: "Category" },
             { key: "template_markdown", label: "Template", format: "truncate" },

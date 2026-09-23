@@ -302,10 +302,10 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
 
         <div className="px-4 pb-4 pt-4 md:px-6">
           {categoryData.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)]">
-              <p className="text-sm text-[var(--faint)]">
-                No tickets in this period.
-              </p>
+            <div className="flex min-h-[144px] flex-col items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--line)] px-4 text-center">
+              <p className="text-sm font-semibold text-[var(--ink)]">No tickets in this period</p>
+              <p className="text-sm text-[var(--muted)]">Try another date range or inspect the full queue.</p>
+              <Link href="/admin/tickets" className="text-sm font-semibold text-[var(--brand-ink)]">Open ticket queue</Link>
             </div>
           ) : (
             <div className="h-56 sm:h-64">
@@ -360,7 +360,7 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
         <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-4 md:px-6">
           <div className="flex items-center gap-2">
             <h2 className="font-display text-base font-bold">
-              Department ticket ratio
+              Tickets by department
             </h2>
             <CircleHelp
               className="h-4 w-4 cursor-help text-[var(--muted)]"
@@ -418,12 +418,10 @@ export default function DashboardCharts({ tickets }: { tickets: any[] }) {
 
         <div className="px-4 pb-4 pt-4 md:px-6">
           {deptData.length === 0 ? (
-            <div className="flex h-64 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)]">
-              <p className="text-sm text-[var(--faint)]">
-                {selectedDepts.length === 0
-                  ? "No departments selected."
-                  : "No tickets in this period."}
-              </p>
+            <div className="flex min-h-[144px] flex-col items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--line)] px-4 text-center">
+              <p className="text-sm font-semibold text-[var(--ink)]">{deptOptions.length === 0 ? "No departments yet" : selectedDepts.length === 0 ? "No departments selected" : "No tickets in this period"}</p>
+              <p className="text-sm text-[var(--muted)]">{deptOptions.length === 0 ? "Department trends will appear as requests arrive." : selectedDepts.length === 0 ? "Select departments above to compare their request volume." : "Try another date range or inspect the full queue."}</p>
+              {deptOptions.length === 0 ? <Link href="/admin/staff" className="text-sm font-semibold text-[var(--brand-ink)]">Manage departments</Link> : selectedDepts.length === 0 ? <button type="button" onClick={() => setSelectedDepts(deptOptions)} className="text-sm font-semibold text-[var(--brand-ink)]">Select all departments</button> : <Link href="/admin/tickets" className="text-sm font-semibold text-[var(--brand-ink)]">Open ticket queue</Link>}
             </div>
           ) : (
             <div className="h-56 sm:h-64">

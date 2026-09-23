@@ -30,6 +30,7 @@ import {
   type IncidentStatus,
 } from "@/lib/admin/incident-view";
 import type { AdminActionResult, PaginatedResult } from "@/lib/admin/types";
+import { formatDateTime } from "@/lib/date-display";
 
 interface IncidentRow {
   id: string;
@@ -37,6 +38,7 @@ interface IncidentRow {
   message: string;
   severity: "info" | "warning" | "critical";
   is_active: boolean;
+  created_at: string;
   updated_at: string;
 }
 
@@ -109,7 +111,8 @@ function IncidentSection({
       { label: "Message", value: incident.message },
       { label: "Severity", value: incident.severity },
       { label: "Status", value: incident.is_active ? "Active" : "Resolved" },
-      { label: "Updated", value: new Date(incident.updated_at).toLocaleString() },
+      { label: "Started", value: formatDateTime(incident.created_at) },
+      { label: "Updated", value: formatDateTime(incident.updated_at) },
     ],
     actions: (close: () => void) => deleted ? (
       <RestoreButton onRestore={async () => { await onRestore(incident); close(); }} />
@@ -125,16 +128,16 @@ function IncidentSection({
         header={<><h2 className="font-display text-base font-bold">{title}</h2><StatusBadge tone="neutral">{state.total} total</StatusBadge></>}
         mobile={state.rows.length ? <AdminMobileList items={mobileItems} /> : undefined}
       >
-        <AdminThead><AdminTh>Title</AdminTh><AdminTh>Message</AdminTh><AdminTh>Severity</AdminTh><AdminTh>Status</AdminTh><AdminTh>Updated</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
+        <AdminThead><AdminTh>Incident</AdminTh><AdminTh>Severity</AdminTh><AdminTh>Status</AdminTh><AdminTh>Started</AdminTh><AdminTh>Updated</AdminTh><AdminTh className="text-right">Actions</AdminTh></AdminThead>
         <tbody className="divide-y divide-[var(--line)]">
           {state.rows.length === 0 ? <tr><td className="px-4 py-12 text-center text-sm text-[var(--muted)]" colSpan={6}>No incidents match this view.</td></tr> : state.rows.map((incident) => (
             <tr key={incident.id} className="transition hover:bg-[var(--surface-2)]">
-              <AdminTd><span className="text-sm font-semibold">{incident.title}</span></AdminTd>
-              <AdminTd><span className="block max-w-[320px] truncate text-xs text-[var(--muted)]">{incident.message}</span></AdminTd>
+              <AdminTd><span className="block max-w-[300px] truncate text-sm font-semibold">{incident.title}</span><span className="mt-1 block max-w-[300px] truncate text-[13px] text-[var(--muted)]">{incident.message}</span></AdminTd>
               <AdminTd><StatusBadge tone={severityTone(incident.severity)}>{incident.severity}</StatusBadge></AdminTd>
               <AdminTd><StatusBadge tone={incident.is_active ? "success" : "neutral"}>{incident.is_active ? "Active" : "Resolved"}</StatusBadge></AdminTd>
-              <AdminTd className="whitespace-nowrap font-mono text-xs text-[var(--faint)]">{new Date(incident.updated_at).toLocaleString()}</AdminTd>
-              <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{deleted ? <RestoreButton onRestore={() => onRestore(incident)} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => onEdit(incident)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => onDelete(incident)} /></>}</div></AdminTd>
+              <AdminTd className="whitespace-nowrap text-[13px] text-[var(--muted)]">{formatDateTime(incident.created_at)}</AdminTd>
+              <AdminTd className="whitespace-nowrap text-[13px] text-[var(--muted)]">{formatDateTime(incident.updated_at)}</AdminTd>
+              <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{deleted ? <RestoreButton onRestore={() => onRestore(incident)} /> : <><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-[13px]" onClick={() => onEdit(incident)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => onDelete(incident)} /></>}</div></AdminTd>
             </tr>
           ))}
         </tbody>
@@ -238,7 +241,7 @@ export function IncidentsAdminPage() {
       <PageHeader eyebrow="Administration" title="Incidents" description="Publish, resolve, edit, delete, and restore the global outage banners every staff member sees." actions={<Button type="button" onClick={startCreate}><Plus className="h-4 w-4" /> Add Incident</Button>} />
       {mutationError && <Alert tone="error" role="alert">{mutationError}</Alert>}{notice && <Alert tone="success">{notice}</Alert>}
       {showForm && <form onSubmit={submit} className="surface grid grid-cols-1 gap-4 p-6 md:grid-cols-2"><div className="flex items-center justify-between md:col-span-2"><div><h2 className="font-display text-base font-bold">{editing ? "Edit Incident" : "Add Incident"}</h2><p className="mt-1 text-xs text-[var(--muted)]">Active incidents appear in the global service-status banner.</p></div><button type="button" onClick={() => setShowForm(false)} aria-label="Close form" className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-2)]"><X className="h-4 w-4" /></button></div><IncidentFields form={form} setForm={setForm} /><div className="flex justify-end gap-2 md:col-span-2"><Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button><Button type="submit" disabled={saving}><Check className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}</Button></div></form>}
-      <AdminResourceToolbar q={q} onQChange={(value) => { setQ(value); resetSharedPages(); }} deleted={deleted} onDeletedChange={(value) => { setDeleted(value); resetSharedPages(); }} dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={(value) => { setDateFrom(value); resetSharedPages(); }} onDateToChange={(value) => { setDateTo(value); resetSharedPages(); }}><Select value={severity} onChange={(event) => { setSeverity(event.target.value); resetSharedPages(); }} aria-label="Severity" className="!w-auto !py-2.5 !text-xs"><option value="all">All severity</option><option value="info">Information</option><option value="warning">Warning</option><option value="critical">Critical</option></Select></AdminResourceToolbar>
+      <AdminResourceToolbar q={q} onQChange={(value) => { setQ(value); resetSharedPages(); }} deleted={deleted} onDeletedChange={(value) => { setDeleted(value); resetSharedPages(); }} dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={(value) => { setDateFrom(value); resetSharedPages(); }} onDateToChange={(value) => { setDateTo(value); resetSharedPages(); }}><Select value={severity} onChange={(event) => { setSeverity(event.target.value); resetSharedPages(); }} aria-label="Severity" className="!w-auto !py-2.5 !text-[13px]"><option value="all">All severities</option><option value="info">Information</option><option value="warning">Warning</option><option value="critical">Critical</option></Select></AdminResourceToolbar>
       {deleted ? <IncidentSection title="Deleted incidents" state={deletedRecords} page={deletedPage} pageSize={deletedPageSize} deleted onPageChange={setDeletedPage} onPageSizeChange={(size) => { setDeletedPageSize(size); setDeletedPage(1); }} onEdit={startEdit} onDelete={async () => {}} onRestore={async (row) => { await mutate({ resource: "incidents", action: "restore", id: row.id }); }} onRetry={() => setRefreshKey((current) => current + 1)} /> : <><IncidentSection title="Active incidents" state={active} page={activePage} pageSize={activePageSize} deleted={false} onPageChange={setActivePage} onPageSizeChange={(size) => { setActivePageSize(size); setActivePage(1); }} onEdit={startEdit} onDelete={async (row) => { await mutate({ resource: "incidents", action: "delete", id: row.id }); }} onRestore={async () => {}} onRetry={() => void loadSection("active", activePage, activePageSize, setActive)} /><IncidentSection title="Resolved incidents" state={resolved} page={resolvedPage} pageSize={resolvedPageSize} deleted={false} onPageChange={setResolvedPage} onPageSizeChange={(size) => { setResolvedPageSize(size); setResolvedPage(1); }} onEdit={startEdit} onDelete={async (row) => { await mutate({ resource: "incidents", action: "delete", id: row.id }); }} onRestore={async () => {}} onRetry={() => void loadSection("resolved", resolvedPage, resolvedPageSize, setResolved)} /></>}
     </div>
   );

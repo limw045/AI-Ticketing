@@ -7,8 +7,11 @@ const newTicket = readFileSync("app/(workspace)/tickets/new/page.tsx", "utf8");
 
 describe("list empty-state contract", () => {
   it("distinguishes filtered emptiness from initial emptiness", () => {
-    expect(staff).toContain('"No matching staff" : "No staff accounts yet"');
-    expect(tickets).toContain('"No matching tickets" : "No tickets yet"');
+    expect(staff).toContain('"No matching staff"');
+    expect(staff).toContain('"No staff accounts yet"');
+    expect(tickets).toContain('"No matching tickets"');
+    expect(tickets).toContain('"No tickets yet"');
+    expect(tickets).toContain('"Clear filters"');
     expect(staff).toContain("Try a broader search or reset the active filters.");
   });
 

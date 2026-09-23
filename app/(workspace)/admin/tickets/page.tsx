@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge, priorityTone, statusTone } from "@/components/ui/StatusBadge";
 import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
 import { ListEmptyState } from "@/components/ui/ListEmptyState";
+import { formatDate, formatDateTime } from "@/lib/date-display";
 import { createClient } from "@/lib/supabase/client";
 
 import { SubtaskEditor, type EditableSubtask } from "@/components/tickets/SubtaskEditor";
@@ -40,6 +41,7 @@ export default function AdminTicketsPage() {
   const [form, setForm] = useState<Record<string, any>>({});
   const [subtasks, setSubtasks] = useState<EditableSubtask[]>([]);
   const [saving, setSaving] = useState(false);
+  const hasFilters = Boolean(admin.q || admin.dateFrom || admin.dateTo || admin.deleted || Object.values(admin.filters).some((value) => value && value !== "all"));
 
   useEffect(() => {
     fetch("/api/admin/staff?pageSize=100")
@@ -141,12 +143,12 @@ export default function AdminTicketsPage() {
       )}
 
       <AdminResourceToolbar q={admin.q} onQChange={admin.setQ} deleted={admin.deleted} onDeletedChange={admin.setDeleted} dateFrom={admin.dateFrom} dateTo={admin.dateTo} onDateFromChange={admin.setDateFrom} onDateToChange={admin.setDateTo}>
-        <Select value={admin.filters.status ?? "all"} onChange={(event) => admin.setFilter("status", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Status"><option value="all">All statuses</option>{STATUSES.map((status) => <option key={status} value={status}>{ticketStatusLabel(status)}</option>)}</Select>
-        <Select value={admin.filters.priority ?? "all"} onChange={(event) => admin.setFilter("priority", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Priority"><option value="all">All priorities</option>{PRIORITIES.map((priority) => <option key={priority} value={priority}>{priorityLabel(priority)}</option>)}</Select>
-        <Select value={admin.filters.source ?? "all"} onChange={(event) => admin.setFilter("source", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Source"><option value="all">All sources</option><option value="portal">Portal</option><option value="api">API</option></Select>
+        <Select value={admin.filters.status ?? "all"} onChange={(event) => admin.setFilter("status", event.target.value)} className="!w-auto !py-2.5 !text-[13px]" aria-label="Status"><option value="all">All statuses</option>{STATUSES.map((status) => <option key={status} value={status}>{ticketStatusLabel(status)}</option>)}</Select>
+        <Select value={admin.filters.priority ?? "all"} onChange={(event) => admin.setFilter("priority", event.target.value)} className="!w-auto !py-2.5 !text-[13px]" aria-label="Priority"><option value="all">All priorities</option>{PRIORITIES.map((priority) => <option key={priority} value={priority}>{priorityLabel(priority)}</option>)}</Select>
+        <Select value={admin.filters.source ?? "all"} onChange={(event) => admin.setFilter("source", event.target.value)} className="!w-auto !py-2.5 !text-[13px]" aria-label="Source"><option value="all">All sources</option><option value="portal">Portal</option><option value="api">API</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={9} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "No matching tickets" : "No tickets yet"} description={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "Try a broader search or reset the active filters." : "New portal and API requests will appear here."} /> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={9} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={hasFilters ? "No matching tickets" : "No tickets yet"} description={hasFilters ? "Try a broader search or reset the active filters." : "New portal and API requests will appear here."} actionLabel={hasFilters ? "Clear filters" : "Create a ticket"} onAction={hasFilters ? admin.clearFilters : undefined} actionHref={hasFilters ? undefined : "/tickets/new"} /> : (
         <AdminTable
           header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} tickets</h2><StatusBadge tone="brand">{admin.total} total</StatusBadge></>}
           mobile={<AdminMobileList items={admin.rows.map((ticket) => ({
@@ -161,7 +163,7 @@ export default function AdminTicketsPage() {
               { label: "Priority", value: priorityLabel(ticket.priority) },
               { label: "Status", value: ticketStatusLabel(ticket.status) },
               { label: "Assignee", value: ticket.assignee?.display_name ?? "Unassigned" },
-              { label: "Created", value: new Date(ticket.created_at).toLocaleString() },
+              { label: "Created", value: formatDateTime(ticket.created_at) },
             ],
             actions: (close) => admin.deleted ? <RestoreButton onRestore={async () => { await admin.mutate({ action: "restore", id: ticket.id }); close(); }} /> : <><Link href={`/tickets/${ticket.id}#conversation`} onClick={() => { setPortalMode("admin"); close(); }}><Button type="button" variant="secondary" className="w-full"><MessageSquare className="h-4 w-4" /> Open conversation</Button></Link><Button type="button" variant="secondary" onClick={() => { startEdit(ticket); close(); }}><Pencil className="h-4 w-4" /> Edit</Button><TwoStepDelete onConfirm={async () => { await admin.mutate({ action: "delete", id: ticket.id }); close(); }} /></>,
           }))} />}
@@ -177,8 +179,8 @@ export default function AdminTicketsPage() {
                 <AdminTd><StatusBadge tone={priorityTone(ticket.priority)}>{priorityLabel(ticket.priority)}</StatusBadge></AdminTd>
                 <AdminTd><StatusBadge tone={statusTone(ticket.status)}>{ticketStatusLabel(ticket.status)}</StatusBadge></AdminTd>
                 <AdminTd className="text-xs text-[var(--muted)]">{ticket.assignee?.display_name ?? "Unassigned"}</AdminTd>
-                <AdminTd className="font-mono text-xs text-[var(--faint)]">{new Date(ticket.created_at).toLocaleDateString()}</AdminTd>
-                <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: ticket.id })} /> : <><Link href={`/tickets/${ticket.id}#conversation`} onClick={() => setPortalMode("admin")} className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-soft)] px-3 py-2 text-xs font-medium text-[var(--brand-ink)]"><MessageSquare size={14} /> Conversation</Link><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(ticket)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: ticket.id })} /></>}</div></AdminTd>
+                <AdminTd className="whitespace-nowrap text-[13px] text-[var(--muted)]">{formatDate(ticket.created_at)}</AdminTd>
+                <AdminTd className="text-right"><div className="flex items-center justify-end gap-2">{admin.deleted ? <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: ticket.id })} /> : <><Link href={`/tickets/${ticket.id}#conversation`} onClick={() => setPortalMode("admin")} className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-soft)] px-3 py-2 text-xs font-medium text-[var(--brand-ink)]"><MessageSquare size={14} /> Conversation</Link><Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-[13px]" onClick={() => startEdit(ticket)}><Pencil className="h-3.5 w-3.5" /> Edit</Button><TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: ticket.id })} /></>}</div></AdminTd>
               </tr>
             ))}
           </tbody>

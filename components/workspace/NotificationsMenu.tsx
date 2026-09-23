@@ -203,10 +203,10 @@ export function NotificationsMenu() {
                   )}
                 />
                 <span className="min-w-0">
-                  <strong className="block truncate text-xs text-[var(--ink)]">
+                  <strong className="block truncate text-[13px] text-[var(--ink)]">
                     {notification.title}
                   </strong>
-                  <span className="mt-1 block line-clamp-2 text-xs leading-4 text-[var(--muted)]">
+                  <span className="mt-1 block line-clamp-2 text-[13px] leading-5 text-[var(--muted)]">
                     {notification.body}
                   </span>
                 </span>
@@ -216,9 +216,11 @@ export function NotificationsMenu() {
               </button>
             ))}
             {notifications.length === 0 && !error && !loading && (
-              <p className="px-4 py-8 text-center text-xs text-[var(--muted)]">
-                No notifications yet.
-              </p>
+              <div className="flex flex-col items-center px-5 py-7 text-center">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--success-soft)] text-[var(--success)]"><Check className="h-4 w-4" aria-hidden="true" /></span>
+                <strong className="mt-3 text-sm font-semibold text-[var(--ink)]">You&apos;re all caught up</strong>
+                <p className="mt-1 max-w-[230px] text-[13px] leading-5 text-[var(--muted)]">New updates about your requests will appear here.</p>
+              </div>
             )}
           </div>
         </div>

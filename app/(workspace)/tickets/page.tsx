@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { getHistoricalCategoryOptions } from "@/lib/ticket-categories";
+import { formatDate } from "@/lib/date-display";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { ResponsiveSheet } from "@/components/ui/ResponsiveSheet";
 import { getPortalMode, type PortalMode } from "@/lib/portal-mode";
@@ -521,12 +522,12 @@ export default function TicketDashboard() {
                     </span>
                   </div>
 
-                  <span className="hidden w-16 text-right font-mono text-xs font-medium text-[var(--faint)] lg:block">
-                    {new Date(ticket.created_at).toLocaleDateString()}
+                  <span className="hidden w-24 whitespace-nowrap text-right text-xs font-medium text-[var(--muted)] lg:block">
+                    {formatDate(ticket.created_at)}
                   </span>
 
-                  <span className="font-mono text-xs text-[var(--faint)] sm:hidden">
-                    {new Date(ticket.created_at).toLocaleDateString()}
+                  <span className="text-xs text-[var(--muted)] sm:hidden">
+                    {formatDate(ticket.created_at)}
                   </span>
                   <StatusBadge tone={statusTone(ticket.status)} className="shrink-0">
                     {ticketStatusLabel(ticket.status)}

@@ -31,6 +31,11 @@ describe("getRoleHomeMetrics", () => {
     expect(metrics.unassignedCount).toBe(2);
   });
 
+  it("does not count resolved urgent requests as active", () => {
+    const metrics = getRoleHomeMetrics([...baseTickets, { status: "resolved", priority: "urgent", author_id: "user-a", assignee_id: "agent-1" }]);
+    expect(metrics.urgentCount).toBe(1);
+  });
+
   it("handles an empty queue without dividing by zero", () => {
     const metrics = getRoleHomeMetrics([], "user-a");
     expect(metrics).toEqual({

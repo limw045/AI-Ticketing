@@ -20,6 +20,8 @@ import { Alert } from "@/components/ui/Alert";
 import { Button, FieldLabel, Input, Select, Textarea } from "@/components/ui/FormField";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ListEmptyState } from "@/components/ui/ListEmptyState";
+import { formatDateTime } from "@/lib/date-display";
 import type { AdminResource } from "@/lib/admin/types";
 
 export interface CrudField {
@@ -42,6 +44,7 @@ export interface CrudColumn {
 export interface CrudFilter {
   key: string;
   label: string;
+  allLabel?: string;
   options: { label: string; value: string }[];
 }
 
@@ -50,7 +53,7 @@ function readPath(row: any, path: string) {
 }
 
 function displayValue(value: unknown, format: CrudColumn["format"]) {
-  if (format === "date") return value ? new Date(String(value)).toLocaleString() : "—";
+  if (format === "date") return formatDateTime(value ? String(value) : null);
   if (format === "boolean") return value ? "Active" : "Inactive";
   if (format === "visibility") return value ? "Internal" : "Public";
   if (value === null || value === undefined || value === "") return "—";
@@ -66,6 +69,9 @@ export function SimpleCrudPage({
   filters = [],
   compact = false,
   isReadOnlyRow,
+  itemName,
+  emptyDescription,
+  listName,
 }: {
   resource: AdminResource;
   title: string;
@@ -75,12 +81,17 @@ export function SimpleCrudPage({
   filters?: CrudFilter[];
   compact?: boolean;
   isReadOnlyRow?: (row: any) => boolean;
+  itemName?: string;
+  emptyDescription?: string;
+  listName?: string;
 }) {
   const admin = useAdminResource(resource);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+  const singularName = itemName ?? title.replace(/s$/, "");
+  const hasFilters = Boolean(admin.q || admin.dateFrom || admin.dateTo || admin.deleted || Object.values(admin.filters).some((value) => value && value !== "all"));
 
   const startCreate = () => {
     setEditing(null);
@@ -121,7 +132,7 @@ export function SimpleCrudPage({
           description={description}
           actions={
             <Button type="button" onClick={startCreate}>
-              <Plus className="h-4 w-4" /> Add {title.replace(/s$/, "")}
+              <Plus className="h-4 w-4" /> Add {singularName}
             </Button>
           }
         />
@@ -145,7 +156,7 @@ export function SimpleCrudPage({
         <form onSubmit={submit} className="surface grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
           <div className="flex items-center justify-between md:col-span-2">
             <div>
-              <h3 className="font-display text-base font-bold">{editing ? `Edit ${title.replace(/s$/, "")}` : `Add ${title.replace(/s$/, "")}`}</h3>
+              <h3 className="font-display text-base font-bold">{editing ? `Edit ${singularName}` : `Add ${singularName}`}</h3>
               <p className="mt-1 text-xs text-[var(--muted)]">Only safe business fields are editable.</p>
             </div>
             <button type="button" onClick={() => setShowForm(false)} aria-label="Close form" className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface-2)]">
@@ -222,9 +233,9 @@ export function SimpleCrudPage({
             value={admin.filters[filter.key] ?? "all"}
             onChange={(event) => admin.setFilter(filter.key, event.target.value)}
             aria-label={filter.label}
-            className="!w-auto !py-2.5 !text-xs"
+            className="!w-auto !py-2.5 !text-[13px]"
           >
-            <option value="all">All {filter.label.toLowerCase()}</option>
+            <option value="all">{filter.allLabel ?? `All ${filter.label.toLowerCase()}`}</option>
             {filter.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </Select>
         ))}
@@ -233,10 +244,10 @@ export function SimpleCrudPage({
       {admin.loading && admin.rows.length === 0 ? (
         <AdminTableSkeleton columns={columns.length + 1} />
       ) : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? (
-        <div className="surface py-16 text-center text-sm text-[var(--muted)]">No records match this view.</div>
+        <ListEmptyState title={hasFilters ? "No matching records" : `No ${title.toLowerCase()} yet`} description={hasFilters ? "Try a broader search or reset the active filters." : emptyDescription ?? `Add the first ${singularName} to get started.`} actionLabel={hasFilters ? "Clear filters" : `Add ${singularName}`} onAction={hasFilters ? admin.clearFilters : startCreate} />
       ) : (
         <AdminTable
-          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} {title.toLowerCase()}</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
+          header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} {(listName ?? title).toLowerCase()}</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
           mobile={
             <AdminMobileList
               items={admin.rows.map((row) => ({
@@ -269,11 +280,11 @@ export function SimpleCrudPage({
                 {columns.map((column) => {
                   const value = readPath(row, column.key);
                   return (
-                    <AdminTd key={column.key} className={column.format === "date" ? "whitespace-nowrap font-mono text-xs text-[var(--faint)]" : ""}>
+                    <AdminTd key={column.key} className={column.format === "date" ? "whitespace-nowrap text-[13px] text-[var(--muted)]" : ""}>
                       {column.format === "status" || column.format === "visibility" ? (
                         <StatusBadge tone={value ? "success" : "neutral"}>{displayValue(value, column.format)}</StatusBadge>
                       ) : (
-                        <span className={column.format === "truncate" ? "block max-w-[320px] truncate text-xs text-[var(--muted)]" : "text-sm text-[var(--ink)]"}>
+                        <span className={column.format === "truncate" ? "block max-w-[320px] truncate text-[13px] text-[var(--muted)]" : "text-sm text-[var(--ink)]"}>
                           {displayValue(value, column.format)}
                         </span>
                       )}
@@ -288,7 +299,7 @@ export function SimpleCrudPage({
                       <RestoreButton onRestore={() => admin.mutate({ action: "restore", id: row.id })} />
                     ) : (
                       <>
-                        <Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => startEdit(row)}>
+                        <Button type="button" variant="secondary" className="!px-3 !py-1.5 !text-[13px]" onClick={() => startEdit(row)}>
                           <Pencil className="h-3.5 w-3.5" /> Edit
                         </Button>
                         <TwoStepDelete onConfirm={() => admin.mutate({ action: "delete", id: row.id })} />

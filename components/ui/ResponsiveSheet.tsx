@@ -15,6 +15,7 @@ export function ResponsiveSheet({
   children,
   footer,
   className = "",
+  placement = "center",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,6 +24,7 @@ export function ResponsiveSheet({
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  placement?: "center" | "right";
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -76,7 +78,7 @@ export function ResponsiveSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center md:items-center md:p-6">
+    <div className={cn("fixed inset-0 z-[70] flex items-end justify-center", placement === "right" ? "md:items-stretch md:justify-end" : "md:items-center md:p-6")}>
       <button
         type="button"
         aria-label={`Close ${title}`}
@@ -91,7 +93,8 @@ export function ResponsiveSheet({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={cn(
-          "relative flex max-h-[min(86dvh,760px)] w-full flex-col overflow-hidden rounded-t-[24px] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)] outline-none md:max-w-lg md:rounded-[24px]",
+          "relative flex max-h-[min(86dvh,760px)] w-full flex-col overflow-hidden rounded-t-[24px] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)] outline-none",
+          placement === "right" ? "md:h-full md:max-h-full md:max-w-xl md:rounded-l-[24px] md:rounded-r-none" : "md:max-w-lg md:rounded-[24px]",
           className
         )}
       >

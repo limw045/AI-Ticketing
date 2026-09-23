@@ -22,7 +22,7 @@ export function getRoleHomeMetrics(
     (t) => t.status === "resolved" || t.status === "closed"
   ).length;
   const urgentCount = tickets.filter(
-    (t) => t.priority === "urgent" && t.status !== "closed"
+    (t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed"
   ).length;
   const unassignedCount = tickets.filter(
     (t) => t.status !== "closed" && !t.assignee_id

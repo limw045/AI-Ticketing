@@ -20,6 +20,8 @@ import {
   Plus,
   UserRound,
   LayoutDashboard,
+  Clock3,
+  BookOpen,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -115,16 +117,23 @@ export default function DashboardPage() {
       {accessNotice && <Alert tone="warning" role="alert">{accessNotice}</Alert>}
       {isAdministrator && portalMode === "user" && <Alert tone="info"><span>You’re viewing your personal requests.</span><Link href="/admin/dashboard" className="ml-3 inline-flex items-center gap-2 text-sm underline"><LayoutDashboard size={14} /> Open admin console</Link></Alert>}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Request summary">
-        <MetricCard label={viewRole === "admin" ? "Total requests" : "Your requests"} value={m.totalVolume} icon={<Inbox size={15} />} hint="Across all dates" />
-        <MetricCard label="Resolution rate" value={m.hasResolutionSample ? `${m.resolutionRate}%` : "—"} icon={<CheckCircle2 size={15} />} hint={m.hasResolutionSample ? "Resolved or closed requests" : "No requests yet"} />
-        <MetricCard label="Urgent requests" value={m.urgentCount} icon={<TriangleAlert size={15} />} valueClassName="text-[var(--danger)]" hint="Needs attention" />
-        <MetricCard label="Unassigned" value={m.unassignedCount} icon={<UserRound size={15} />} hint="Awaiting an owner" />
+        {viewRole === "admin" ? <>
+          <MetricCard label="Total requests" value={m.totalVolume} icon={<Inbox size={15} />} hint="Across all dates" />
+          <MetricCard label="Resolution rate" value={m.hasResolutionSample ? `${m.resolutionRate}%` : "—"} icon={<CheckCircle2 size={15} />} hint={m.hasResolutionSample ? "Resolved or closed requests" : "No requests yet"} />
+          <MetricCard label="Urgent requests" value={m.urgentCount} icon={<TriangleAlert size={15} />} valueClassName="text-[var(--danger)]" hint="Needs attention" />
+          <MetricCard label="Unassigned" value={m.unassignedCount} icon={<UserRound size={15} />} hint="Awaiting an owner" />
+        </> : <>
+          <MetricCard label="Total requests" value={m.totalVolume} icon={<Inbox size={15} />} hint="Across all dates" />
+          <MetricCard label="Open" value={m.openCount} icon={<Clock3 size={15} />} hint="Awaiting review" />
+          <MetricCard label="In progress" value={m.inProgressCount} icon={<UserRound size={15} />} hint="Being worked on" />
+          <MetricCard label="Resolved" value={m.resolvedCount} icon={<CheckCircle2 size={15} />} hint="Resolved or closed" />
+        </>}
       </section>
       <TicketActivity tickets={visibleTickets} />
       <RecentRequests tickets={visibleTickets} personal={viewRole !== "admin"} />
       <section className="overview-shortcuts" aria-label="Workspace shortcuts">
-        <Link href="/faq"><div><h2>Find an answer in Knowledge</h2><p>Practical guides for access, tools, and common requests.</p></div><ArrowUpRight size={18} /></Link>
-        <Link href={viewRole === "admin" ? "/admin/dashboard" : "/tickets/new"}><div><h2>{viewRole === "admin" ? "Explore operations" : "Need a hand?"}</h2><p>{viewRole === "admin" ? "Explore department trends and manage your service desk." : "Share the details and get help from the team."}</p></div><ArrowUpRight size={18} /></Link>
+        <Link href="/faq"><BookOpen size={20} aria-hidden="true" /><div><h2>Find an answer</h2><p>Search guides before opening a request.</p><span>Browse Knowledge <ArrowUpRight size={14} /></span></div></Link>
+        <Link href={viewRole === "admin" ? "/admin/dashboard" : "/tickets/new"}><Plus size={20} aria-hidden="true" /><div><h2>{viewRole === "admin" ? "Explore operations" : "Still need help?"}</h2><p>{viewRole === "admin" ? "See service desk trends and the work that needs attention." : "Create a request for the AI team."}</p><span>{viewRole === "admin" ? "Open admin overview" : "Create request"} <ArrowUpRight size={14} /></span></div></Link>
       </section>
     </div>
   );

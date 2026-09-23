@@ -6,8 +6,11 @@ export default function AdminCommentsPage() {
   return (
     <SimpleCrudPage
       resource="comments"
-      title="Comments"
-      description="Moderate public replies and internal notes without changing their author or ticket identity."
+      title="Conversations"
+      itemName="reply or note"
+      listName="replies and notes"
+      description="Review public replies and internal notes across tickets."
+      emptyDescription="Replies and internal notes will appear here as requests are discussed."
       columns={[
         { key: "ticket.ticket_number", label: "Ticket" },
         { key: "author.display_name", label: "Author" },

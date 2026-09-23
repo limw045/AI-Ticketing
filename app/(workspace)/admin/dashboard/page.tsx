@@ -108,7 +108,7 @@ export default function AdminDashboard() {
   const resolutionRate =
     totalVolume > 0 ? Math.round((resolvedTickets / totalVolume) * 100) : 0;
   const urgentCount = tickets.filter(
-    (t) => t.priority === "urgent" && t.status !== "closed"
+    (t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed"
   ).length;
   const activeIncidents = incidents.filter((i) => i.is_active).length;
   const respondedTickets = tickets.filter(
@@ -140,8 +140,8 @@ export default function AdminDashboard() {
     },
     {
       href: "/admin/comments",
-      label: "Comments",
-      description: "Moderate replies and internal notes across tickets.",
+      label: "Conversations",
+      description: "Review replies and internal notes across tickets.",
       icon: MessageSquareText,
       badge: "Discussion",
     },
@@ -192,9 +192,11 @@ export default function AdminDashboard() {
         ]
       : []),
   ];
+  const primaryLinks = quickLinks.filter((link) => ["/admin/tickets", "/admin/incidents", "/admin/knowledge", "/admin/staff"].includes(link.href));
+  const secondaryLinks = quickLinks.filter((link) => !primaryLinks.includes(link));
 
   return (
-    <div className="space-y-10">
+    <div className="admin-overview space-y-10">
       {error && (
         <Alert tone="error" role="alert">
           {error}
@@ -241,7 +243,7 @@ export default function AdminDashboard() {
           hint="Resolved or closed of all time"
         />
         <MetricCard
-          label="Avg response SLA"
+          label="Avg first response"
           value={
             averageResponseHours === null
               ? "N/A"
@@ -251,11 +253,11 @@ export default function AdminDashboard() {
           hint="First reply after creation"
         />
         <MetricCard
-          label="Urgent breaches"
+          label="Open urgent"
           value={urgentCount}
           animate
           valueClassName="text-[var(--danger)]"
-          hint="P0 tickets still open"
+          hint="Urgent requests still active"
         />
       </div>
 
@@ -282,9 +284,7 @@ export default function AdminDashboard() {
         </header>
         <div className="p-6">
           {tickets.length === 0 ? (
-            <p className="py-8 text-center text-xs text-[var(--faint)]">
-              No tickets yet — the latest requests will appear here.
-            </p>
+            <div className="py-6 text-center"><p className="text-sm font-semibold">No tickets yet</p><p className="mt-1 text-sm text-[var(--muted)]">New requests will appear here as they arrive.</p><Link href="/admin/tickets" className="mt-3 inline-flex text-sm font-semibold text-[var(--brand-ink)]">Open ticket queue</Link></div>
           ) : (
             <ul className="divide-y divide-[var(--line)]">
               {tickets.slice(0, 6).map((ticket) => (
@@ -312,24 +312,25 @@ export default function AdminDashboard() {
           )}
         </div>
       </section>
-      <section id="admin"><h2 className="font-display text-lg mb-5">Manage your workspace</h2>
-      <div className="admin-launcher grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {quickLinks.map((link) => {
+      <section id="admin" className="space-y-4"><div><h2 className="font-display text-xl font-semibold">Manage your workspace</h2><p className="mt-1 text-sm text-[var(--muted)]">Start with daily work, then open configuration and oversight tools as needed.</p></div>
+      <h3 className="text-[13px] font-semibold text-[var(--muted)]">Daily operations</h3>
+      <div className="admin-launcher grid grid-cols-1 sm:grid-cols-2">
+        {primaryLinks.map((link) => {
           const Icon = link.icon;
           return (
             <Link
               key={link.href}
               href={link.href}
-              className="group surface flex items-start justify-between gap-4 p-6 transition hover:border-[var(--line-strong)]"
+              className="group surface flex items-start justify-between gap-4 p-5 transition hover:bg-[var(--surface-2)]"
             >
               <div>
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-soft)]">
                   <Icon className="h-4 w-4 text-[var(--brand-ink)]" />
                 </span>
-                <h2 className="mt-4 font-display text-base font-bold">
+                <h4 className="mt-3 font-display text-base font-semibold">
                   {link.label}
-                </h2>
-                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                </h4>
+                <p className="mt-1 text-sm leading-5 text-[var(--muted)]">
                   {link.description}
                 </p>
               </div>
@@ -341,7 +342,7 @@ export default function AdminDashboard() {
           );
         })}
       </div>
-
+      {secondaryLinks.length > 0 && <><h3 className="pt-3 text-[13px] font-semibold text-[var(--muted)]">Configuration & oversight</h3><div className="admin-launcher-secondary grid gap-2 sm:grid-cols-2">{secondaryLinks.map((link) => { const Icon = link.icon; return <Link key={link.href} href={link.href} className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--surface-2)]"><Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" /><span className="min-w-0 flex-1"><strong className="block text-sm font-semibold">{link.label}</strong><span className="block truncate text-[13px] text-[var(--muted)]">{link.description}</span></span><ArrowRight className="h-4 w-4 shrink-0 text-[var(--faint)] group-hover:text-[var(--brand-ink)]" aria-hidden="true" /></Link>; })}</div></>}
       </section>
     </div>
   );

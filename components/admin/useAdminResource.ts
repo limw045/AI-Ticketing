@@ -110,6 +110,7 @@ export function useAdminResource(resource: AdminResource) {
     setQ: (value: string) => { setQ(value); setPage(1); },
     filters,
     setFilter,
+    clearFilters: () => { setQ(""); setFilters({}); setDateFrom(""); setDateTo(""); setDeleted(false); setPage(1); },
     dateFrom,
     setDateFrom: (value: string) => { setDateFrom(value); setPage(1); },
     dateTo,

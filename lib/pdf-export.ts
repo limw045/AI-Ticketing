@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import { priorityLabel, ticketStatusLabel } from "@/lib/display-labels";
+import { formatDateTime } from "@/lib/date-display";
 
 const PURPLE: [number, number, number] = [79, 45, 127];
 const INK: [number, number, number] = [24, 20, 29];
@@ -51,7 +52,7 @@ export async function exportTicketPDF(ticket: any) {
     ["Category", ticket.category || "General"],
     ["Author", ticket.author?.display_name || "Staff Member"],
     ["Email", ticket.author?.email || ""],
-    ["Created", new Date(ticket.created_at || Date.now()).toLocaleString()],
+    ["Created", formatDateTime(ticket.created_at || new Date())],
   ];
 
   for (const [label, value] of details) {

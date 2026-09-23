@@ -129,7 +129,7 @@ export default function FAQPage() {
               variant={showAddForm ? "secondary" : "primary"}
               onClick={() => setShowAddForm(!showAddForm)}
             >
-              <Plus className="h-4 w-4" /> Pin answer
+              <Plus className="h-4 w-4" /> Publish answer
             </Button>
           )
         }
@@ -218,7 +218,7 @@ export default function FAQPage() {
                 </span>
                 <span className="flex items-center gap-3">
                   {faq.is_pinned && (
-                    <Pin className="h-4 w-4 text-[var(--brand-ink)]" />
+                    <><Pin className="h-4 w-4 text-[var(--brand-ink)]" aria-hidden="true" /><span className="sr-only">Pinned answer</span></>
                   )}
                   <ChevronDown
                     className={cn(

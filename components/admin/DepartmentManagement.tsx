@@ -49,13 +49,13 @@ export function DepartmentManagement() {
     {error && <Alert tone="error">{error}</Alert>}
     {notice && <Alert tone="success">{notice}</Alert>}
     <form onSubmit={addDepartment} className="surface flex flex-col gap-3 p-5 sm:flex-row sm:items-end">
-      <label className="flex-1"><FieldLabel>New department</FieldLabel><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Department name" required /></label>
+      <label className="w-full max-w-[600px]"><FieldLabel>New department</FieldLabel><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Department name" required /></label>
       <Button type="submit">Add department</Button>
     </form>
     <div className="surface divide-y divide-[var(--line)] overflow-hidden">
       {departments.map((department) => <div key={department.id} className="flex items-center justify-between gap-4 p-4">
         <div><p className="text-sm font-semibold">{department.name}</p><p className="font-mono text-xs text-[var(--faint)]">{department.slug}</p></div>
-        <div className="flex items-center gap-3"><StatusBadge tone={department.is_active ? "success" : "neutral"}>{department.is_active ? "Active" : "Inactive"}</StatusBadge>{department.is_system ? <StatusBadge tone="neutral">System</StatusBadge> : <Button type="button" variant="secondary" className="!min-h-9 !px-3 !py-1.5 !text-xs" onClick={() => void toggleDepartment(department)}>{department.is_active ? "Deactivate" : "Restore"}</Button>}</div>
+        <div className="flex items-center gap-3"><StatusBadge tone={department.is_active ? "success" : "neutral"}>{department.is_active ? "Active" : "Inactive"}</StatusBadge>{department.is_system ? <StatusBadge tone="neutral">System</StatusBadge> : <Button type="button" variant="secondary" className="!min-h-9 !px-3 !py-1.5 !text-[13px]" onClick={() => void toggleDepartment(department)}>{department.is_active ? "Deactivate" : "Restore"}</Button>}</div>
       </div>)}
     </div>
   </section>;
