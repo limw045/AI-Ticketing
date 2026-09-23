@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/cn";
+import styles from "./BrandLockup.module.css";
 
 export function BrandMark({
   className = "",
@@ -11,7 +12,7 @@ export function BrandMark({
   return (
     <span
       aria-hidden="true"
-      className={cn("relative inline-block shrink-0 overflow-hidden rounded-lg bg-white", className)}
+      className={cn("relative inline-block shrink-0 overflow-hidden rounded-lg", styles.mark, className)}
       style={{ width: size, height: size }}
     >
       <Image
@@ -20,8 +21,15 @@ export function BrandMark({
         width={1254}
         height={1254}
         sizes="64px"
-        className="absolute max-w-none"
-        style={{ width: "150%", height: "150%", left: "-25%", top: "-21%" }}
+        className={styles.lightLogo}
+      />
+      <Image
+        src="/brand/ticketing-logo-dark.png"
+        alt=""
+        width={1254}
+        height={1254}
+        sizes="64px"
+        className={styles.darkLogo}
       />
     </span>
   );

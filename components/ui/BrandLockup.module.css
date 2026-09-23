@@ -1,0 +1,19 @@
+.mark {
+  background: #fff;
+}
+
+.lightLogo,
+.darkLogo {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  max-width: none;
+  left: -25%;
+  top: -21%;
+}
+
+.darkLogo { display: none; }
+
+:global(html[data-theme="dark"]) .mark { background: #09090d; }
+:global(html[data-theme="dark"]) .lightLogo { display: none; }
+:global(html[data-theme="dark"]) .darkLogo { display: block; }

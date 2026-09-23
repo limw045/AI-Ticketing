@@ -59,7 +59,15 @@ export function AuthShell({
               width={1254}
               height={1254}
               sizes="(max-width: 899px) 1px, (max-width: 1440px) 46vw, 660px"
-              className={`support-illustration ${styles.image}`}
+              className={`support-illustration ${styles.image} ${styles.lightImage}`}
+            />
+            <Image
+              src={`/illustrations/auth/${artwork.image}-dark.png`}
+              alt=""
+              width={artwork.image === "recovery" ? 1448 : 1254}
+              height={artwork.image === "recovery" ? 1086 : 1254}
+              sizes="(max-width: 899px) 1px, (max-width: 1440px) 46vw, 660px"
+              className={`${styles.image} ${styles.darkImage}`}
             />
             <div className={styles.caption}>
               <span className={styles.eyebrow}>YOUR EVERYDAY SUPPORT, SIMPLIFIED</span>

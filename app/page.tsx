@@ -60,7 +60,8 @@ export default function Home() {
         </div>
         <div className={styles.heroArt}>
           <div className={styles.artHeading}><span>A LITTLE TEAMWORK GOES A LONG WAY</span><span className={styles.artDot} /></div>
-          <Image src="/illustrations/home/ai-support.png" alt="" width={1448} height={1086} sizes="(max-width: 760px) 90vw, (max-width: 1440px) 46vw, 600px" preload className={`support-illustration ${styles.heroImage}`} />
+          <Image src="/illustrations/home/ai-support.png" alt="" width={1448} height={1086} sizes="(max-width: 760px) 90vw, (max-width: 1440px) 46vw, 600px" className={`support-illustration ${styles.heroImage} ${styles.lightImage}`} />
+          <Image src="/illustrations/home/ai-support-dark.png" alt="" width={1254} height={1254} sizes="(max-width: 760px) 90vw, (max-width: 1440px) 46vw, 600px" className={`${styles.heroImage} ${styles.darkImage}`} />
           <p>Your team. Your requests.<br /><strong>All connected.</strong></p>
         </div>
       </section>
@@ -75,7 +76,8 @@ export default function Home() {
             <article key={feature.number} className={styles.feature}>
               <div className={styles.featureArt}>
                 <span className={styles.featureNumber}>{feature.number}</span>
-                <Image src={`/illustrations/home/${feature.image}.png`} alt="" width={1254} height={1254} sizes="(max-width: 760px) 80vw, 320px" className={`support-illustration ${styles.featureImage}`} />
+                <Image src={`/illustrations/home/${feature.image}.png`} alt="" width={1254} height={1254} sizes="(max-width: 760px) 80vw, 320px" className={`support-illustration ${styles.featureImage} ${styles.lightImage}`} />
+                <Image src={`/illustrations/home/${feature.image}-dark.png`} alt="" width={1254} height={1254} sizes="(max-width: 760px) 80vw, 320px" className={`${styles.featureImage} ${styles.darkImage}`} />
               </div>
               <div className={styles.featureCopy}>
                 <span className={styles.featureLabel}>{feature.label}</span>
