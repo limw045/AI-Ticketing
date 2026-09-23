@@ -61,7 +61,6 @@
 .workspace .admin-table > div.overflow-x-auto { padding: 0; }
 .workspace .arrow-action { font-size: 12px; font-weight: 500; }
 .workspace [role="alert"] { border-radius: 10px; }
-.workspace .workspace-toolbar { padding: 16px 0; border: 0; border-radius: 0; border-bottom: 1px solid var(--line); }
 .workspace .workspace-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); overflow-x: auto; }
 .workspace-tabs button { border-bottom: 2px solid transparent; padding: 12px 0; color: var(--muted); font-size: 13px; white-space: nowrap; }
 .workspace-tabs button[aria-pressed="true"] { border-bottom-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
