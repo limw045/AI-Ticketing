@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Check, Pencil, UserPlus, X } from "lucide-react";
+import { RegistrationLink } from "@/components/admin/RegistrationLink";
+import { Check, Pencil, X } from "lucide-react";
 import { useAdminResource } from "@/components/admin/useAdminResource";
 import {
   AdminPagination,
@@ -93,20 +93,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
       <AdminLoadError message={admin.error} onRetry={admin.refresh} />
       {admin.notice && <Alert tone="success">{admin.notice}</Alert>}
 
-      {!administratorsOnly && (
-        <section className="surface flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)]">
-              <UserPlus className="h-4 w-4 text-[var(--brand-ink)]" />
-            </span>
-            <div>
-              <h2 className="font-display text-base font-bold">Add staff through registration</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">New accounts always start as Employee. Super Admins can promote them after registration.</p>
-            </div>
-          </div>
-          <Link href="/register"><Button variant="secondary"><UserPlus className="h-4 w-4" /> Open registration</Button></Link>
-        </section>
-      )}
+      {!administratorsOnly && <RegistrationLink />}
 
       {editing && (
         <form onSubmit={save} className="surface grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
@@ -133,7 +120,7 @@ export function StaffManagement({ administratorsOnly = false }: { administrators
         <Select value={admin.filters.user_type ?? "all"} onChange={(event) => admin.setFilter("user_type", event.target.value)} className="!w-auto !py-2.5 !text-xs" aria-label="Staff type"><option value="all">All staff types</option><option value="full_time">Full-time</option><option value="intern">Intern</option><option value="contractor">Contractor</option></Select>
       </AdminResourceToolbar>
 
-      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "No matching staff" : "No staff accounts yet"} description={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "Try a broader search or reset the active filters." : "Open registration to create the first employee account."} actionHref={!admin.q ? "/register" : undefined} actionLabel={!admin.q ? "Open registration" : undefined} /> : (
+      {admin.loading && admin.rows.length === 0 ? <AdminTableSkeleton columns={7} /> : admin.error && admin.rows.length === 0 ? null : admin.rows.length === 0 ? <ListEmptyState title={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "No matching staff" : "No staff accounts yet"} description={admin.q || Object.values(admin.filters).some((value) => value && value !== "all") ? "Try a broader search or reset the active filters." : "Share the registration link above so staff can create their accounts."} /> : (
         <AdminTable
           header={<><h2 className="font-display text-base font-bold">{admin.deleted ? "Deleted" : "Active"} accounts</h2><StatusBadge tone="neutral">{admin.total} total</StatusBadge></>}
           mobile={

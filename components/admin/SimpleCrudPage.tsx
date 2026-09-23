@@ -28,6 +28,7 @@ export interface CrudField {
   type?: "text" | "textarea" | "select" | "checkbox" | "number";
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
   defaultValue?: string | number | boolean;
   options?: { label: string; value: string }[];
 }
@@ -165,10 +166,14 @@ export function SimpleCrudPage({
               ) : field.type === "select" ? (
                 <Select
                   required={field.required}
+                  disabled={field.disabled}
                   value={String(form[field.key] ?? "")}
                   onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value || null }))}
                 >
-                  {!field.required && <option value="">None</option>}
+                  {!field.required && !field.options?.some((option) => option.value === "") && <option value="">None</option>}
+                  {Boolean(form[field.key]) && !field.options?.some((option) => option.value === String(form[field.key])) && (
+                    <option value={String(form[field.key])} disabled>Current selection (unavailable)</option>
+                  )}
                   {field.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </Select>
               ) : field.type === "checkbox" ? (

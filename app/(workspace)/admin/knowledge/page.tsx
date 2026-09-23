@@ -1,12 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Alert } from "@/components/ui/Alert";
 import { BookOpen, Workflow } from "lucide-react";
 import { SimpleCrudPage } from "@/components/admin/SimpleCrudPage";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function AdminKnowledgePage() {
   const [tab, setTab] = useState<"faqs" | "rules">("faqs");
+  const [assignees, setAssignees] = useState<{ label: string; value: string }[]>([]);
+  const [assigneeError, setAssigneeError] = useState("");
+  const [assigneesLoading, setAssigneesLoading] = useState(true);
+  const [assigneeRetry, setAssigneeRetry] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setAssigneesLoading(true);
+    setAssigneeError("");
+    void createClient().from("profiles").select("id, display_name, email")
+      .in("role", ["admin", "super_admin"]).eq("account_status", "active")
+      .is("deleted_at", null).order("display_name")
+      .then(({ data, error }) => {
+        if (!active) return;
+        setAssigneesLoading(false);
+        if (error) { setAssigneeError("Could not load administrators. Retry to select a default assignee."); return; }
+        setAssignees((data ?? []).map((person) => ({ value: person.id, label: person.display_name ? `${person.display_name} (${person.email})` : person.email })));
+      });
+    return () => { active = false; };
+  }, [assigneeRetry]);
   return (
     <div className="space-y-8">
       <PageHeader
@@ -30,6 +51,7 @@ export default function AdminKnowledgePage() {
           <Workflow className="h-4 w-4" /> Category rules
         </button>
       </div>
+      {tab === "rules" && assigneeError && <Alert tone="error">{assigneeError} <button type="button" className="underline" onClick={() => setAssigneeRetry((value) => value + 1)}>Retry</button></Alert>}
       {tab === "faqs" ? (
         <SimpleCrudPage
           compact
@@ -74,7 +96,11 @@ export default function AdminKnowledgePage() {
           ]}
           fields={[
             { key: "category_name", label: "Category name", required: true },
-            { key: "default_assignee_id", label: "Default assignee ID", placeholder: "Optional Admin UUID" },
+            {
+              key: "default_assignee_id", label: "Default assignee", type: "select",
+              disabled: assigneesLoading || Boolean(assigneeError),
+              options: [{ value: "", label: assigneesLoading ? "Loading administrators…" : "Unassigned" }, ...assignees],
+            },
             {
               key: "template_markdown",
               label: "Request guidance",
