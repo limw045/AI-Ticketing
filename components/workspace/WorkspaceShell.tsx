@@ -242,10 +242,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   }, [drawerOpen]);
 
   const handleSignOut = async () => {
+    await fetch("/auth/portal/logout", { method: "POST" }).catch(() => undefined);
     const supabase = createClient();
     await supabase.auth.signOut({ scope: "local" });
-    router.replace("/login");
-    router.refresh();
+    // Recreate the Auth client after clearing portal mode so a later password
+    // login uses the normal Supabase refresh flow.
+    window.location.assign("/login");
   };
 
   const role = (profile?.role as WorkspaceRole) || "employee";

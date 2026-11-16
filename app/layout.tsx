@@ -2,6 +2,7 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/app/theme";
+import { PortalSessionKeeper } from "@/components/PortalSessionKeeper";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -34,7 +35,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geist.variable} antialiased`}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider><PortalSessionKeeper />{children}</ThemeProvider>
       </body>
     </html>
   );

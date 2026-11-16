@@ -4,12 +4,19 @@ import { getSupabaseAuthConfig, getSupabasePublicConfig } from "@/lib/supabase/c
 
 let sharedClient: SupabaseClient<any, string> | undefined;
 
+function browserAuthOptions() {
+  // OAuth refresh tokens use /oauth/token, handled by the portal session keeper.
+  // Direct password users retain the SDK's normal refresh behavior.
+  const portal = typeof document !== "undefined" && document.cookie.split("; ").includes("ticketing_portal_mode=1");
+  return { autoRefreshToken: !portal };
+}
+
 export function createClient() {
   const { url, anonKey, schema } = getSupabasePublicConfig();
   const authConfig = getSupabaseAuthConfig();
   if (authConfig.url !== url) {
     if (sharedClient) return sharedClient;
-    const auth = createBrowserClient(authConfig.url, authConfig.anonKey);
+    const auth = createBrowserClient(authConfig.url, authConfig.anonKey, { auth: browserAuthOptions() });
     let cached: { sessionToken: string; token: string; expiresAt: number } | undefined;
     let pending: { sessionToken: string; promise: Promise<string> } | undefined;
     const accessToken = async () => {
@@ -43,5 +50,5 @@ export function createClient() {
     sharedClient = data;
     return data;
   }
-  return createBrowserClient(url, anonKey, { db: { schema } });
+  return createBrowserClient(url, anonKey, { db: { schema }, auth: browserAuthOptions() });
 }

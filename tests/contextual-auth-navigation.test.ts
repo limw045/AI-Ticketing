@@ -10,6 +10,7 @@ describe("contextual authentication navigation", () => {
   it("keeps safe internal destinations and rejects external redirects", () => {
     expect(safeInternalNext("/faq?category=VPN")).toBe("/faq?category=VPN");
     expect(safeInternalNext("//evil.example")).toBe("/dashboard");
+    expect(safeInternalNext("/\\evil.example")).toBe("/dashboard");
   });
 
   it("lets an admin choose a portal before returning to the original destination", () => {

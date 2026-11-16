@@ -25,12 +25,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPortalChoice, setShowPortalChoice] = useState(false);
   const [requestedNext, setRequestedNext] = useState("/dashboard");
+  const [portalError, setPortalError] = useState(false);
 
   useEffect(() => {
     const callbackError = new URLSearchParams(window.location.search).get("error");
     const verified = new URLSearchParams(window.location.search).get("verified");
     setRequestedNext(safeInternalNext(new URLSearchParams(window.location.search).get("next")));
     if (callbackError) setError(callbackError);
+    setPortalError(new URLSearchParams(window.location.search).has("portalError"));
     if (verified === "1") setNotice("Email verified successfully. Sign in to continue.");
   }, []);
 
@@ -103,6 +105,10 @@ export default function LoginPage() {
           ? "Sign in to continue to Internal Knowledge. Your original destination will be preserved."
           : "Sign in with your GTMSW staff or Intern account."}
       </p>
+      {portalError && <p role="alert" className="mt-4 text-sm text-red-600">AIDeck sign-in could not be completed. Try again or sign in directly.</p>}
+      <a href={`/auth/portal/start?next=${encodeURIComponent(requestedNext)}`} className="mt-5 inline-block text-sm font-semibold underline">
+        Continue with AIDeck
+      </a>
 
       {error && (
         <div className="mt-6">
